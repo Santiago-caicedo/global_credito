@@ -6,117 +6,151 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container mt-5">
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center">
         <h2>Dashboard de Analista</h2>
-        <p>Bienvenido, <strong>{{ request.user.username }}</strong>.</p>
-        <hr>
+        <p class="m-0">Bienvenido, <strong>{{ request.user.username }}</strong>.</p>
+    </div>
+    <hr>
 
-        {% if solicitud %}
-            <div class="card">
-                <div class="card-header fs-5">
-                    <strong>Solicitud Asignada: #{{ solicitud.id }}</strong>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">Información del Cliente</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><strong>Nombre:</strong> {{ solicitud.nombre_completo }}</li>
-                        <li class="list-group-item"><strong>Cédula:</strong> {{ solicitud.cedula }}</li>
-                        <li class="list-group-item"><strong>Fecha de Nacimiento:</strong> {{ solicitud.fecha_nacimiento|date:"Y-m-d" }} ({{ solicitud.edad }} años)</li>
-                        <li class="list-group-item"><strong>Ocupación:</strong> {{ solicitud.get_ocupacion_display }}</li>
-                        <li class="list-group-item"><strong>Ingresos Reportados:</strong> ${{ solicitud.ingresos_totales|floatformat:2 }}</li>
-                    </ul>
-
-                    <hr>
-
-                    <h5 class="card-title mt-4">Documentos Cargados por el Asesor</h5>
-                    <ul class="list-group">
-                        {% for doc in solicitud.documentos.all %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ doc.get_nombre_documento_display }}
-                                <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-secondary btn-sm">Ver Documento</a>
-                            </li>
-                        {% empty %}
-                            <li class="list-group-item">No se han cargado documentos para esta solicitud.</li>
-                        {% endfor %}
-                    </ul>
-
-                </div>
+    {% if solicitud %}
+        <!-- ================================================================== -->
+        <!-- NUEVA SECCIÓN: Resumen de la Información de la Solicitud           -->
+        <!-- ================================================================== -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Resumen de la Solicitud #{{ solicitud.id }}</h5>
+                <span class="badge {{ solicitud.get_estado_color_class }} fs-6">{{ solicitud.get_estado_display }}</span>
             </div>
-
-            <!-- Aquí añadiremos los formularios para el análisis más adelante -->
-             <hr class="my-4">
-
-            <!-- SECCIÓN DE ANÁLISIS -->
-            <div class="row">
-                <!-- Columna para Observaciones -->
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">1. Registrar Observaciones</h5>
-                            <form method="post">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label class="form-label">Observación Centrales de Riesgo</label>
-                                    {{ form_observaciones.observacion_centrales_riesgo }}
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Observación Llamada con Cliente</label>
-                                    {{ form_observaciones.observacion_llamada_cliente }}
-                                </div>
-                                <button type="submit" name="submit_observaciones" class="btn btn-info">Guardar Observaciones</button>
-                            </form>
-                        </div>
+            <div class="card-body bg-light">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Cliente:</strong><br>{{ solicitud.nombre_completo }}</p>
+                        <p class="mb-2"><strong>Cédula:</strong><br>{{ solicitud.cedula }}</p>
+                        <p class="mb-0"><strong>Fecha de Expedición:</strong><br>{{ solicitud.fecha_expedicion|date:"Y-m-d" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Fecha de Nacimiento:</strong><br>{{ solicitud.fecha_nacimiento|date:"Y-m-d" }} ({{ solicitud.edad }} años)</p>
+                        <p class="mb-2"><strong>Ocupación Reportada:</strong><br>{{ solicitud.get_ocupacion_display }}</p>
+                        <p class="mb-0"><strong>Ingresos Reportados:</strong><br>${{ solicitud.ingresos_totales|floatformat:2 }}</p>
                     </div>
                 </div>
-
-                <!-- Columna para Referencias -->
-                <div class="col-md-6">
-                    <div class="card">
+            </div>
+        </div>
+        <!-- ================================================================== -->
+        <!-- FIN DE LA NUEVA SECCIÓN                                            -->
+        <!-- ================================================================== -->
+        {% if solicitud.recomendacion_sistema_texto %}
+                    <div class="card mt-4 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Resultado del Análisis del Sistema</h5>
+                        </div>
                         <div class="card-body">
-                            <h5 class="card-title">2. Añadir Referencias</h5>
-                            <form method="post">
-                                {% csrf_token %}
-                                <div class="mb-2">
-                                    <label class="form-label">Tipo</label>
-                                    {{ form_referencia.tipo }}
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label">Nombre Completo</label>
-                                    {{ form_referencia.nombre_completo }}
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label">Número de Contacto</label>
-                                    {{ form_referencia.numero_contacto }}
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label">Parentesco</label>
-                                    {{ form_referencia.parentesco }}
-                                </div>
-                                <button type="submit" name="submit_referencia" class="btn btn-primary">Añadir Referencia</button>
-                            </form>
+                            <div class="alert {% if solicitud.recomendacion_sistema_aprobada %}alert-success{% else %}alert-danger{% endif %}">
+                                <strong>Recomendación:</strong> {{ solicitud.recomendacion_sistema_texto }}
+                            </div>
+                            <!-- Acciones Finales -->
+                            <div class="mt-3 text-center">
+                                <h5>Decisión Final de Pre-Aprobación</h5>
+                                <p>Por favor, tome una decisión basada en la recomendación y su criterio profesional.</p>
+                                <a href="{% url 'preaprobar_solicitud' solicitud.id %}" class="btn btn-success btn-lg">Pre-Aprobar Solicitud</a>
+                                <a href="{% url 'rechazar_solicitud' solicitud.id %}" class="btn btn-danger btn-lg">Rechazar Solicitud</a>
+                            </div>
                         </div>
                     </div>
-                    
-                    <h5 class="mt-4">Referencias Añadidas</h5>
-                    <ul class="list-group">
-                        {% for ref in solicitud.referencias.all %}
-                            <li class="list-group-item">
-                                <strong>{{ ref.get_tipo_display }}:</strong> {{ ref.nombre_completo }} ({{ ref.parentesco }}) - {{ ref.numero_contacto }}
-                            </li>
-                        {% empty %}
-                            <li class="list-group-item">Aún no se han añadido referencias.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-
-        {% else %}
-            <div class="alert alert-info" role="alert">
-                <h4 class="alert-heading">¡Estás al día!</h4>
-                <p>No tienes ninguna solicitud asignada en este momento. El sistema te asignará una automáticamente en cuanto esté disponible.</p>
-            </div>
         {% endif %}
 
-    </div>
+        <!-- PESTAÑAS DE NAVEGACIÓN -->
+        <ul class="nav nav-tabs mt-4" id="analisisTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="documentos-tab" data-bs-toggle="tab" data-bs-target="#documentos" type="button" role="tab">Fase 1: Carga y Observación de Documentos</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if not documentos_obligatorios_ok %}disabled{% endif %}" id="riesgo-tab" data-bs-toggle="tab" data-bs-target="#riesgo" type="button" role="tab">Fase 2: Análisis de Riesgo</button>
+            </li>
+        </ul>
+
+        <!-- CONTENIDO DE LAS PESTAÑAS (Este código no ha cambiado) -->
+        <div class="tab-content" id="analisisTabContent">
+            <!-- Pestaña 1: Documentos -->
+            <div class="tab-pane fade show active p-3 border border-top-0" id="documentos" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Documentos del Asesor</h5>
+                        <ul class="list-group">
+                            {% for doc in documentos_del_asesor %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ doc.get_nombre_documento_display }}
+                                    <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-secondary btn-sm">Ver</a>
+                                </li>
+                            {% empty %}
+                                <li class="list-group-item">No hay documentos del asesor.</li>
+                            {% endfor %}
+                        </ul>
+
+                        <h5 class="mt-4">Documentos de Análisis (Subidos por usted)</h5>
+                        <ul class="list-group">
+                            {% for doc in documentos_del_analista %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ doc.get_nombre_documento_display }}
+                                    <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-secondary btn-sm">Ver</a>
+                                </li>
+                            {% empty %}
+                                <li class="list-group-item">Aún no ha subido documentos de análisis.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Subir Documento de Análisis</h5>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de Documento</label>
+                                {{ form_documento.nombre_documento }}
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Archivo</label>
+                                {{ form_documento.archivo }}
+                            </div>
+                            <button type="submit" name="submit_documento" class="btn btn-primary">Subir Documento</button>
+                        </form>
+                        
+                        <hr>
+                        
+                        {% if documentos_obligatorios_ok %}
+                            <h5>Observación General de Documentos</h5>
+                            <form method="post">
+                                {% csrf_token %}
+                                {{ form_observacion.observacion_analisis_documentos.label_tag }}
+                                {{ form_observacion.observacion_analisis_documentos }}
+                                <button type="submit" name="submit_observacion" class="btn btn-secondary mt-2">Guardar Observación</button>
+                            </form>
+                        {% else %}
+                            <div class="alert alert-warning mt-3">Debe cargar los documentos obligatorios (Historial de Crédito y Procesos Judiciales) para poder dejar una observación y pasar a la siguiente fase.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña 2: Riesgo -->
+            <div class="tab-pane fade p-3 border border-top-0" id="riesgo" role="tabpanel">
+                <h5>Evaluación de Riesgo</h5>
+                <p>Por favor, ingrese los datos obtenidos de sus consultas para generar una recomendación del sistema.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form_riesgo.as_p }}
+                    <button type="submit" name="submit_riesgo" class="btn btn-info">Generar Recomendación</button>
+                </form>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">¡Estás al día!</h4>
+            <p>No tienes ninguna solicitud asignada en este momento. El sistema te asignará una automáticamente en cuanto esté disponible.</p>
+        </div>
+    {% endif %}
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>

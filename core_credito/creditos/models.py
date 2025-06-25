@@ -62,8 +62,54 @@ class SolicitudCredito(models.Model):
     ingresos_totales = models.DecimalField("Ingresos Totales (COP)", max_digits=12, decimal_places=2, null=True, blank=True)
 
 
-    # ---- SECCIÓN 2: Datos de Enriquecimiento y Análisis (Para Fases Posteriores) ----
-    # Campos que serán llenados y usados después del primer filtro.
+    TIPO_VIVIENDA_PROPIA = 'PROPIA'
+    TIPO_VIVIENDA_FAMILIAR = 'FAMILIAR'
+    TIPO_VIVIENDA_ARRIENDO = 'ARRIENDO'
+    VIVIENDA_CHOICES = [
+        (TIPO_VIVIENDA_PROPIA, 'Propia'),
+        (TIPO_VIVIENDA_FAMILIAR, 'Familiar'),
+        (TIPO_VIVIENDA_ARRIENDO, 'En Arriendo'),
+    ]
+    ESTADO_CIVIL_SOLTERO = 'SOLTERO'
+    ESTADO_CIVIL_CASADO = 'CASADO'
+    ESTADO_CIVIL_DIVORCIADO = 'DIVORCIADO'
+    ESTADO_CIVIL_UNION_LIBRE = 'UNION_LIBRE'
+    ESTADO_CIVIL_CHOICES = [
+        (ESTADO_CIVIL_SOLTERO, 'Soltero/a'),
+        (ESTADO_CIVIL_CASADO, 'Casado/a'),
+        (ESTADO_CIVIL_DIVORCIADO, 'Divorciado/a'),
+        (ESTADO_CIVIL_UNION_LIBRE, 'Unión Libre'),
+    ]
+    SEXO_HOMBRE = 'HOMBRE'
+    SEXO_MUJER = 'MUJER'
+    SEXO_CHOICES = [
+        (SEXO_HOMBRE, 'Hombre'),
+        (SEXO_MUJER, 'Mujer'),
+    ]
+    PERSONAS_CARGO_CHOICES = [
+        ('0', '0'), ('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('+5', 'Más de 5'),
+    ]
+
+    # --- Campos Demográficos (Para almacenar el perfil completo) ---
+    tipo_vivienda = models.CharField("Tipo de Vivienda", max_length=20, choices=VIVIENDA_CHOICES, blank=True, null=True)
+    personas_a_cargo = models.CharField("Personas a cargo", max_length=10, choices=PERSONAS_CARGO_CHOICES, null=True, blank=True)
+    gastos_personales = models.DecimalField("Gastos Personales Reportados", max_digits=12, decimal_places=2, null=True, blank=True)
+    direccion_residencia = models.CharField("Dirección de Residencia", max_length=255, blank=True, null=True)
+    ciudad_residencia = models.CharField("Ciudad de Residencia", max_length=100, blank=True, null=True)
+    departamento_residencia = models.CharField("Departamento de Residencia", max_length=100, blank=True, null=True)
+    barrio_residencia = models.CharField("Barrio de Residencia", max_length=100, blank=True, null=True)
+    estrato = models.PositiveSmallIntegerField("Estrato", null=True, blank=True)
+    estado_civil = models.CharField("Estado Civil", max_length=20, choices=ESTADO_CIVIL_CHOICES, blank=True, null=True)
+    sexo = models.CharField("Sexo", max_length=10, choices=SEXO_CHOICES, blank=True, null=True)
+
+    # --- Campos Financieros (Inputs para la NUEVA fórmula de cálculo) ---
+    # Nota: reutilizamos 'ingresos_totales' de la Sección 1, el analista puede confirmarlo o ajustarlo.
+    gastos_financieros = models.DecimalField("Gastos Financieros Confirmados", max_digits=12, decimal_places=2, null=True, blank=True)
+    num_aportantes = models.PositiveSmallIntegerField("Número de Aportantes", default=1, choices=[(1, '1'), (2, '2')])
+    
+    # --- Campo para guardar el resultado del cálculo ---
+    capacidad_pago_calculada = models.DecimalField("Capacidad de Pago Calculada", max_digits=12, decimal_places=2, null=True, blank=True)
+
     PERSONAS_CARGO_0 = '0'
     PERSONAS_CARGO_1 = '1'
     PERSONAS_CARGO_2 = '2'
@@ -97,8 +143,11 @@ class SolicitudCredito(models.Model):
     estado = models.CharField(max_length=30, choices=ESTADOS_CHOICES, default=ESTADO_NUEVO)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
+    recomendacion_sistema_aprobada = models.BooleanField("¿Sistema recomienda aprobar?", null=True)
+    recomendacion_sistema_texto = models.TextField("Texto de recomendación del sistema", blank=True, null=True)
 
     # ---- Campos de Análisis (llenados por el Analista) ----
+    observacion_analisis_documentos = models.TextField("Observación del Análisis de Documentos", blank=True, null=True) # <-- NUEVO CAMPO
     observacion_centrales_riesgo = models.TextField("Observación Centrales de Riesgo", blank=True, null=True)
     observacion_llamada_cliente = models.TextField("Observación Llamada con Cliente", blank=True, null=True)
     observacion_referencias = models.TextField("Observación de Referencias", blank=True, null=True)
@@ -188,22 +237,42 @@ class HistorialEstado(models.Model):
 
 class Documento(models.Model):
     """ Almacena los archivos asociados a una solicitud de crédito. """
-    # --- Definición de Choices para el Modelo ---
+    # Documentos del Asesor (Fase 1)
+    TIPO_CEDULA = 'CEDULA'
+    TIPO_RENTA = 'DECLARACION_RENTA'
+    TIPO_LABORAL = 'CERTIFICADO_LABORAL'
+    TIPO_AUTORIZACION = 'AUTORIZACION_CONSULTA'
+    
+    # Documentos del Analista (Fase 3)
+    TIPO_HISTORIAL_CREDITO = 'HISTORIAL_CREDITO'
+    TIPO_PROCESOS_JUDICIALES = 'PROCESOS_JUDICIALES'
+    TIPO_ADRESS = 'ADRESS'
+    TIPO_CONTRALORIA = 'CONTRALORIA'
+    TIPO_PROCURADURIA = 'PROCURADURIA'
+    TIPO_OTRAS_CONSULTAS = 'OTRAS_CONSULTAS'
+
     DOCUMENTOS_CHOICES = [
-        ('CEDULA', 'Cédula'),
-        ('DECLARACION_RENTA', 'Declaración de Renta'),
-        ('CERTIFICADO_LABORAL', 'Certificado Laboral'),
-        ('AUTORIZACION_CONSULTA', 'Autorización de Consulta a Centrales'),
+        ('Documentos del Asesor', (
+            (TIPO_CEDULA, 'Cédula'),
+            (TIPO_RENTA, 'Declaración de Renta'),
+            (TIPO_LABORAL, 'Certificado Laboral'),
+            (TIPO_AUTORIZACION, 'Autorización de Consulta a Centrales'),
+        )),
+        ('Documentos de Análisis', (
+            (TIPO_HISTORIAL_CREDITO, 'Historial de Crédito (PDF)'),
+            (TIPO_PROCESOS_JUDICIALES, 'Pantallazo de Procesos Judiciales'),
+            (TIPO_ADRESS, 'Pantallazo ADRESS'),
+            (TIPO_CONTRALORIA, 'Antecedentes en Contraloría (PDF)'),
+            (TIPO_PROCURADURIA, 'Antecedentes en Procuraduría (Pantallazo)'),
+            (TIPO_OTRAS_CONSULTAS, 'Otras Consultas (Puesto de Votación, Sisbén)'),
+        )),
     ]
 
     solicitud = models.ForeignKey(SolicitudCredito, on_delete=models.CASCADE, related_name='documentos')
-    # --- Campo Actualizado con `choices` ---
-    nombre_documento = models.CharField(
-        max_length=100,
-        choices=DOCUMENTOS_CHOICES,
-        help_text="Ej: Cédula, Certificado Laboral"
-    )
+    nombre_documento = models.CharField(max_length=100, choices=DOCUMENTOS_CHOICES)
     archivo = models.FileField(upload_to='documentos/%Y/%m/%d/')
+    # Nuevo campo para saber quién subió el documento
+    subido_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='documentos_subidos')
     fecha_carga = models.DateTimeField(auto_now_add=True)
     ok_analista = models.BooleanField("Documento Validado (OK)", default=False)
     observacion_correccion = models.TextField("Observación para Corrección", blank=True, null=True)
@@ -213,5 +282,4 @@ class Documento(models.Model):
         verbose_name_plural = "Documentos"
 
     def __str__(self):
-        # Ahora podemos usar el método get_..._display() aquí también!
         return f"{self.get_nombre_documento_display()} de Solicitud #{self.solicitud.id}"

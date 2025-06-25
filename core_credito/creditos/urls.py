@@ -7,5 +7,9 @@ urlpatterns = [
     path('<int:solicitud_id>/', views.solicitud_detalle_view, name='solicitud_detalle'),
     path('<int:solicitud_id>/enviar_asignacion/', views.enviar_a_asignacion_view, name='enviar_a_asignacion'),
     path('analista/dashboard/', views.analista_dashboard_view, name='analista_dashboard'),
+    path('solicitud/<int:solicitud_id>/preaprobar/', views.preaprobar_solicitud_view, name='preaprobar_solicitud'),
+    path('solicitud/<int:solicitud_id>/rechazar/', views.rechazar_solicitud_view, name='rechazar_solicitud'),
+    path('solicitud/<int:solicitud_id>/capacidad_pago/', views.capacidad_pago_view, name='capacidad_pago'),
+
 
 ]
