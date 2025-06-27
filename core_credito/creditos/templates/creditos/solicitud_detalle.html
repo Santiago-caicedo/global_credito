@@ -6,63 +6,90 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container mt-5">
-        <a href="{% url 'listar_solicitudes' %}">&larr; Volver a la lista</a>
-        <h2 class="mt-2">Detalle de Solicitud #{{ solicitud.id }}</h2>
-        <p>Cliente: <strong>{{ solicitud.nombre_completo }}</strong></p>
-        <p>Estado: <span class="badge {{ solicitud.get_estado_color_class }}">{{ solicitud.get_estado_display }}</span></p>
+<div class="container mt-5">
+    <a href="{% url 'listar_solicitudes' %}">&larr; Volver a la lista</a>
+    <h2 class="mt-2">Gestionar Solicitud #{{ solicitud.id }}</h2>
+    <p>Cliente: <strong>{{ solicitud.nombre_completo }}</strong> | Estado: <span class="badge {{ solicitud.get_estado_color_class }}">{{ solicitud.get_estado_display }}</span></p>
 
-        <hr>
-
-        <!-- Sección para Cargar Documentos -->
-        {% if solicitud.estado == solicitud.ESTADO_PEND_DOCUMENTOS %}
-        <div class="card bg-light mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Cargar Documentos Requeridos</h5>
-                <!-- ¡EL enctype ES OBLIGATORIO PARA SUBIR ARCHIVOS! -->
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="id_nombre_documento" class="form-label">Tipo de Documento</label>
-                        {{ form_documento.nombre_documento }}
-                    </div>
-                    <div class="mb-3">
-                        <label for="id_archivo" class="form-label">Seleccionar Archivo</label>
-                        {{ form_documento.archivo }}
-                    </div>
-                    <button type="submit" class="btn btn-primary">Subir Documento</button>
-                </form>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if solicitud.estado == solicitud.ESTADO_PEND_DOCUMENTOS and solicitud.documentos.all %}
-        <div class="card border-success mt-4">
-            <div class="card-body">
-                <h5 class="card-title text-success">Finalizar Carga y Enviar a Análisis</h5>
-                <p>Todos los documentos requeridos han sido cargados. Haz clic en el botón para enviar la solicitud a la fase de asignación de analista.</p>
-                <form action="{% url 'enviar_a_asignacion' solicitud.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-success">Enviar a Asignación</button>
-                </form>
-            </div>
-        </div>
-        {% endif %}
-
-
-        <!-- Sección para Ver Documentos Ya Cargados -->
-        <h5>Documentos Cargados</h5>
-        <ul class="list-group">
-            {% for doc in solicitud.documentos.all %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    {{ doc.get_nombre_documento_display }}
-                    <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-secondary btn-sm">Ver</a>
-                </li>
-            {% empty %}
-                <li class="list-group-item">Aún no se han cargado documentos.</li>
-            {% endfor %}
-        </ul>
-
+    <!-- Alerta de Corrección -->
+    {% if solicitud.estado == solicitud.ESTADO_DOCS_CORRECCION %}
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">¡Acción Requerida!</h4>
+        <p>Esta solicitud ha sido devuelta por el analista. Por favor, revise los documentos marcados "Para Corrección", elimínelos y vuelva a subirlos con la información correcta.</p>
     </div>
+    {% endif %}
+
+    <hr>
+
+    <div class="row">
+        <!-- Columna para ver documentos -->
+        <div class="col-md-6">
+            <h5>Documentos Cargados</h5>
+            <ul class="list-group">
+                {% for doc in documentos_cargados %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center 
+                        {% if not doc.ok_analista %}list-group-item-danger{% endif %}">
+                        <div>
+                            {{ doc.get_nombre_documento_display }}
+                            {% if not doc.ok_analista %}
+                                <p class="small text-danger mb-0 mt-1 fst-italic">
+                                    <strong>Motivo de corrección:</strong> "{{ doc.observacion_correccion }}"
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-secondary btn-sm">Ver</a>
+                            {% if not doc.ok_analista %}
+                            <form action="{% url 'corregir_documento' doc.id %}" method="post" class="d-inline ms-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Corregir</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Aún no se han cargado documentos.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <!-- Columna para subir nuevos documentos -->
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Subir Documento</h5>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form_documento.as_p }}
+                        <button type="submit" class="btn btn-primary w-100">Subir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botón para Reenviar a Análisis -->
+    <hr class="my-4">
+    {% if solicitud.estado == solicitud.ESTADO_DOCS_CORRECCION and not necesita_correccion %}
+        <div class="alert alert-success">
+            <h5 class="alert-heading">¡Todo Corregido!</h5>
+            <p>Ya no hay documentos pendientes de corrección. Puede reenviar la solicitud para que sea analizada de nuevo.</p>
+            <form action="{% url 'enviar_a_asignacion' solicitud.id %}" method="post" class="mt-2">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-lg">Reenviar a Asignación</button>
+            </form>
+        </div>
+    {% elif solicitud.estado == solicitud.ESTADO_PEND_DOCUMENTOS %}
+        <div class="text-center">
+            <h5>Enviar a Análisis</h5>
+            <p>Una vez haya subido todos los documentos requeridos, envíe la solicitud a la siguiente fase.</p>
+            <form action="{% url 'enviar_a_asignacion' solicitud.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-lg">Enviar a Asignación</button>
+            </form>
+        </div>
+    {% endif %}
+
+</div>
 </body>
 </html>

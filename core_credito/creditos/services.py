@@ -4,6 +4,7 @@ import random
 from django.db import transaction
 from decimal import Decimal, ROUND_HALF_UP
 
+
 # --- MOTOR INICIAL (FASE 1) ---
 def ejecutar_motor_inicial(solicitud: SolicitudCredito):
     """
@@ -134,8 +135,6 @@ def intentar_asignar_solicitud_en_espera():
 
 
 
-from .models import SolicitudCredito
-from decimal import Decimal, ROUND_HALF_UP
 
 
 # Reemplaza tu función calcular_capacidad_pago_service existente con esta:
@@ -208,4 +207,39 @@ def calcular_capacidad_pago_service(solicitud: SolicitudCredito):
         'Gasto Principal (El mayor de los dos)': round_currency(gastos_personales_utilizados),
         '(-) Gastos Financieros Reportados': round_currency(gastos_financieros),
         'Capacidad de Pago Mensual (FINAL)': round_currency(capacidad_pago),
+    }
+
+
+
+def calcular_oferta_service(solicitud: SolicitudCredito):
+    """
+    Toma la capacidad de pago y un plazo para calcular el monto máximo del préstamo.
+    """
+    TASA_INTERES_MENSUAL = Decimal('0.023')
+    SEGURO_PCT = Decimal('0.0025')
+    FGS_PCT = Decimal('0.0025')
+
+    cuota_maxima = solicitud.capacidad_pago_calculada or Decimal('0')
+    plazo_meses = solicitud.plazo_oferta
+    
+    if cuota_maxima <= 0 or not plazo_meses or plazo_meses <= 0:
+        return {'Error': 'La capacidad de pago y el plazo deben ser mayores a cero.'}
+
+    tasa_total_mensual = TASA_INTERES_MENSUAL + SEGURO_PCT + FGS_PCT
+    r, n = tasa_total_mensual, plazo_meses
+    
+    try:
+        factor = (Decimal('1') + r) ** n
+        monto_maximo = cuota_maxima * (factor - Decimal('1')) / (r * factor)
+    except (ZeroDivisionError, OverflowError):
+        return {'Error': 'Cálculo no válido con los parámetros dados.'}
+        
+    def round_currency(value):
+        return value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    return {
+        'Monto Máximo a Prestar': round_currency(monto_maximo),
+        'Cuota Mensual Estimada': round_currency(cuota_maxima),
+        'Plazo': plazo_meses,
+        'Tasa Total Mensual Aplicada': f"{(tasa_total_mensual * 100):.2f}%"
     }

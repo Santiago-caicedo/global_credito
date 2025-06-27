@@ -2,72 +2,164 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Análisis de Capacidad de Pago</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Capacidad de Pago - Solicitud #{{ solicitud.id }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    {# Carga la librería de Django para formatear números #}
+    {% load humanize %}
 </head>
 <body>
-<div class="container mt-5 mb-5">
-    <a href="{% url 'analista_dashboard' %}">&larr; Volver al Dashboard</a>
-    <h2 class="mt-2">Análisis de Capacidad de Pago</h2>
-    <hr>
-    
-    <!-- Resumen de la Solicitud (reutilizado) -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Resumen de la Solicitud #{{ solicitud.id }}</h5>
-            <span class="badge bg-success fs-6">{{ solicitud.get_estado_display }}</span>
+<div class="container mt-4 mb-5">
+
+    <!-- 1. Encabezado y Mensajes del Sistema -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <a href="{% url 'analista_dashboard' %}">&larr; Volver al Dashboard Principal</a>
+            <h2 class="mt-2">Análisis de Capacidad de Pago</h2>
         </div>
-        <!-- ... (Puedes copiar el card-body con la info del cliente desde analista_dashboard.html) ... -->
+        <span class="badge {{ solicitud.get_estado_color_class }} fs-6">{{ solicitud.get_estado_display }}</span>
+    </div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- 2. Resumen de la Solicitud Inicial -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header"><h5 class="mb-0">Resumen de la Solicitud #{{ solicitud.id }}</h5></div>
+        <div class="card-body bg-light">
+            <div class="row">
+                <div class="col-md-4"><p class="mb-2"><strong>Cliente:</strong><br>{{ solicitud.nombre_completo }}</p><p class="mb-0"><strong>Cédula:</strong><br>{{ solicitud.cedula }}</p></div>
+                <div class="col-md-4"><p class="mb-2"><strong>Ocupación:</strong><br>{{ solicitud.get_ocupacion_display }}</p><p class="mb-0"><strong>Ingresos:</strong><br>${{ solicitud.ingresos_totales|intcomma }}</p></div>
+                <div class="col-md-4"><p class="mb-2"><strong>Monto Solicitado:</strong><br>${{ solicitud.monto_solicitado|intcomma }}</p><p class="mb-0"><strong>Plazo Solicitado:</strong><br>{{ solicitud.plazo_solicitado }} meses</p></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Formulario de Capacidad de Pago -->
-    <div class="card">
+    <!-- 3. Formulario Principal de Análisis (para calcular capacidad de pago) -->
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0">Paso 1: Recopilar Datos y Calcular Capacidad de Pago</h5></div>
         <div class="card-body">
-            <h5 class="card-title">Formulario de Análisis Financiero y Demográfico</h5>
-            <p>Por favor, complete los siguientes datos obtenidos de la llamada con el cliente.</p>
             <form method="post">
                 {% csrf_token %}
                 <div class="row">
-                    <!-- Iteramos sobre los campos para un layout de dos columnas -->
-                    {% for field in form %}
+                    {% for field in form_capacidad %}
                     <div class="col-md-6 mb-3">
                         <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                         {{ field }}
                     </div>
                     {% endfor %}
                 </div>
-                <button type="submit" class="btn btn-primary mt-3">Guardar Datos y Calcular</button>
+                <button type="submit" name="submit_capacidad" class="btn btn-primary mt-3 w-100">Guardar y Calcular Capacidad de Pago</button>
             </form>
         </div>
     </div>
 
-    {% if resultado_calculo %}
-
-        {# Cargamos la librería de humanize al principio de la plantilla o de la sección #}
-        {% load humanize %}
-
-        <div class="card mt-4 border-primary">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Resultados de Capacidad de Pago</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    {% for key, value in resultado_calculo.items %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ key }}
-
-                            {# Usamos el filtro 'intcomma' para añadir los separadores #}
-                            {% if key == 'Capacidad de Pago Mensual (FINAL)' %}
-                                <span class="badge bg-success rounded-pill fs-6">${{ value|intcomma }}</span>
-                            {% else %}
-                                <span class="badge bg-light text-dark rounded-pill">${{ value|intcomma }}</span>
-                            {% endif %}
-
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
+    <!-- 4. Resultados del Cálculo de Capacidad de Pago -->
+    {% if resultado_capacidad %}
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white"><h5 class="mb-0">Resultados del Cálculo</h5></div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for key, value in resultado_capacidad.items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ key }}
+                        {% if 'FINAL' in key %}<span class="badge bg-success rounded-pill fs-6">${{ value|intcomma }}</span>
+                        {% else %}<span class="badge bg-light text-dark rounded-pill">${{ value|intcomma }}</span>{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
+    </div>
     {% endif %}
+
+    <!-- 5. Calculadora de Oferta y Formulario de Decisión Final -->
+    {% if solicitud.capacidad_pago_calculada > 0 %}
+    <div class="card mt-4">
+        <div class="card-header"><h5 class="mb-0">Paso 2: Simular y Registrar Oferta Definitiva</h5></div>
+        <div class="card-body">
+            
+            <!-- Lógica Condicional: Muestra el formulario o el panel de confirmación -->
+            {% if not solicitud.monto_aprobado_calculado %}
+                
+                <!-- ESTADO A: Formulario para simular y registrar -->
+                <form method="post" class="d-flex align-items-end p-3 bg-light rounded">
+                    {% csrf_token %}
+                    <div class="flex-grow-1 me-3">
+                        <label for="{{ form_oferta.plazo_oferta.id_for_label }}" class="form-label fw-bold">Simular con Plazo (meses):</label>
+                        {{ form_oferta.plazo_oferta }}
+                    </div>
+                    <button type="submit" name="submit_simular_oferta" class="btn btn-info">Calcular Simulación</button>
+                </form>
+
+                {% if resultado_oferta %}
+                <div class="card mt-4 border-info shadow-sm">
+                    <div class="card-header bg-info text-dark"><h6 class="mb-0">Resultado de la Simulación (Sugerencia)</h6></div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for key, value in resultado_oferta.items %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ key }}
+                                    {% if 'Monto' in key %}<span class="badge bg-dark rounded-pill fs-6">${{ value|intcomma }}</span>
+                                    {% else %}<span class="badge bg-secondary rounded-pill">{{ value }}</span>{% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        
+                        <hr class="my-4">
+                        <h5 class="text-center text-success">Registrar Oferta Definitiva</h5>
+                        <p class="text-center text-muted">Use la simulación como guía e ingrese los valores finales que se ofrecerán al cliente.</p>
+                        <form method="post" class="mt-3">
+                            {% csrf_token %}
+                            <div class="row justify-content-center">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">{{ form_oferta_definitiva.monto_aprobado_calculado.label }}</label>
+                                    {{ form_oferta_definitiva.monto_aprobado_calculado }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">{{ form_oferta_definitiva.plazo_oferta.label }}</label>
+                                    {{ form_oferta_definitiva.plazo_oferta }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form_oferta_definitiva.observacion_oferta_final.label }}</label>
+                                {{ form_oferta_definitiva.observacion_oferta_final }}
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" name="submit_oferta_definitiva" class="btn btn-success btn-lg">Guardar Oferta Definitiva</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+            {% else %}
+
+                <!-- ESTADO B: Panel de Confirmación con la oferta ya guardada -->
+                <div class="alert alert-success text-center" role="alert">
+                    <h4 class="alert-heading">¡Oferta Registrada!</h4>
+                    <p>Se ha guardado una oferta definitiva de <strong>${{ solicitud.monto_aprobado_calculado|intcomma }}</strong> a <strong>{{ solicitud.plazo_oferta }} meses</strong>.</p>
+                    {% if solicitud.observacion_oferta_final %}
+                        <hr>
+                        <p class="mb-0"><strong>Justificación:</strong> {{ solicitud.observacion_oferta_final }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <a href="{% url 'capacidad_pago' solicitud.id %}?action=corregir" class="btn btn-warning btn-lg">Corregir Oferta</a>
+                    <a href="{% url 'preaprobar_solicitud' solicitud.id %}" class="btn btn-primary btn-lg">Continuar con Siguiente Fase</a>
+                </div>
+
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -10,6 +10,9 @@ urlpatterns = [
     path('solicitud/<int:solicitud_id>/preaprobar/', views.preaprobar_solicitud_view, name='preaprobar_solicitud'),
     path('solicitud/<int:solicitud_id>/rechazar/', views.rechazar_solicitud_view, name='rechazar_solicitud'),
     path('solicitud/<int:solicitud_id>/capacidad_pago/', views.capacidad_pago_view, name='capacidad_pago'),
+    path('documento/<int:documento_id>/validar/', views.validar_documento_view, name='validar_documento'),
+    path('solicitud/<int:solicitud_id>/devolver/', views.devolver_a_asesor_view, name='devolver_a_asesor'),
+    path('documento/<int:documento_id>/corregir/', views.corregir_documento_view, name='corregir_documento'),
 
 
 ]

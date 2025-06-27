@@ -8,9 +8,10 @@ class SolicitudCredito(models.Model):
     Modelo central que representa una única solicitud de crédito y su estado
     a lo largo de todo el flujo de trabajo.
     """
-    # ---- Definición de Estados del Flujo ----
+    # ---- 1. DEFINICIÓN DE ESTADOS Y CHOICES (Organizados) ----
+    
+    # --- Estados del Flujo ---
     ESTADO_NUEVO = 'NUEVO'
-    ESTADO_EN_EVALUACION = 'EN_EVALUACION'
     ESTADO_RECHAZADO_AUTO = 'RECHAZADO_AUTO'
     ESTADO_PEND_DOCUMENTOS = 'PEND_DOCUMENTOS'
     ESTADO_EN_ASIGNACION = 'EN_ASIGNACION'
@@ -26,7 +27,6 @@ class SolicitudCredito(models.Model):
 
     ESTADOS_CHOICES = [
         (ESTADO_NUEVO, 'Nuevo'),
-        (ESTADO_EN_EVALUACION, 'En Evaluación Automática'),
         (ESTADO_RECHAZADO_AUTO, 'Rechazado Automáticamente'),
         (ESTADO_PEND_DOCUMENTOS, 'Pendiente Carga Documentos Iniciales'),
         (ESTADO_EN_ASIGNACION, 'En Espera de Asignación de Analista'),
@@ -41,8 +41,8 @@ class SolicitudCredito(models.Model):
         (ESTADO_RECHAZADO_DIRECTOR, 'Rechazado por Director'),
     ]
 
-    # ---- SECCIÓN 1: Datos del Formulario Inicial del Asesor ----
-    # Campos requeridos para el primer motor de decisión.
+    # --- Choices para campos de formulario ---
+    # --- Choices para Ocupación (¡CORRECCIÓN!) ---
     OCUPACION_EMPLEADO = 'EMPLEADO'
     OCUPACION_INDEPENDIENTE = 'INDEPENDIENTE'
     OCUPACION_PENSIONADO = 'PENSIONADO'
@@ -51,107 +51,58 @@ class SolicitudCredito(models.Model):
         (OCUPACION_INDEPENDIENTE, 'Independiente'),
         (OCUPACION_PENSIONADO, 'Pensionado'),
     ]
+    VIVIENDA_CHOICES = [('PROPIA', 'Propia'), ('FAMILIAR', 'Familiar'), ('ARRIENDO', 'En Arriendo')]
+    ESTADO_CIVIL_CHOICES = [('SOLTERO', 'Soltero/a'), ('CASADO', 'Casado/a'), ('DIVORCIADO', 'Divorciado/a'), ('UNION_LIBRE', 'Unión Libre')]
+    SEXO_CHOICES = [('HOMBRE', 'Hombre'), ('MUJER', 'Mujer')]
+    PERSONAS_CARGO_CHOICES = [('0', '0'), ('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('+5', 'Más de 5')]
+    NUM_APORTANTES_CHOICES = [(1, '1'), (2, '2')]
 
+
+    # ---- 2. CAMPOS DEL FORMULARIO INICIAL DEL ASESOR (OBLIGATORIOS) ----
     cedula = models.CharField("Cédula del cliente", max_length=20, unique=True)
     nombre_completo = models.CharField("Nombre completo del cliente", max_length=255)
-    # NOTA: Los campos de fecha y ocupación se mantienen `nullable` para no romper la BD existente,
-    # pero serán requeridos a nivel del formulario.
-    fecha_nacimiento = models.DateField("Fecha de nacimiento", null=True, blank=True)
-    fecha_expedicion = models.DateField("Fecha de expedición de la cédula", null=True, blank=True)
-    ocupacion = models.CharField("Ocupación", max_length=20, choices=OCUPACION_CHOICES, null=True, blank=True)
-    ingresos_totales = models.DecimalField("Ingresos Totales (COP)", max_digits=12, decimal_places=2, null=True, blank=True)
+    fecha_nacimiento = models.DateField("Fecha de nacimiento")
+    fecha_expedicion = models.DateField("Fecha de expedición de la cédula")
+    ocupacion = models.CharField("Ocupación", max_length=20, choices=OCUPACION_CHOICES)
+    ingresos_totales = models.DecimalField("Ingresos Totales (Reportados por Asesor)", max_digits=12, decimal_places=2)
+    monto_solicitado = models.DecimalField("Monto Solicitado por Cliente", max_digits=12, decimal_places=2)
+    plazo_solicitado = models.PositiveSmallIntegerField("Plazo Solicitado por Cliente (meses)")
 
-
-    TIPO_VIVIENDA_PROPIA = 'PROPIA'
-    TIPO_VIVIENDA_FAMILIAR = 'FAMILIAR'
-    TIPO_VIVIENDA_ARRIENDO = 'ARRIENDO'
-    VIVIENDA_CHOICES = [
-        (TIPO_VIVIENDA_PROPIA, 'Propia'),
-        (TIPO_VIVIENDA_FAMILIAR, 'Familiar'),
-        (TIPO_VIVIENDA_ARRIENDO, 'En Arriendo'),
-    ]
-    ESTADO_CIVIL_SOLTERO = 'SOLTERO'
-    ESTADO_CIVIL_CASADO = 'CASADO'
-    ESTADO_CIVIL_DIVORCIADO = 'DIVORCIADO'
-    ESTADO_CIVIL_UNION_LIBRE = 'UNION_LIBRE'
-    ESTADO_CIVIL_CHOICES = [
-        (ESTADO_CIVIL_SOLTERO, 'Soltero/a'),
-        (ESTADO_CIVIL_CASADO, 'Casado/a'),
-        (ESTADO_CIVIL_DIVORCIADO, 'Divorciado/a'),
-        (ESTADO_CIVIL_UNION_LIBRE, 'Unión Libre'),
-    ]
-    SEXO_HOMBRE = 'HOMBRE'
-    SEXO_MUJER = 'MUJER'
-    SEXO_CHOICES = [
-        (SEXO_HOMBRE, 'Hombre'),
-        (SEXO_MUJER, 'Mujer'),
-    ]
-    PERSONAS_CARGO_CHOICES = [
-        ('0', '0'), ('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('+5', 'Más de 5'),
-    ]
-
-    # --- Campos Demográficos (Para almacenar el perfil completo) ---
-    tipo_vivienda = models.CharField("Tipo de Vivienda", max_length=20, choices=VIVIENDA_CHOICES, blank=True, null=True)
+    # ---- 3. CAMPOS DE ANÁLISIS DEL ANALISTA (OPCIONALES a nivel de BD, obligatorios en su propio formulario) ----
+    tipo_vivienda = models.CharField("Tipo de Vivienda", max_length=20, choices=VIVIENDA_CHOICES, null=True, blank=True)
     personas_a_cargo = models.CharField("Personas a cargo", max_length=10, choices=PERSONAS_CARGO_CHOICES, null=True, blank=True)
     gastos_personales = models.DecimalField("Gastos Personales Reportados", max_digits=12, decimal_places=2, null=True, blank=True)
-    direccion_residencia = models.CharField("Dirección de Residencia", max_length=255, blank=True, null=True)
-    ciudad_residencia = models.CharField("Ciudad de Residencia", max_length=100, blank=True, null=True)
-    departamento_residencia = models.CharField("Departamento de Residencia", max_length=100, blank=True, null=True)
-    barrio_residencia = models.CharField("Barrio de Residencia", max_length=100, blank=True, null=True)
-    estrato = models.PositiveSmallIntegerField("Estrato", null=True, blank=True)
-    estado_civil = models.CharField("Estado Civil", max_length=20, choices=ESTADO_CIVIL_CHOICES, blank=True, null=True)
-    sexo = models.CharField("Sexo", max_length=10, choices=SEXO_CHOICES, blank=True, null=True)
-
-    # --- Campos Financieros (Inputs para la NUEVA fórmula de cálculo) ---
-    # Nota: reutilizamos 'ingresos_totales' de la Sección 1, el analista puede confirmarlo o ajustarlo.
     gastos_financieros = models.DecimalField("Gastos Financieros Confirmados", max_digits=12, decimal_places=2, null=True, blank=True)
-    num_aportantes = models.PositiveSmallIntegerField("Número de Aportantes", default=1, choices=[(1, '1'), (2, '2')])
-    
-    # --- Campo para guardar el resultado del cálculo ---
-    capacidad_pago_calculada = models.DecimalField("Capacidad de Pago Calculada", max_digits=12, decimal_places=2, null=True, blank=True)
-
-    PERSONAS_CARGO_0 = '0'
-    PERSONAS_CARGO_1 = '1'
-    PERSONAS_CARGO_2 = '2'
-    PERSONAS_CARGO_3 = '3'
-    PERSONAS_CARGO_4 = '4'
-    PERSONAS_CARGO_MAS_5 = '+5'
-    PERSONAS_CARGO_CHOICES = [
-        (PERSONAS_CARGO_0, '0'),
-        (PERSONAS_CARGO_1, '1'),
-        (PERSONAS_CARGO_2, '2'),
-        (PERSONAS_CARGO_3, '3'),
-        (PERSONAS_CARGO_4, '4'),
-        (PERSONAS_CARGO_MAS_5, 'Más de 5'),
-    ]
-    
-    tiene_vivienda_propia = models.BooleanField("¿Tiene vivienda propia?", default=False)
-    personas_a_cargo = models.CharField("Personas a cargo", max_length=10, choices=PERSONAS_CARGO_CHOICES, null=True, blank=True)
-    
-    # Datos de centrales de riesgo
+    otros_gastos = models.DecimalField("Otros Gastos Mensuales", max_digits=12, decimal_places=2, null=True, blank=True)
+    direccion_residencia = models.CharField("Dirección de Residencia", max_length=255, null=True, blank=True)
+    ciudad_residencia = models.CharField("Ciudad de Residencia", max_length=100, null=True, blank=True)
+    departamento_residencia = models.CharField("Departamento de Residencia", max_length=100, null=True, blank=True)
+    barrio_residencia = models.CharField("Barrio de Residencia", max_length=100, null=True, blank=True)
+    estrato = models.PositiveSmallIntegerField("Estrato", null=True, blank=True)
+    estado_civil = models.CharField("Estado Civil", max_length=20, choices=ESTADO_CIVIL_CHOICES, null=True, blank=True)
+    sexo = models.CharField("Sexo", max_length=10, choices=SEXO_CHOICES, null=True, blank=True)
+    num_aportantes = models.PositiveSmallIntegerField("Número de Aportantes", default=1, choices=NUM_APORTANTES_CHOICES, null=True, blank=True)
     mora_telco_mayor_300k = models.BooleanField("¿Mora Telco > $300.000?", null=True)
     mora_otros_mayor_500k = models.BooleanField("¿Mora otros productos > $500.000?", null=True)
     es_tipo_0 = models.BooleanField("¿Es tipo 0?", null=True)
-    huellas_consulta = models.PositiveIntegerField("Número de huellas de consulta", null=True, blank=True)
+    huellas_consulta = models.PositiveIntegerField("Número de huellas de consulta", default=0, null=True, blank=True)
     tiene_procesos_judiciales = models.BooleanField("¿Tiene procesos judiciales?", null=True)
-    causal_no_sujeto = models.CharField("Causal de no sujeto a crédito", max_length=100, null=True, blank=True)
-    actividad_economica_restringida = models.CharField("Actividad Económica (si es restringida)", max_length=100, null=True, blank=True)
 
-    # ---- Campos de Control del Sistema ----
+    # ---- 4. CAMPOS DE CONTROL Y RESULTADOS ----
     asesor_comercial = models.ForeignKey(User, on_delete=models.PROTECT, related_name='solicitudes_creadas')
     analista_asignado = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='solicitudes_asignadas')
     estado = models.CharField(max_length=30, choices=ESTADOS_CHOICES, default=ESTADO_NUEVO)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    observacion_analisis_documentos = models.TextField("Observación del Análisis de Documentos", blank=True, null=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     recomendacion_sistema_aprobada = models.BooleanField("¿Sistema recomienda aprobar?", null=True)
     recomendacion_sistema_texto = models.TextField("Texto de recomendación del sistema", blank=True, null=True)
+    observacion_oferta_final = models.TextField("Justificación de la Oferta Definitiva", blank=True, null=True)
+    capacidad_pago_calculada = models.DecimalField("Capacidad de Pago Calculada", max_digits=12, decimal_places=2, null=True, blank=True)
+    plazo_oferta = models.PositiveSmallIntegerField("Plazo de la Oferta (meses)", null=True, blank=True)
+    monto_aprobado_calculado = models.DecimalField("Monto Máximo Aprobado", max_digits=12, decimal_places=2, null=True, blank=True)
 
-    # ---- Campos de Análisis (llenados por el Analista) ----
-    observacion_analisis_documentos = models.TextField("Observación del Análisis de Documentos", blank=True, null=True) # <-- NUEVO CAMPO
-    observacion_centrales_riesgo = models.TextField("Observación Centrales de Riesgo", blank=True, null=True)
-    observacion_llamada_cliente = models.TextField("Observación Llamada con Cliente", blank=True, null=True)
-    observacion_referencias = models.TextField("Observación de Referencias", blank=True, null=True)
-
+    #acá para el cambio
     class Meta:
         verbose_name = "Solicitud de Crédito"
         verbose_name_plural = "Solicitudes de Crédito"
@@ -162,38 +113,16 @@ class SolicitudCredito(models.Model):
 
     @property
     def edad(self):
+        if not self.fecha_nacimiento: return None
         today = date.today()
-        if not self.fecha_nacimiento:
-            return None
         return today.year - self.fecha_nacimiento.year - ((today.month, today.day) < (self.fecha_nacimiento.month, self.fecha_nacimiento.day))
-    
+
     def get_estado_color_class(self):
-        """
-        Retorna la clase de CSS de Bootstrap para el color del badge
-        según el estado actual de la solicitud.
-        """
-        # Rechazados en Rojo
-        if 'RECHAZADO' in self.estado:
-            return 'bg-danger'
-
-        # Aprobados/Listos en Verde
-        elif self.estado == self.ESTADO_PEND_DOCUMENTOS or 'APROBADO' in self.estado:
-            return 'bg-success'
-
-        # Estados de espera de acción del usuario en Amarillo
-        elif 'PEND' in self.estado or 'CORRECCION' in self.estado:
-            return 'bg-warning text-dark'
-            
-        # --- NUEVA LÓGICA AQUÍ ---
-        # En espera de asignación en Celeste
-        elif self.estado == self.ESTADO_EN_ASIGNACION:
-            return 'bg-info text-dark'
-            
-        # En proceso activo en Azul
-        elif 'EN_' in self.estado: # Ahora solo capturará 'EN_ANALISIS', etc.
-            return 'bg-primary'
-
-        # Estado por defecto en Gris
+        if 'RECHAZADO' in self.estado: return 'bg-danger'
+        if self.estado == self.ESTADO_PEND_DOCUMENTOS or 'APROBADO' in self.estado: return 'bg-success'
+        if self.estado == self.ESTADO_EN_ASIGNACION: return 'bg-info text-dark'
+        if 'PEND' in self.estado or 'CORRECCION' in self.estado: return 'bg-warning text-dark'
+        if 'EN_' in self.estado: return 'bg-primary'
         return 'bg-secondary'
 
 
@@ -274,7 +203,7 @@ class Documento(models.Model):
     # Nuevo campo para saber quién subió el documento
     subido_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='documentos_subidos')
     fecha_carga = models.DateTimeField(auto_now_add=True)
-    ok_analista = models.BooleanField("Documento Validado (OK)", default=False)
+    ok_analista = models.BooleanField("Documento Validado (OK)", default=True)
     observacion_correccion = models.TextField("Observación para Corrección", blank=True, null=True)
 
     class Meta:
