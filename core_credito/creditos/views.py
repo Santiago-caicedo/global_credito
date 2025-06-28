@@ -6,7 +6,7 @@ from django.contrib import messages
 from decimal import Decimal
 from .models import SolicitudCredito, Documento, HistorialEstado
 from .forms import (
-    ObservacionAnalisisForm, RechazoDocumentoForm, SolicitudCreditoForm, DocumentoForm, DocumentoAnalisisForm,
+    ObservacionAnalisisForm, RechazoDocumentoForm, ReferenciaForm, SolicitudCreditoForm, DocumentoForm, DocumentoAnalisisForm,
     AnalisisRiesgoForm, CapacidadPagoForm, OfertaForm, OfertaDefinitivaForm
 )
 from .services import (
@@ -74,8 +74,26 @@ def solicitud_detalle_view(request, solicitud_id):
         messages.error(request, "No tienes permiso para ver esta solicitud.")
         return redirect('listar_solicitudes')
 
+    # --- LÓGICA DE CONTROL DE ESTADO ---
+    # 1. Definimos los únicos estados en los que el asesor puede subir archivos.
+    estados_permitidos_carga = [
+        SolicitudCredito.ESTADO_PEND_DOCUMENTOS,
+        SolicitudCredito.ESTADO_DOCS_CORRECCION
+    ]
+
+    # 2. Solo creamos el formulario si el estado es el correcto.
+    form_documento = None
+    if solicitud.estado in estados_permitidos_carga:
+        form_documento = DocumentoForm()
+    # ------------------------------------
+
     # Lógica de POST para subir un nuevo documento
     if request.method == 'POST':
+        # Volvemos a comprobar el permiso para evitar envíos maliciosos
+        if solicitud.estado not in estados_permitidos_carga:
+            messages.error(request, "La solicitud ya no está en una etapa que permita cargar documentos.")
+            return redirect('solicitud_detalle', solicitud_id=solicitud.id)
+            
         form = DocumentoForm(request.POST, request.FILES)
         if form.is_valid():
             nuevo_documento = form.save(commit=False)
@@ -84,19 +102,16 @@ def solicitud_detalle_view(request, solicitud_id):
             nuevo_documento.save()
             messages.success(request, f"Documento '{nuevo_documento.get_nombre_documento_display()}' cargado exitosamente.")
         else:
-            messages.error(request, "Error al cargar el documento. Por favor, intente de nuevo.")
+            messages.error(request, "Error al cargar el documento.")
         return redirect('solicitud_detalle', solicitud_id=solicitud.id)
 
     # Lógica de GET para mostrar la página
-    form_documento = DocumentoForm()
     documentos_cargados = solicitud.documentos.filter(subido_por=request.user)
-    
-    # Comprobamos si hay documentos que necesiten corrección
     documentos_a_corregir = documentos_cargados.filter(ok_analista=False)
     
     contexto = {
         'solicitud': solicitud,
-        'form_documento': form_documento,
+        'form_documento': form_documento, # Pasamos el formulario (o None) a la plantilla
         'documentos_cargados': documentos_cargados,
         'necesita_correccion': documentos_a_corregir.exists(),
     }
@@ -167,6 +182,15 @@ def analista_dashboard_view(request):
                 form_observacion.save()
                 messages.success(request, "Observación guardada.")
             return redirect('analista_dashboard')
+        
+        elif 'submit_observacion' in request.POST:
+            form_observacion = ObservacionAnalisisForm(request.POST, instance=solicitud_asignada)
+            if form_observacion.is_valid():
+                form_observacion.save()
+                messages.success(request, "Observación guardada correctamente.")
+            else:
+                messages.error(request, "No se pudo guardar la observación.")
+            return redirect('analista_dashboard')
 
         elif 'submit_riesgo' in request.POST:
             if form_riesgo.is_valid():
@@ -179,7 +203,7 @@ def analista_dashboard_view(request):
             else:
                 messages.error(request, "Error al generar la recomendación. Por favor, revise los campos.")
             # NO redirigimos, para mostrar el resultado inmediatamente
-    
+        
     # 3. Lógica de GET y preparación del contexto final para renderizar
     # Se ejecuta en peticiones GET o después de un POST que no redirige
     
@@ -207,9 +231,10 @@ def analista_dashboard_view(request):
     
     contexto = {
         'solicitud': solicitud_asignada,
-        'form_documento': form_documento,
+        'form_observacion': ObservacionAnalisisForm(instance=solicitud_asignada),
         'form_observacion': form_observacion,
         'form_riesgo': form_riesgo,
+        'form_documento': DocumentoAnalisisForm(), 
         'documentos_del_asesor': documentos_del_asesor,
         'documentos_del_analista': documentos_del_analista,
         'documentos_obligatorios_ok': docs_obligatorios.issubset(docs_cargados_analista),
@@ -236,21 +261,27 @@ def analista_dashboard_view(request):
 @login_required
 def preaprobar_solicitud_view(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
-    if not solicitud.monto_aprobado_calculado:
-        messages.error(request, "No se puede continuar. Primero debe guardar una oferta definitiva.")
-        return redirect('capacidad_pago', solicitud_id=solicitud.id)
-        
+    
+    # 1. Eliminar la validación incorrecta.
+    #    La única responsabilidad de esta vista es cambiar el estado y redirigir.
+    
+    # 2. Actualizar estado y registrar en historial
     estado_anterior = solicitud.estado
     solicitud.estado = SolicitudCredito.ESTADO_PREAPROBADO
     solicitud.save()
+    
     HistorialEstado.objects.create(
         solicitud=solicitud,
         estado_anterior=estado_anterior,
         estado_nuevo=solicitud.estado,
         usuario_responsable=request.user,
-        observaciones="Analista pre-aprobó la solicitud y definió la oferta."
+        observaciones="Analista pre-aprobó la solicitud. Pasando a análisis de capacidad de pago."
     )
-    messages.success(request, f"Solicitud #{solicitud_id} ha sido PRE-APROBADA y ha pasado a la siguiente etapa.")
+    
+    # 3. Mostramos un mensaje informativo al analista
+    messages.info(request, f"Solicitud #{solicitud.id} pre-aprobada. Por favor, complete el siguiente análisis.")
+    
+    # 4. Redirigimos a la página de capacidad de pago
     return redirect('capacidad_pago', solicitud_id=solicitud.id)
 
 
@@ -324,18 +355,32 @@ def capacidad_pago_view(request, solicitud_id):
             else:
                 messages.error(request, "Error al guardar la oferta definitiva. Verifique los valores.")
             return redirect('capacidad_pago', solicitud_id=solicitud.id)
+        
+        elif 'submit_referencia' in request.POST:
+            form_referencia = ReferenciaForm(request.POST)
+            if form_referencia.is_valid():
+                nueva_referencia = form_referencia.save(commit=False)
+                nueva_referencia.solicitud = solicitud
+                nueva_referencia.save()
+                messages.success(request, "Referencia añadida correctamente.")
+            else:
+                messages.error(request, "Error al añadir la referencia. Revise los campos.")
+            return redirect('capacidad_pago', solicitud_id=solicitud.id)
+
     
     # Lógica de GET y preparación del contexto
     form_capacidad = CapacidadPagoForm(instance=solicitud)
     initial_plazo = solicitud.plazo_oferta if solicitud.plazo_oferta else solicitud.plazo_solicitado
     form_oferta = OfertaForm(instance=solicitud, initial={'plazo_oferta': initial_plazo})
     form_oferta_definitiva = OfertaDefinitivaForm(instance=solicitud)
+    form_referencia = ReferenciaForm()
     
     contexto = {
         'solicitud': solicitud,
         'form_capacidad': form_capacidad,
         'form_oferta': form_oferta,
         'form_oferta_definitiva': form_oferta_definitiva,
+        'form_referencia': form_referencia,
         'resultado_capacidad': None,
         'resultado_oferta': None,
     }

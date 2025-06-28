@@ -146,6 +146,12 @@ class ReferenciaForm(forms.ModelForm):
     class Meta:
         model = Referencia
         fields = ['tipo', 'nombre_completo', 'numero_contacto', 'parentesco']
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'nombre_completo': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero_contacto': forms.TextInput(attrs={'class': 'form-control'}),
+            'parentesco': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
 
 

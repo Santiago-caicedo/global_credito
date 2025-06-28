@@ -59,6 +59,40 @@
         </div>
     </div>
 
+
+    <!-- SECCIÓN DE REFERENCIAS -->
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0">Paso 1.5: Registrar Referencias del Cliente</h5></div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h6>Añadir Nueva Referencia</h6>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form_referencia.as_p }}
+                        <div class="d-grid">
+                            <button type="submit" name="submit_referencia" class="btn btn-info">Añadir Referencia</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <h6>Referencias Registradas</h6>
+                    <ul class="list-group">
+                        {% for ref in solicitud.referencias.all %}
+                            <li class="list-group-item">
+                                <strong>{{ ref.get_tipo_display }}:</strong> {{ ref.nombre_completo }}
+                                <br>
+                                <small class="text-muted">{{ ref.parentesco }} - {{ ref.numero_contacto }}</small>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">Aún no se han registrado referencias.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 4. Resultados del Cálculo de Capacidad de Pago -->
     {% if resultado_capacidad %}
     <div class="card mb-4 border-primary">

@@ -108,9 +108,54 @@
 
                 <h4>Paso 2: Cargar Documentos de Análisis y Dejar Observación</h4>
                 <div class="row g-4">
-                    <div class="col-md-6"><div class="card h-100"><div class="card-header"><h5 class="mb-0">Cargar sus Documentos</h5></div><div class="card-body"><form method="post" enctype="multipart/form-data">{% csrf_token %}<label for="{{ form_documento.nombre_documento.id_for_label }}" class="form-label">1. Seleccione tipo:</label>{{ form_documento.nombre_documento }}<label for="{{ form_documento.archivo.id_for_label }}" class="form-label mt-3">2. Elija archivo:</label>{{ form_documento.archivo }}<div class="d-grid mt-3"><button type="submit" name="submit_documento" class="btn btn-primary">Subir Documento</button></div></form></div></div></div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">Cargar sus Documentos</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    
+                                    {# --- ¡AQUÍ ESTÁ LA CORRECCIÓN! --- #}
+                                    {# Iteramos sobre los campos del formulario para que Django los renderice #}
+                                    
+                                    <div class="mb-3">
+                                        <label for="{{ form_documento.nombre_documento.id_for_label }}" class="form-label">1. Seleccione tipo:</label>
+                                        {{ form_documento.nombre_documento }}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="{{ form_documento.archivo.id_for_label }}" class="form-label">2. Elija archivo:</label>
+                                        {{ form_documento.archivo }}
+                                    </div>
+                                    
+                                    <div class="d-grid mt-3">
+                                        <button type="submit" name="submit_documento" class="btn btn-primary">Subir Documento</button>
+                                    </div>
+                                </form>
+                                <hr>
+                                <p class="text-muted small mb-0">
+                                    <strong>Nota:</strong> Para habilitar la Fase 2, es obligatorio cargar el 
+                                    <em>"Historial de Crédito"</em> y el <em>"Pantallazo de Procesos Judiciales"</em>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-md-6"><h6>Documentos de Análisis Cargados</h6><ul class="list-group mb-3">{% for doc in documentos_del_analista %}<li class="list-group-item d-flex justify-content-between align-items-center"><span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-check-fill text-success me-2" viewBox="0 0 16 16"><path d="M8.97 4.97a.75.75 0 0 1 1.07 1.07l-4.5 4.5a.75.75 0 0 1-1.07 0l-2-2a.75.75 0 0 1 1.07-1.07L4.5 8.88l4.47-4.47z"/><path d="M2 2a2 2 0 0 1 2-2h5.293A2 2 0 0 1 10.707 1.5H12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm7.5 1.5v-2l3 3h-2.5a.5.5 0 0 1-.5-.5z"/></svg>{{ doc.get_nombre_documento_display }}</span><a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-outline-secondary btn-sm">Ver</a></li>{% empty %}<li class="list-group-item text-muted">Aún no ha subido documentos.</li>{% endfor %}</ul></div>
                 </div>
+                {% if documentos_obligatorios_ok %}
+                <div class="card mt-3">
+                    <div class="card-header"><h5 class="mb-0">Observación General</h5></div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form_observacion.as_p }}
+                            <div class="d-grid mt-2"><button type="submit" name="submit_observacion" class="btn btn-secondary">Guardar Observación</button></div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
 
                 <hr class="my-4">
                 <h4>Paso 3: Siguiente Acción</h4>
