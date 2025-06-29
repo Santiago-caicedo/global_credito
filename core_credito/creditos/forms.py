@@ -173,3 +173,26 @@ class RechazoDocumentoForm(forms.ModelForm):
         labels = {
             'observacion_correccion': 'Motivo de la Corrección'
         }
+
+
+class DocumentoFinalForm(forms.ModelForm):
+    """
+    Formulario para que el Asesor suba los documentos finales de cierre.
+    """
+    class Meta:
+        model = Documento
+        fields = ['nombre_documento', 'archivo']
+        widgets = {
+            'nombre_documento': forms.Select(attrs={'class': 'form-select'}),
+            'archivo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filtramos las opciones para mostrar solo las de cierre
+        opciones_cierre = next(
+            (grupo[1] for grupo in Documento.DOCUMENTOS_CHOICES if grupo[0] == 'Documentos de Cierre'),
+            []
+        )
+        self.fields['nombre_documento'].choices = opciones_cierre
+        self.fields['nombre_documento'].label = "Tipo de Documento Final"

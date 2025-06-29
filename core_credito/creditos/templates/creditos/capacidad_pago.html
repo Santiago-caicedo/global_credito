@@ -14,7 +14,7 @@
     <!-- 1. Encabezado y Mensajes del Sistema -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <a href="{% url 'analista_dashboard' %}">&larr; Volver al Dashboard Principal</a>
+            <a href="{% url 'analista_caso_activo' %}">&larr; Volver al Dashboard Principal</a>
             <h2 class="mt-2">Análisis de Capacidad de Pago</h2>
         </div>
         <span class="badge {{ solicitud.get_estado_color_class }} fs-6">{{ solicitud.get_estado_display }}</span>
@@ -185,7 +185,13 @@
                 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
                     <a href="{% url 'capacidad_pago' solicitud.id %}?action=corregir" class="btn btn-warning btn-lg">Corregir Oferta</a>
-                    <a href="{% url 'preaprobar_solicitud' solicitud.id %}" class="btn btn-primary btn-lg">Continuar con Siguiente Fase</a>
+                    
+                    <!-- FORMULARIO CORREGIDO PARA EL BOTÓN "CONTINUAR" -->
+                    <form action="{% url 'enviar_para_documentos_finales' solicitud.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-lg">Continuar con Siguiente Fase</button>
+                    </form>
+                    
                 </div>
 
             {% endif %}

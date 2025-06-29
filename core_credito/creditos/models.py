@@ -195,6 +195,12 @@ class Documento(models.Model):
             (TIPO_PROCURADURIA, 'Antecedentes en Procuraduría (Pantallazo)'),
             (TIPO_OTRAS_CONSULTAS, 'Otras Consultas (Puesto de Votación, Sisbén)'),
         )),
+        ('Documentos de Cierre', (
+            ('PAGARE', 'Pagaré'),
+            ('CARTA_INSTRUCCIONES', 'Carta de Instrucciones'),
+            ('POLIZA_SEGURO', 'Póliza de Seguro'),
+            ('FORMATO_VINCULACION', 'Formato de Vinculación'),
+        )),
     ]
 
     solicitud = models.ForeignKey(SolicitudCredito, on_delete=models.CASCADE, related_name='documentos')
@@ -203,7 +209,7 @@ class Documento(models.Model):
     # Nuevo campo para saber quién subió el documento
     subido_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='documentos_subidos')
     fecha_carga = models.DateTimeField(auto_now_add=True)
-    ok_analista = models.BooleanField("Documento Validado (OK)", default=False)
+    ok_analista = models.BooleanField("Documento Validado (OK)", default=True)
     observacion_correccion = models.TextField("Observación para Corrección", blank=True, null=True)
 
     class Meta:

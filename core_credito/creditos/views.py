@@ -6,7 +6,7 @@ from django.contrib import messages
 from decimal import Decimal
 from .models import SolicitudCredito, Documento, HistorialEstado
 from .forms import (
-    ObservacionAnalisisForm, RechazoDocumentoForm, ReferenciaForm, SolicitudCreditoForm, DocumentoForm, DocumentoAnalisisForm,
+    DocumentoFinalForm, ObservacionAnalisisForm, RechazoDocumentoForm, ReferenciaForm, SolicitudCreditoForm, DocumentoForm, DocumentoAnalisisForm,
     AnalisisRiesgoForm, CapacidadPagoForm, OfertaForm, OfertaDefinitivaForm
 )
 from .services import (
@@ -70,31 +70,33 @@ def listar_solicitudes_view(request):
 def solicitud_detalle_view(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id)
     
+    # 1. Seguridad: Solo el asesor de la solicitud puede acceder
     if request.user != solicitud.asesor_comercial:
         messages.error(request, "No tienes permiso para ver esta solicitud.")
         return redirect('listar_solicitudes')
 
-    # --- LÓGICA DE CONTROL DE ESTADO ---
-    # 1. Definimos los únicos estados en los que el asesor puede subir archivos.
-    estados_permitidos_carga = [
-        SolicitudCredito.ESTADO_PEND_DOCUMENTOS,
-        SolicitudCredito.ESTADO_DOCS_CORRECCION
-    ]
+    # 2. Determinar qué formulario mostrar y qué tipos de documentos son requeridos
+    form_a_mostrar = None
+    FormularioAUsar = None
+    tipos_requeridos = set()
 
-    # 2. Solo creamos el formulario si el estado es el correcto.
-    form_documento = None
-    if solicitud.estado in estados_permitidos_carga:
-        form_documento = DocumentoForm()
-    # ------------------------------------
+    estados_carga_inicial = [SolicitudCredito.ESTADO_PEND_DOCUMENTOS, SolicitudCredito.ESTADO_DOCS_CORRECCION]
+    if solicitud.estado in estados_carga_inicial:
+        form_a_mostrar = DocumentoForm()
+        FormularioAUsar = DocumentoForm
+        tipos_requeridos = {'CEDULA', 'DECLARACION_RENTA', 'CERTIFICADO_LABORAL', 'AUTORIZACION_CONSULTA'}
+    elif solicitud.estado == SolicitudCredito.ESTADO_PEND_DOCS_ADICIONALES:
+        form_a_mostrar = DocumentoFinalForm()
+        FormularioAUsar = DocumentoFinalForm
+        tipos_requeridos = {'PAGARE', 'CARTA_INSTRUCCIONES', 'POLIZA_SEGURO', 'FORMATO_VINCULACION'}
 
-    # Lógica de POST para subir un nuevo documento
+    # 3. Procesamiento de POST (envío de formulario)
     if request.method == 'POST':
-        # Volvemos a comprobar el permiso para evitar envíos maliciosos
-        if solicitud.estado not in estados_permitidos_carga:
-            messages.error(request, "La solicitud ya no está en una etapa que permita cargar documentos.")
+        if not FormularioAUsar:
+            messages.error(request, "La solicitud no está en una etapa que permita cargar documentos.")
             return redirect('solicitud_detalle', solicitud_id=solicitud.id)
             
-        form = DocumentoForm(request.POST, request.FILES)
+        form = FormularioAUsar(request.POST, request.FILES)
         if form.is_valid():
             nuevo_documento = form.save(commit=False)
             nuevo_documento.solicitud = solicitud
@@ -102,21 +104,29 @@ def solicitud_detalle_view(request, solicitud_id):
             nuevo_documento.save()
             messages.success(request, f"Documento '{nuevo_documento.get_nombre_documento_display()}' cargado exitosamente.")
         else:
-            messages.error(request, "Error al cargar el documento.")
+            messages.error(request, "Error al cargar el documento. Revise el formulario.")
         return redirect('solicitud_detalle', solicitud_id=solicitud.id)
 
-    # Lógica de GET para mostrar la página
+    # 4. Preparación para GET (mostrar la página)
+    # Obtenemos solo los documentos relevantes para la etapa actual
     documentos_cargados = solicitud.documentos.filter(subido_por=request.user)
-    documentos_a_corregir = documentos_cargados.filter(ok_analista=False)
     
+    # Verificamos si hay alguno marcado para corrección
+    necesita_correccion = documentos_cargados.filter(ok_analista=False).exists()
+
+    # Verificamos si se han cargado todos los tipos de documentos requeridos
+    tipos_cargados = {doc.nombre_documento for doc in documentos_cargados}
+    documentos_completos = tipos_requeridos.issubset(tipos_cargados)
+
     contexto = {
         'solicitud': solicitud,
-        'form_documento': form_documento, # Pasamos el formulario (o None) a la plantilla
+        'form_documento': form_a_mostrar,
         'documentos_cargados': documentos_cargados,
-        'necesita_correccion': documentos_a_corregir.exists(),
+        'necesita_correccion': necesita_correccion,
+        'documentos_completos': documentos_completos,
     }
     return render(request, 'creditos/solicitud_detalle.html', contexto)
-
+ 
 
 
 @login_required
@@ -151,7 +161,7 @@ def enviar_a_asignacion_view(request, solicitud_id):
 # ==============================================================================
 
 @login_required
-def analista_dashboard_view(request):
+def analista_caso_activo_view(request):
     # 1. Verificación inicial del perfil y la solicitud asignada
     if not hasattr(request.user, 'perfil'):
         messages.error(request, "No tienes un perfil de usuario asignado.")
@@ -159,7 +169,7 @@ def analista_dashboard_view(request):
 
     solicitud_asignada = request.user.perfil.solicitud_actual
     if not solicitud_asignada:
-        return render(request, 'creditos/analista_dashboard.html', {'solicitud': None})
+        return render(request, 'creditos/analista_caso_activo.html', {'solicitud': None})
 
     # 2. Lógica de POST: Procesamiento de los diferentes formularios
     if request.method == 'POST':
@@ -175,13 +185,13 @@ def analista_dashboard_view(request):
                 doc.subido_por = request.user
                 doc.save()
                 messages.success(request, f"Documento '{doc.get_nombre_documento_display()}' cargado.")
-            return redirect('analista_dashboard')
+            return redirect('analista_caso_activo')
 
         elif 'submit_observacion' in request.POST:
             if form_observacion.is_valid():
                 form_observacion.save()
                 messages.success(request, "Observación guardada.")
-            return redirect('analista_dashboard')
+            return redirect('analista_caso_activo')
         
         elif 'submit_observacion' in request.POST:
             form_observacion = ObservacionAnalisisForm(request.POST, instance=solicitud_asignada)
@@ -190,7 +200,7 @@ def analista_dashboard_view(request):
                 messages.success(request, "Observación guardada correctamente.")
             else:
                 messages.error(request, "No se pudo guardar la observación.")
-            return redirect('analista_dashboard')
+            return redirect('analista_caso_activo')
 
         elif 'submit_riesgo' in request.POST:
             if form_riesgo.is_valid():
@@ -254,7 +264,7 @@ def analista_dashboard_view(request):
         contexto['form_riesgo'] = form_riesgo_post
     
     # 4. Devolvemos la respuesta final
-    return render(request, 'creditos/analista_dashboard.html', contexto)
+    return render(request, 'creditos/analista_caso_activo.html', contexto)
 
 
 
@@ -303,17 +313,20 @@ def rechazar_solicitud_view(request, solicitud_id):
     request.user.perfil.save()
     messages.warning(request, f"Solicitud #{solicitud.id} ha sido RECHAZADA. Caso cerrado.")
     intentar_asignar_solicitud_en_espera()
-    return redirect('analista_dashboard')
+    return redirect('analista_escritorio')
 
 
 @login_required
+@login_required
 def capacidad_pago_view(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
-
-    if solicitud.estado != SolicitudCredito.ESTADO_PREAPROBADO:
-        messages.error(request, "Acción no permitida: la solicitud no se encuentra en el estado correcto para este análisis.")
-        return redirect('analista_dashboard')
     
+    # 1. Seguridad de Estado: Solo se accede si la solicitud está PREAPROBADA
+    if solicitud.estado != SolicitudCredito.ESTADO_PREAPROBADO:
+        messages.error(request, "Acción no permitida: la solicitud no está en el estado correcto para este análisis.")
+        return redirect('analista_escritorio')
+    
+    # 2. Acción para Corregir Oferta (manejada al principio)
     if request.GET.get('action') == 'corregir':
         solicitud.monto_aprobado_calculado = None
         solicitud.plazo_oferta = None
@@ -321,17 +334,17 @@ def capacidad_pago_view(request, solicitud_id):
         solicitud.save()
         messages.info(request, "Oferta borrada. Por favor, ingrese los nuevos valores.")
         return redirect('capacidad_pago', solicitud_id=solicitud.id)
-        
+    
+    # 3. Procesamiento de Formularios si la petición es POST
     if request.method == 'POST':
-        form_capacidad = CapacidadPagoForm(request.POST, instance=solicitud)
-        form_oferta_simulacion = OfertaForm(request.POST)
-        form_oferta_definitiva = OfertaDefinitivaForm(request.POST, instance=solicitud)
-
+        # --- Formulario 1: Guardar datos de capacidad de pago ---
         if 'submit_capacidad' in request.POST:
+            form_capacidad = CapacidadPagoForm(request.POST, instance=solicitud)
             if form_capacidad.is_valid():
                 instancia_guardada = form_capacidad.save()
                 resultado_calculo = calcular_capacidad_pago_service(instancia_guardada)
                 capacidad_final = resultado_calculo.get('Capacidad de Pago Mensual (FINAL)', 0)
+
                 if capacidad_final < 0:
                     messages.error(request, f"Cálculo inválido: La capacidad de pago es negativa (${capacidad_final:,.2f}).")
                     instancia_guardada.capacidad_pago_calculada = None
@@ -339,16 +352,21 @@ def capacidad_pago_view(request, solicitud_id):
                     instancia_guardada.capacidad_pago_calculada = capacidad_final
                     messages.success(request, "Cálculo de capacidad de pago realizado y guardado.")
                 instancia_guardada.save()
+                return redirect('capacidad_pago', solicitud_id=solicitud.id)
             else:
+                # Si el form no es válido, se mostrará con errores
                 messages.error(request, "Error al guardar. Por favor, revise los campos del formulario de análisis.")
-            return redirect('capacidad_pago', solicitud_id=solicitud.id)
-
+        
+        # --- Formulario 2: Simular oferta de crédito (NO GUARDA NADA) ---
         elif 'submit_simular_oferta' in request.POST:
-            if form_oferta_simulacion.is_valid():
+            form_oferta = OfertaForm(request.POST) # Se procesa el form de simulación
+            if form_oferta.is_valid():
                 messages.info(request, "Simulación generada. Ingrese los valores definitivos a continuación.")
-            # La vista continuará para re-renderizar la plantilla con los resultados
-
+            # La vista continuará y renderizará la plantilla con los resultados y errores si los hay
+        
+        # --- Formulario 3: Guardar la oferta definitiva ---
         elif 'submit_oferta_definitiva' in request.POST:
+            form_oferta_definitiva = OfertaDefinitivaForm(request.POST, instance=solicitud)
             if form_oferta_definitiva.is_valid():
                 form_oferta_definitiva.save()
                 messages.success(request, "¡Oferta definitiva guardada en el sistema!")
@@ -356,6 +374,7 @@ def capacidad_pago_view(request, solicitud_id):
                 messages.error(request, "Error al guardar la oferta definitiva. Verifique los valores.")
             return redirect('capacidad_pago', solicitud_id=solicitud.id)
         
+        # --- Formulario 4: Añadir Referencias ---
         elif 'submit_referencia' in request.POST:
             form_referencia = ReferenciaForm(request.POST)
             if form_referencia.is_valid():
@@ -367,14 +386,14 @@ def capacidad_pago_view(request, solicitud_id):
                 messages.error(request, "Error al añadir la referencia. Revise los campos.")
             return redirect('capacidad_pago', solicitud_id=solicitud.id)
 
-    
-    # Lógica de GET y preparación del contexto
+    # 4. Lógica de GET y preparación del contexto final para renderizar
+    # Si no es POST o si un formulario POST no fue válido, se preparan los formularios aquí.
     form_capacidad = CapacidadPagoForm(instance=solicitud)
     initial_plazo = solicitud.plazo_oferta if solicitud.plazo_oferta else solicitud.plazo_solicitado
     form_oferta = OfertaForm(instance=solicitud, initial={'plazo_oferta': initial_plazo})
     form_oferta_definitiva = OfertaDefinitivaForm(instance=solicitud)
     form_referencia = ReferenciaForm()
-    
+
     contexto = {
         'solicitud': solicitud,
         'form_capacidad': form_capacidad,
@@ -384,21 +403,30 @@ def capacidad_pago_view(request, solicitud_id):
         'resultado_capacidad': None,
         'resultado_oferta': None,
     }
-    
+
+    # Se rellenan los resultados si ya existen datos guardados
     if solicitud.capacidad_pago_calculada is not None:
         contexto['resultado_capacidad'] = calcular_capacidad_pago_service(solicitud)
     
-    if request.method == 'POST' and 'submit_simular_oferta' in request.POST and form_oferta_simulacion.is_valid():
-        solicitud_temporal = solicitud
-        solicitud_temporal.plazo_oferta = form_oferta_simulacion.cleaned_data['plazo_oferta']
-        contexto['resultado_oferta'] = calcular_oferta_service(solicitud_temporal)
-        initial_data = {
-            'monto_aprobado_calculado': contexto['resultado_oferta'].get('Monto Máximo a Prestar'),
-            'plazo_oferta': contexto['resultado_oferta'].get('Plazo')
-        }
-        contexto['form_oferta_definitiva'] = OfertaDefinitivaForm(initial=initial_data)
-
+    # Lógica para mostrar la simulación después de un POST de simulación
+    if request.method == 'POST' and 'submit_simular_oferta' in request.POST:
+        form_oferta_simulacion = OfertaForm(request.POST) # Se re-valida para obtener cleaned_data
+        if form_oferta_simulacion.is_valid():
+            solicitud_temporal = solicitud
+            solicitud_temporal.plazo_oferta = form_oferta_simulacion.cleaned_data['plazo_oferta']
+            contexto['resultado_oferta'] = calcular_oferta_service(solicitud_temporal)
+            
+            # Se pre-llena el formulario definitivo con los datos de la simulación
+            initial_data = {
+                'monto_aprobado_calculado': contexto['resultado_oferta'].get('Monto Máximo a Prestar'),
+                'plazo_oferta': contexto['resultado_oferta'].get('Plazo')
+            }
+            contexto['form_oferta_definitiva'] = OfertaDefinitivaForm(initial=initial_data)
+        else:
+             contexto['form_oferta'] = form_oferta_simulacion # Pasamos el form con errores para que se muestren
+             
     return render(request, 'creditos/capacidad_pago.html', contexto)
+
 
 
 
@@ -410,7 +438,7 @@ def validar_documento_view(request, documento_id):
     
     if request.user != solicitud.analista_asignado:
         messages.error(request, "Acción no permitida.")
-        return redirect('analista_dashboard')
+        redirect('analista_caso_activo')
 
     if request.method == 'POST':
         if 'aprobar' in request.POST:
@@ -428,7 +456,7 @@ def validar_documento_view(request, documento_id):
             else:
                 messages.error(request, "Debe especificar un motivo para la corrección.")
 
-    return redirect('analista_dashboard')
+    return redirect('analista_caso_activo')
 
 
 @login_required
@@ -455,7 +483,7 @@ def devolver_a_asesor_view(request, solicitud_id):
 
         messages.info(request, f"La solicitud #{solicitud.id} ha sido devuelta al asesor.")
     
-    return redirect('analista_dashboard')
+    return redirect('analista_escritorio')
 
 
 
@@ -477,3 +505,138 @@ def corregir_documento_view(request, documento_id):
 
     # Si no es POST, simplemente redirigir
     return redirect('listar_solicitudes')
+
+
+
+def enviar_para_documentos_finales_view(request, solicitud_id):
+    """
+    Esta vista se activa cuando el analista da su aprobación final
+    y envía el caso al asesor para que cargue los documentos de cierre.
+    """
+    if request.method == 'POST':
+        solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
+        
+        # Validación: Asegurarse de que una oferta definitiva esté guardada
+        if not solicitud.monto_aprobado_calculado or not solicitud.plazo_oferta:
+            messages.error(request, "No se puede continuar. Primero debe guardar una oferta definitiva.")
+            return redirect('capacidad_pago', solicitud_id=solicitud.id)
+            
+        estado_anterior = solicitud.estado
+        solicitud.estado = SolicitudCredito.ESTADO_PEND_DOCS_ADICIONALES
+        solicitud.save()
+
+        HistorialEstado.objects.create(
+            solicitud=solicitud,
+            estado_anterior=estado_anterior,
+            estado_nuevo=solicitud.estado,
+            usuario_responsable=request.user,
+            observaciones="Analista aprobó la oferta. Solicitando documentos finales al asesor."
+        )
+        
+        # El analista aún no se libera. Queda "dueño" del caso.
+        messages.success(request, f"Solicitud #{solicitud.id} aprobada. Se ha notificado al asesor para que cargue los documentos finales.")
+        
+        # Lo redirigimos a su dashboard principal
+        return redirect('analista_escritorio')
+
+    return redirect('analista_escritorio')
+
+
+
+
+@login_required
+def enviar_a_validacion_final_view(request, solicitud_id):
+        if request.method == 'POST':
+            solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, asesor_comercial=request.user)
+            
+            estado_anterior = solicitud.estado
+            solicitud.estado = SolicitudCredito.ESTADO_EN_VALIDACION_DOCS
+            solicitud.save()
+
+            HistorialEstado.objects.create(
+                solicitud=solicitud,
+                estado_anterior=estado_anterior,
+                estado_nuevo=solicitud.estado,
+                usuario_responsable=request.user,
+                observaciones="Asesor cargó documentos finales y envió a validación."
+            )
+            
+            messages.success(request, f"Solicitud #{solicitud.id} enviada a validación final.")
+            return redirect('solicitud_detalle', solicitud_id=solicitud_id)
+            
+        return redirect('listar_solicitudes')
+
+
+
+
+@login_required
+def validacion_final_view(request, solicitud_id):
+    solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
+    
+    # Seguridad: Solo se puede acceder si el estado es el correcto
+    if solicitud.estado != SolicitudCredito.ESTADO_EN_VALIDACION_DOCS:
+        messages.error(request, "La solicitud no se encuentra en la etapa de validación final.")
+        return redirect('analista_escritorio')
+
+    # Filtramos para obtener solo los documentos de cierre
+    tipos_documento_cierre = [
+        'PAGARE', 'CARTA_INSTRUCCIONES', 'POLIZA_SEGURO', 'FORMATO_VINCULACION'
+    ]
+    documentos_finales = solicitud.documentos.filter(nombre_documento__in=tipos_documento_cierre)
+    
+    # Adjuntamos un formulario de rechazo a cada documento
+    for doc in documentos_finales:
+        doc.rechazo_form = RechazoDocumentoForm(instance=doc)
+        
+    # Verificamos si todos los documentos están marcados como OK
+    todos_ok = all(doc.ok_analista for doc in documentos_finales)
+
+    contexto = {
+        'solicitud': solicitud,
+        'documentos_finales': documentos_finales,
+        'todos_documentos_ok': todos_ok,
+    }
+    return render(request, 'creditos/validacion_final.html', contexto)
+
+
+
+
+@login_required
+def analista_escritorio_view(request):
+    """
+    La nueva página de inicio para el analista. Actúa como un centro de control.
+    """
+    solicitud_actual = None
+    if hasattr(request.user, 'perfil'):
+        solicitud_actual = request.user.perfil.solicitud_actual
+        
+    contexto = {
+        'solicitud_actual': solicitud_actual
+    }
+    return render(request, 'creditos/analista_escritorio.html', contexto)
+
+
+
+
+@login_required
+def historial_analista_view(request):
+    """
+    Muestra una lista de todas las solicitudes que un analista ha finalizado.
+    """
+    # Estados que consideramos "finalizados" desde la perspectiva del analista
+    estados_finalizados = [
+        SolicitudCredito.ESTADO_RECHAZADO_ANALISTA,
+        SolicitudCredito.ESTADO_PEND_APROB_DIRECTOR,
+        SolicitudCredito.ESTADO_APROBADO,
+        SolicitudCredito.ESTADO_RECHAZADO_DIRECTOR,
+    ]
+    
+    solicitudes_atendidas = SolicitudCredito.objects.filter(
+        analista_asignado=request.user,
+        estado__in=estados_finalizados
+    ).order_by('-fecha_actualizacion')
+    
+    contexto = {
+        'solicitudes': solicitudes_atendidas
+    }
+    return render(request, 'creditos/historial_analista.html', contexto)
