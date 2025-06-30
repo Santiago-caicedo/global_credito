@@ -18,6 +18,7 @@ class SolicitudCredito(models.Model):
     ESTADO_EN_ANALISIS = 'EN_ANALISIS'
     ESTADO_PREAPROBADO = 'PREAPROBADO'
     ESTADO_RECHAZADO_ANALISTA = 'RECHAZADO_ANALISTA'
+    ESTADO_DOCS_FINALES_CORRECCION = 'DOCS_FINALES_CORRECCION'  
     ESTADO_PEND_DOCS_ADICIONALES = 'PEND_DOCS_ADICIONALES'
     ESTADO_EN_VALIDACION_DOCS = 'EN_VALIDACION_DOCS'
     ESTADO_DOCS_CORRECCION = 'DOCS_CORRECCION'
@@ -33,6 +34,7 @@ class SolicitudCredito(models.Model):
         (ESTADO_EN_ANALISIS, 'En Análisis por Analista'),
         (ESTADO_PREAPROBADO, 'Pre-Aprobado por Analista'),
         (ESTADO_RECHAZADO_ANALISTA, 'Rechazado por Analista'),
+        (ESTADO_DOCS_FINALES_CORRECCION, 'En Corrección de Documentos Finales'),
         (ESTADO_PEND_DOCS_ADICIONALES, 'Pendiente Documentos Adicionales'),
         (ESTADO_EN_VALIDACION_DOCS, 'En Validación de Documentos'),
         (ESTADO_DOCS_CORRECCION, 'Documentos en Corrección'),

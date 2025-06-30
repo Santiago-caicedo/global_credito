@@ -18,6 +18,8 @@ urlpatterns = [
     path('solicitud/<int:solicitud_id>/validacion_final/', views.validacion_final_view, name='validacion_final'),
     path('analista/escritorio/', views.analista_escritorio_view, name='analista_escritorio'),
     path('analista/historial/', views.historial_analista_view, name='historial_analista'),
+    path('solicitud/<int:solicitud_id>/enviar_director/', views.enviar_a_director_view, name='enviar_a_director'),
+    path('solicitud/<int:solicitud_id>/devolver_final/', views.devolver_docs_finales_view, name='devolver_docs_finales'),
 
 
 ]

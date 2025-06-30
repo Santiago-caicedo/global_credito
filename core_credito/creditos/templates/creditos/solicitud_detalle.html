@@ -26,10 +26,10 @@
     {% endif %}
 
     <!-- Alerta de Corrección (si aplica) -->
-    {% if solicitud.estado == solicitud.ESTADO_DOCS_CORRECCION %}
+    {% if necesita_correccion %}
     <div class="alert alert-danger">
         <h4 class="alert-heading">¡Acción Requerida!</h4>
-        <p>Esta solicitud ha sido devuelta por el analista. Por favor, revise los documentos marcados "Para Corrección", elimínelos y vuelva a subirlos con la información correcta.</p>
+        <p>Esta solicitud ha sido devuelta. Revise los documentos marcados "Para Corrección", elimínelos y vuelva a subirlos con la información correcta.</p>
     </div>
     {% endif %}
 
@@ -46,22 +46,17 @@
                     {% else %}
                         <ul class="list-group list-group-flush">
                             {% for doc in documentos_cargados %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center {% if not doc.ok_analista and doc.observacion_correccion %}list-group-item-danger{% endif %}">
+                                <li class="list-group-item d-flex justify-content-between align-items-center {% if not doc.ok_analista %}list-group-item-danger{% endif %}">
                                     <div>
                                         {{ doc.get_nombre_documento_display }}
                                         {% if not doc.ok_analista and doc.observacion_correccion %}
-                                            <p class="small text-danger mb-0 mt-1 fst-italic">
-                                                <strong>Motivo:</strong> "{{ doc.observacion_correccion }}"
-                                            </p>
+                                            <p class="small text-danger mb-0 mt-1 fst-italic"><strong>Motivo:</strong> "{{ doc.observacion_correccion }}"</p>
                                         {% endif %}
                                     </div>
                                     <div>
                                         <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-secondary btn-sm">Ver</a>
-                                        {% if not doc.ok_analista and doc.observacion_correccion %}
-                                        <form action="{% url 'corregir_documento' doc.id %}" method="post" class="d-inline ms-2">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger btn-sm">Corregir</button>
-                                        </form>
+                                        {% if not doc.ok_analista %}
+                                        <form action="{% url 'corregir_documento' doc.id %}" method="post" class="d-inline ms-2">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Corregir</button></form>
                                         {% endif %}
                                     </div>
                                 </li>
@@ -78,11 +73,7 @@
                 <div class="card bg-light h-100">
                     <div class="card-header"><h5 class="mb-0">Subir Documento Requerido</h5></div>
                     <div class="card-body">
-                        <form method="post" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            {{ form_documento.as_p }}
-                            <div class="d-grid"><button type="submit" class="btn btn-primary mt-2">Subir</button></div>
-                        </form>
+                        <form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form_documento.as_p }}<div class="d-grid"><button type="submit" class="btn btn-primary mt-2">Subir</button></div></form>
                     </div>
                 </div>
             {% else %}
@@ -97,32 +88,42 @@
     <!-- Botón de Siguiente Acción -->
     <hr class="my-4">
     <div class="text-center">
-        {% if solicitud.estado == solicitud.ESTADO_DOCS_CORRECCION %}
-            {% if not necesita_correccion %}
-                {% if documentos_completos %}
-                    <div class="alert alert-success"><h5 class="alert-heading">¡Todo Corregido!</h5><p>Ya puede reenviar la solicitud para que sea analizada de nuevo.</p><form action="{% url 'enviar_a_asignacion' solicitud.id %}" method="post" class="mt-2">{% csrf_token %}<button type="submit" class="btn btn-success btn-lg">Reenviar a Asignación</button></form></div>
-                {% else %}
-                     <div class="alert alert-warning"><p class="mb-0">Ha eliminado los documentos marcados. Por favor, vuelva a subir las versiones correctas para poder continuar.</p></div>
-                {% endif %}
-            {% else %}
-                <p class="text-danger fw-bold">Aún hay documentos marcados para corregir. Por favor, gestiónelos antes de continuar.</p>
+
+        {# Primero, comprobamos si hay documentos marcados con error. Si es así, bloqueamos todo. #}
+        {% if necesita_correccion %}
+            <p class="text-danger fw-bold">Aún hay documentos marcados para corregir. Por favor, gestiónelos antes de continuar.</p>
+        
+        {# Si no hay errores, comprobamos si faltan documentos por subir. #}
+        {% elif not documentos_completos %}
+            <p class="text-muted">Debe subir todos los documentos requeridos para la etapa actual para poder continuar.</p>
+        
+        {# Si no hay errores Y los documentos están completos, mostramos el botón correcto. #}
+        {% else %}
+            
+            {% if solicitud.estado == solicitud.ESTADO_PEND_DOCUMENTOS or solicitud.estado == solicitud.ESTADO_DOCS_CORRECCION %}
+                <div class="alert alert-success">
+                    <h5 class="alert-heading">Documentos Listos</h5>
+                    <p>Todos los documentos requeridos han sido cargados. Puede enviar la solicitud a la siguiente fase de análisis.</p>
+                    <form action="{% url 'enviar_a_asignacion' solicitud.id %}" method="post" class="mt-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-lg">Enviar a Asignación</button>
+                    </form>
+                </div>
+            
+            {% elif solicitud.estado == solicitud.ESTADO_PEND_DOCS_ADICIONALES or solicitud.estado == solicitud.ESTADO_DOCS_FINALES_CORRECCION %}
+                <div class="alert alert-success">
+                    <h5 class="alert-heading">Documentos Finales Completos</h5>
+                    <p>Todos los documentos de cierre han sido cargados. Puede enviar el caso para su validación final.</p>
+                    <form action="{% url 'enviar_a_validacion_final' solicitud.id %}" method="post" class="mt-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-lg">Finalizar y Enviar a Validación</button>
+                    </form>
+                </div>
             {% endif %}
-        {% elif solicitud.estado == solicitud.ESTADO_PEND_DOCUMENTOS %}
-            {% if documentos_completos %}
-                <div class="alert alert-success"><h5 class="alert-heading">Documentos Completos</h5><p>Puede enviar la solicitud a la siguiente fase.</p><form action="{% url 'enviar_a_asignacion' solicitud.id %}" method="post" class="mt-2">{% csrf_token %}<button type="submit" class="btn btn-primary btn-lg">Enviar a Asignación</button></form></div>
-            {% else %}
-                <p class="text-muted">Debe subir todos los documentos requeridos para poder continuar.</p>
-            {% endif %}
-        {% elif solicitud.estado == solicitud.ESTADO_PEND_DOCS_ADICIONALES %}
-            {% if documentos_completos %}
-                <div class="alert alert-success"><h5 class="alert-heading">Documentos Finales Completos</h5><p>Puede enviar el caso para su validación final.</p><form action="{% url 'enviar_a_validacion_final' solicitud.id %}" method="post" class="mt-2">{% csrf_token %}<button type="submit" class="btn btn-success btn-lg">Finalizar y Enviar a Validación</button></form></div>
-            {% else %}
-                 <p class="text-muted">Debe subir todos los documentos de cierre para poder continuar.</p>
-            {% endif %}
+
         {% endif %}
     </div>
 
-</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

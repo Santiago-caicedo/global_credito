@@ -75,20 +75,18 @@ def solicitud_detalle_view(request, solicitud_id):
         messages.error(request, "No tienes permiso para ver esta solicitud.")
         return redirect('listar_solicitudes')
 
-    # 2. Determinar qué formulario mostrar y qué tipos de documentos son requeridos
-    form_a_mostrar = None
+    # 2. Determinar el contexto de la etapa actual
     FormularioAUsar = None
-    tipos_requeridos = set()
-
+    tipos_requeridos_en_etapa = set()
     estados_carga_inicial = [SolicitudCredito.ESTADO_PEND_DOCUMENTOS, SolicitudCredito.ESTADO_DOCS_CORRECCION]
+    estados_carga_final = [SolicitudCredito.ESTADO_PEND_DOCS_ADICIONALES, SolicitudCredito.ESTADO_DOCS_FINALES_CORRECCION]
+
     if solicitud.estado in estados_carga_inicial:
-        form_a_mostrar = DocumentoForm()
         FormularioAUsar = DocumentoForm
-        tipos_requeridos = {'CEDULA', 'DECLARACION_RENTA', 'CERTIFICADO_LABORAL', 'AUTORIZACION_CONSULTA'}
-    elif solicitud.estado == SolicitudCredito.ESTADO_PEND_DOCS_ADICIONALES:
-        form_a_mostrar = DocumentoFinalForm()
+        tipos_requeridos_en_etapa = {'CEDULA', 'DECLARACION_RENTA', 'CERTIFICADO_LABORAL', 'AUTORIZACION_CONSULTA'}
+    elif solicitud.estado in estados_carga_final:
         FormularioAUsar = DocumentoFinalForm
-        tipos_requeridos = {'PAGARE', 'CARTA_INSTRUCCIONES', 'POLIZA_SEGURO', 'FORMATO_VINCULACION'}
+        tipos_requeridos_en_etapa = {'PAGARE', 'CARTA_INSTRUCCIONES', 'POLIZA_SEGURO', 'FORMATO_VINCULACION'}
 
     # 3. Procesamiento de POST (envío de formulario)
     if request.method == 'POST':
@@ -101,6 +99,8 @@ def solicitud_detalle_view(request, solicitud_id):
             nuevo_documento = form.save(commit=False)
             nuevo_documento.solicitud = solicitud
             nuevo_documento.subido_por = request.user
+            nuevo_documento.ok_analista = True
+            nuevo_documento.observacion_correccion = ""
             nuevo_documento.save()
             messages.success(request, f"Documento '{nuevo_documento.get_nombre_documento_display()}' cargado exitosamente.")
         else:
@@ -108,25 +108,24 @@ def solicitud_detalle_view(request, solicitud_id):
         return redirect('solicitud_detalle', solicitud_id=solicitud.id)
 
     # 4. Preparación para GET (mostrar la página)
-    # Obtenemos solo los documentos relevantes para la etapa actual
-    documentos_cargados = solicitud.documentos.filter(subido_por=request.user)
+    # Obtenemos TODOS los documentos que el asesor ha subido para esta solicitud
+    documentos_cargados_todos = solicitud.documentos.filter(subido_por=request.user)
     
     # Verificamos si hay alguno marcado para corrección
-    necesita_correccion = documentos_cargados.filter(ok_analista=False).exists()
+    necesita_correccion = documentos_cargados_todos.filter(ok_analista=False).exists()
 
-    # Verificamos si se han cargado todos los tipos de documentos requeridos
-    tipos_cargados = {doc.nombre_documento for doc in documentos_cargados}
-    documentos_completos = tipos_requeridos.issubset(tipos_cargados)
+    # Verificamos si se han cargado todos los tipos de documentos requeridos para la etapa actual
+    tipos_cargados = {doc.nombre_documento for doc in documentos_cargados_todos}
+    documentos_completos = tipos_requeridos_en_etapa.issubset(tipos_cargados)
 
     contexto = {
         'solicitud': solicitud,
-        'form_documento': form_a_mostrar,
-        'documentos_cargados': documentos_cargados,
+        'form_documento': FormularioAUsar() if FormularioAUsar else None,
+        'documentos_cargados': documentos_cargados_todos,
         'necesita_correccion': necesita_correccion,
         'documentos_completos': documentos_completos,
     }
     return render(request, 'creditos/solicitud_detalle.html', contexto)
- 
 
 
 @login_required
@@ -456,7 +455,15 @@ def validar_documento_view(request, documento_id):
             else:
                 messages.error(request, "Debe especificar un motivo para la corrección.")
 
-    return redirect('analista_caso_activo')
+    estados_validacion_final = [
+        SolicitudCredito.ESTADO_EN_VALIDACION_DOCS,
+        SolicitudCredito.ESTADO_DOCS_FINALES_CORRECCION
+    ]
+    if solicitud.estado in estados_validacion_final:
+        return redirect('validacion_final', solicitud_id=solicitud.id)
+    else:
+        # Si no, es una validación inicial, volvemos al caso activo.
+        return redirect('analista_caso_activo')
 
 
 @login_required
@@ -573,28 +580,29 @@ def enviar_a_validacion_final_view(request, solicitud_id):
 def validacion_final_view(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
     
-    # Seguridad: Solo se puede acceder si el estado es el correcto
-    if solicitud.estado != SolicitudCredito.ESTADO_EN_VALIDACION_DOCS:
+    estados_permitidos = [
+        SolicitudCredito.ESTADO_EN_VALIDACION_DOCS,
+        SolicitudCredito.ESTADO_DOCS_FINALES_CORRECCION # Permitimos acceso si está en corrección
+    ]
+    if solicitud.estado not in estados_permitidos:
         messages.error(request, "La solicitud no se encuentra en la etapa de validación final.")
         return redirect('analista_escritorio')
 
-    # Filtramos para obtener solo los documentos de cierre
-    tipos_documento_cierre = [
-        'PAGARE', 'CARTA_INSTRUCCIONES', 'POLIZA_SEGURO', 'FORMATO_VINCULACION'
-    ]
+    tipos_documento_cierre = ['PAGARE', 'CARTA_INSTRUCCIONES', 'POLIZA_SEGURO', 'FORMATO_VINCULACION']
     documentos_finales = solicitud.documentos.filter(nombre_documento__in=tipos_documento_cierre)
     
-    # Adjuntamos un formulario de rechazo a cada documento
     for doc in documentos_finales:
         doc.rechazo_form = RechazoDocumentoForm(instance=doc)
         
-    # Verificamos si todos los documentos están marcados como OK
-    todos_ok = all(doc.ok_analista for doc in documentos_finales)
+    # Lógica de comprobación
+    necesita_correccion_final = any(not doc.ok_analista and doc.observacion_correccion for doc in documentos_finales)
+    todos_ok = all(doc.ok_analista for doc in documentos_finales) if documentos_finales else False
 
     contexto = {
         'solicitud': solicitud,
         'documentos_finales': documentos_finales,
         'todos_documentos_ok': todos_ok,
+        'necesita_correccion_final': necesita_correccion_final,
     }
     return render(request, 'creditos/validacion_final.html', contexto)
 
@@ -640,3 +648,77 @@ def historial_analista_view(request):
         'solicitudes': solicitudes_atendidas
     }
     return render(request, 'creditos/historial_analista.html', contexto)
+
+
+
+
+
+@login_required
+def enviar_a_director_view(request, solicitud_id):
+    """
+    Acción final del analista. Cambia el estado, libera al analista
+    y envía la solicitud a la última etapa de aprobación.
+    """
+    if request.method == 'POST':
+        solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
+        
+        # Validación de seguridad: Asegurarse de que todos los documentos estén OK
+        tipos_cierre = ['PAGARE', 'CARTA_INSTRUCCIONES', 'POLIZA_SEGURO', 'FORMATO_VINCULACION']
+        docs_finales = solicitud.documentos.filter(nombre_documento__in=tipos_cierre)
+        if not all(doc.ok_analista for doc in docs_finales):
+            messages.error(request, "No se puede enviar. Aún hay documentos pendientes de validación.")
+            return redirect('validacion_final', solicitud_id=solicitud.id)
+
+        estado_anterior = solicitud.estado
+        solicitud.estado = SolicitudCredito.ESTADO_PEND_APROB_DIRECTOR
+        solicitud.save()
+
+        HistorialEstado.objects.create(
+            solicitud=solicitud,
+            estado_anterior=estado_anterior,
+            estado_nuevo=solicitud.estado,
+            usuario_responsable=request.user,
+            observaciones="Analista validó todos los documentos y envió a aprobación final del Director."
+        )
+
+        # Liberamos al analista
+        request.user.perfil.solicitud_actual = None
+        request.user.perfil.save()
+        
+        # Intentamos asignar un nuevo caso de la cola
+        intentar_asignar_solicitud_en_espera()
+
+        messages.success(request, f"Solicitud #{solicitud.id} enviada correctamente a aprobación del Director.")
+        return redirect('analista_escritorio')
+    
+    return redirect('analista_escritorio')
+
+
+
+@login_required
+def devolver_docs_finales_view(request, solicitud_id):
+    """
+    Devuelve el caso al asesor para corregir DOCUMENTOS FINALES,
+    pero MANTIENE la asignación al analista.
+    """
+    if request.method == 'POST':
+        solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
+        
+        estado_anterior = solicitud.estado
+        solicitud.estado = SolicitudCredito.ESTADO_DOCS_FINALES_CORRECCION
+        solicitud.save()
+
+        HistorialEstado.objects.create(
+            solicitud=solicitud,
+            estado_anterior=estado_anterior,
+            estado_nuevo=solicitud.estado,
+            usuario_responsable=request.user,
+            observaciones="Analista devolvió caso para corregir documentos finales."
+        )
+
+        messages.info(request, f"La solicitud #{solicitud.id} ha sido devuelta al asesor para corrección.")
+        
+        # Redirigimos al escritorio, ya que el analista no puede hacer más hasta que se corrija.
+        return redirect('analista_escritorio')
+    
+    return redirect('analista_escritorio')
