@@ -624,14 +624,37 @@ def validacion_final_view(request, solicitud_id):
 @login_required
 def analista_escritorio_view(request):
     """
-    La nueva página de inicio para el analista. Actúa como un centro de control.
+    El nuevo escritorio del analista, con estadísticas y un diseño profesional.
     """
     solicitud_actual = None
     if hasattr(request.user, 'perfil'):
         solicitud_actual = request.user.perfil.solicitud_actual
         
+    # --- LÓGICA AÑADIDA PARA LAS ESTADÍSTICAS ---
+    # Estados que consideramos "finalizados" desde la perspectiva del analista
+    estados_finalizados = [
+        SolicitudCredito.ESTADO_RECHAZADO_ANALISTA,
+        SolicitudCredito.ESTADO_APROBADO,
+        SolicitudCredito.ESTADO_RECHAZADO_DIRECTOR,
+    ]
+    
+    # Contamos cuántas solicitudes ha atendido el analista
+    solicitudes_atendidas_count = SolicitudCredito.objects.filter(
+        analista_asignado=request.user,
+        estado__in=estados_finalizados
+    ).count()
+
+    # Obtenemos las últimas 5 solicitudes atendidas para la tabla de historial rápido
+    ultimas_solicitudes_atendidas = SolicitudCredito.objects.filter(
+        analista_asignado=request.user,
+        estado__in=estados_finalizados
+    ).order_by('-fecha_actualizacion')[:5]
+    # ------------------------------------------------
+
     contexto = {
-        'solicitud_actual': solicitud_actual
+        'solicitud_actual': solicitud_actual,
+        'solicitudes_atendidas_count': solicitudes_atendidas_count,
+        'ultimas_solicitudes': ultimas_solicitudes_atendidas,
     }
     return render(request, 'creditos/analista_escritorio.html', contexto)
 

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- El título de la página será dinámico -->
+    <title>{% block title %}Core de Crédito{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Estilos personalizados (opcional, para el futuro) -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .content-wrapper {
+            min-height: calc(100vh - 110px); /* Ajusta para la altura del footer */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra de Navegación -->
+    {% include 'partials/_navbar.html' %}
+
+    <!-- Contenedor Principal -->
+    <div class="content-wrapper">
+        <main class="container mt-4 mb-5">
+            {# Aquí es donde cada página insertará su contenido específico #}
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <!-- Pie de Página -->
+    <footer class="bg-dark text-white text-center p-3 mt-auto">
+        <p class="mb-0">&copy; {% now "Y" %} Mi Compañía de Crédito. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

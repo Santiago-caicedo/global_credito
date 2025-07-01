@@ -1,70 +1,90 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escritorio de Analista</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    {% load humanize %}
-</head>
-<body>
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center">
-        <h2>Escritorio de Analista</h2>
-        <p class="m-0">Bienvenido, <strong>{{ request.user.username }}</strong>.</p>
-    </div>
-    <hr>
-    
-    <div class="row g-4">
-        <!-- Tarjeta para el Caso Activo -->
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center d-flex flex-column">
-                    <h5 class="card-title">Caso en Proceso</h5>
-                    <p class="card-text text-muted">Acceda a la solicitud que tiene asignada actualmente para continuar con su análisis.</p>
-                    <div class="mt-auto">
-                        {% if solicitud_actual %}
-                            
-                            <!-- ========================================================== -->
-                            <!--    AQUÍ ESTÁ LA LÓGICA DEL BOTÓN INTELIGENTE              -->
-                            <!-- ========================================================== -->
-                            {% if solicitud_actual.estado == 'EN_ANALISIS' %}
-                                <a href="{% url 'analista_caso_activo' %}" class="btn btn-primary btn-lg">Gestionar Caso #{{ solicitud_actual.id }}</a>
-                            
-                            {% elif solicitud_actual.estado == 'PREAPROBADO' %}
-                                <a href="{% url 'capacidad_pago' solicitud_actual.id %}" class="btn btn-info btn-lg">Analizar Capacidad de Pago #{{ solicitud_actual.id }}</a>
+{% extends 'base.html' %}
+{% load humanize %}
 
-                            {% elif solicitud_actual.estado == 'EN_VALIDACION_DOCS' %}
-                                <a href="{% url 'validacion_final' solicitud_actual.id %}" class="btn btn-success btn-lg">Validar Documentos Finales #{{ solicitud_actual.id }}</a>
-                            
+{% block title %}Dashboard de Analista{% endblock %}
+
+{% block content %}
+
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Dashboard</h1>
+        <p class="text-muted mb-0">Bienvenido, <strong>{{ request.user.first_name|default:request.user.username }}</strong></p>
+    </div>
+
+    <!-- Tarjetas de Estadísticas -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card text-white bg-primary shadow h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Caso en Proceso</h5>
+                            {% if solicitud_actual %}
+                                <h2 class="display-4 fw-bold">#{{ solicitud_actual.id }}</h2>
+                                <p class="mb-0">Estado: {{ solicitud_actual.get_estado_display }}</p>
                             {% else %}
-                                <!-- Botón por defecto si el estado es otro -->
-                                <a href="#" class="btn btn-secondary btn-lg disabled">Gestionar Caso #{{ solicitud_actual.id }}</a>
+                                <h2 class="display-4 fw-bold">Libre</h2>
+                                <p class="mb-0">No hay casos asignados.</p>
                             {% endif %}
-                            <!-- ========================================================== -->
-
-                        {% else %}
-                            <a href="#" class="btn btn-outline-primary btn-lg disabled" tabindex="-1">No hay casos asignados</a>
-                        {% endif %}
+                        </div>
+                        <i class="bi bi-folder-check" style="font-size: 3.5rem; opacity: 0.5;"></i>
                     </div>
                 </div>
+                {% if solicitud_actual %}
+                    {% if solicitud_actual.estado == 'EN_ANALISIS' %}
+                        <a href="{% url 'analista_caso_activo' %}" class="card-footer text-white d-flex justify-content-between"><span>Continuar Análisis</span> <i class="bi bi-arrow-right-circle"></i></a>
+                    {% elif solicitud_actual.estado == 'PREAPROBADO' %}
+                        <a href="{% url 'capacidad_pago' solicitud_actual.id %}" class="card-footer text-white d-flex justify-content-between"><span>Analizar Capacidad de Pago</span> <i class="bi bi-arrow-right-circle"></i></a>
+                    {% elif solicitud_actual.estado == 'EN_VALIDACION_DOCS' %}
+                        <a href="{% url 'validacion_final' solicitud_actual.id %}" class="card-footer text-white d-flex justify-content-between"><span>Validar Documentos Finales</span> <i class="bi bi-arrow-right-circle"></i></a>
+                    {% endif %}
+                {% endif %}
             </div>
         </div>
-        
-        <!-- Tarjeta para el Historial -->
         <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center d-flex flex-column">
-                    <h5 class="card-title">Solicitudes Atendidas</h5>
-                    <p class="card-text text-muted">Consulte el historial de todas las solicitudes que ha procesado anteriormente.</p>
-                    <div class="mt-auto">
-                        <a href="{% url 'historial_analista' %}" class="btn btn-outline-secondary btn-lg">Ver Historial</a>
+            <div class="card text-white bg-success shadow h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Solicitudes Atendidas</h5>
+                            <h2 class="display-4 fw-bold">{{ solicitudes_atendidas_count }}</h2>
+                            <p class="mb-0">Casos resueltos históricamente.</p>
+                        </div>
+                        <i class="bi bi-archive-fill" style="font-size: 3.5rem; opacity: 0.5;"></i>
                     </div>
                 </div>
+                <a href="{% url 'historial_analista' %}" class="card-footer text-white d-flex justify-content-between">
+                    <span>Ver Historial Completo</span> <i class="bi bi-arrow-right-circle"></i>
+                </a>
             </div>
         </div>
     </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+
+    <!-- Tabla de Actividad Reciente -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">Actividad Reciente</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead><tr><th># Sol.</th><th>Cliente</th><th>Monto Aprobado</th><th>Estado Final</th><th>Fecha de Cierre</th></tr></thead>
+                    <tbody>
+                        {% for solicitud in ultimas_solicitudes %}
+                        <tr>
+                            <td>{{ solicitud.id }}</td>
+                            <td>{{ solicitud.nombre_completo }}</td>
+                            <td>${{ solicitud.monto_aprobado_calculado|default:"N/A"|intcomma }}</td>
+                            <td><span class="badge {{ solicitud.get_estado_color_class }}">{{ solicitud.get_estado_display }}</span></td>
+                            <td>{{ solicitud.fecha_actualizacion|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted p-4">Aún no ha finalizado ninguna solicitud.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
