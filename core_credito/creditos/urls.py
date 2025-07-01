@@ -20,6 +20,13 @@ urlpatterns = [
     path('analista/historial/', views.historial_analista_view, name='historial_analista'),
     path('solicitud/<int:solicitud_id>/enviar_director/', views.enviar_a_director_view, name='enviar_a_director'),
     path('solicitud/<int:solicitud_id>/devolver_final/', views.devolver_docs_finales_view, name='devolver_docs_finales'),
+    path('director/escritorio/', views.director_escritorio_view, name='director_escritorio'),
+    path('director/parametros/', views.gestion_parametros_view, name='gestion_parametros'),
+    path('director/pendientes/', views.director_pendientes_view, name='director_pendientes'),
+    path('director/solicitud/<int:solicitud_id>/', views.director_detalle_solicitud_view, name='director_detalle_solicitud'),
+    path('director/solicitud/<int:solicitud_id>/aprobar/', views.aprobar_credito_final_view, name='aprobar_credito_final'),
+    path('director/solicitud/<int:solicitud_id>/rechazar/', views.rechazar_credito_final_view, name='rechazar_credito_final'),
+    path('director/historial/', views.historial_completo_view, name='historial_completo'),
 
 
 ]

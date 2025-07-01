@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from datetime import date
 
+from django.forms import ValidationError
+
 class SolicitudCredito(models.Model):
     """
     Modelo central que representa una única solicitud de crédito y su estado
@@ -89,6 +91,7 @@ class SolicitudCredito(models.Model):
     es_tipo_0 = models.BooleanField("¿Es tipo 0?", null=True)
     huellas_consulta = models.PositiveIntegerField("Número de huellas de consulta", default=0, null=True, blank=True)
     tiene_procesos_judiciales = models.BooleanField("¿Tiene procesos judiciales?", null=True)
+    observacion_referencias = models.TextField("Observación de Referencias", blank=True, null=True)
 
     # ---- 4. CAMPOS DE CONTROL Y RESULTADOS ----
     asesor_comercial = models.ForeignKey(User, on_delete=models.PROTECT, related_name='solicitudes_creadas')
@@ -220,3 +223,46 @@ class Documento(models.Model):
 
     def __str__(self):
         return f"{self.get_nombre_documento_display()} de Solicitud #{self.solicitud.id}"
+    
+
+
+
+
+class ParametrosGlobales(models.Model):
+    """
+    Un modelo Singleton para almacenar los parámetros globales del sistema
+    que el Director puede modificar. Solo puede existir una instancia de este modelo.
+    """
+    smlv = models.DecimalField("Salario Mínimo Legal Vigente (SMLV)", max_digits=10, decimal_places=2, default=1300000)
+    tasa_interes_mensual = models.DecimalField(
+        "Tasa de Interés Mensual (Ej: 0.023 para 2.3%)",
+        max_digits=5,
+        decimal_places=4,
+        default=0.0230
+    )
+    porcentaje_seguro = models.DecimalField(
+        "Porcentaje del Seguro sobre el Monto",
+        max_digits=5,
+        decimal_places=4,
+        default=0.0025
+    )
+    porcentaje_fgs = models.DecimalField(
+        "Porcentaje del Fondo de Garantías (FGS)",
+        max_digits=5,
+        decimal_places=4,
+        default=0.0025
+    )
+
+    class Meta:
+        verbose_name = "Parámetro Global"
+        verbose_name_plural = "Parámetros Globales"
+
+    def __str__(self):
+        return "Configuración Global del Sistema"
+
+    def save(self, *args, **kwargs):
+        # Asegura que solo exista una instancia de este modelo (patrón Singleton)
+        if not self.pk and ParametrosGlobales.objects.exists():
+            # Si estamos creando un nuevo objeto y ya existe uno, no lo permitimos.
+            raise ValidationError('Solo puede existir una instancia de Parámetros Globales.')
+        return super(ParametrosGlobales, self).save(*args, **kwargs)

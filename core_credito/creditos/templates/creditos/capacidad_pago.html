@@ -62,9 +62,10 @@
 
     <!-- SECCIÓN DE REFERENCIAS -->
     <div class="card mb-4">
-        <div class="card-header"><h5 class="mb-0">Paso 1.5: Registrar Referencias del Cliente</h5></div>
+        <div class="card-header"><h5 class="mb-0">Paso 1.5: Registrar y Validar Referencias</h5></div>
         <div class="card-body">
             <div class="row g-4">
+                <!-- Columna para AÑADIR una nueva referencia -->
                 <div class="col-md-6">
                     <h6>Añadir Nueva Referencia</h6>
                     <form method="post">
@@ -75,23 +76,37 @@
                         </div>
                     </form>
                 </div>
+                <!-- Columna para VER, OBSERVAR y RECHAZAR -->
                 <div class="col-md-6">
                     <h6>Referencias Registradas</h6>
                     <ul class="list-group">
                         {% for ref in solicitud.referencias.all %}
                             <li class="list-group-item">
                                 <strong>{{ ref.get_tipo_display }}:</strong> {{ ref.nombre_completo }}
-                                <br>
-                                <small class="text-muted">{{ ref.parentesco }} - {{ ref.numero_contacto }}</small>
+                                <br><small class="text-muted">{{ ref.parentesco }} - {{ ref.numero_contacto }}</small>
                             </li>
                         {% empty %}
                             <li class="list-group-item text-muted">Aún no se han registrado referencias.</li>
                         {% endfor %}
                     </ul>
+
+                    <!-- ¡NUEVA SECCIÓN DE OBSERVACIÓN Y RECHAZO! -->
+                    <hr class="my-4">
+                    <h6>Observación General de Referencias</h6>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form_observaciones_ref.as_p }}
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <button type="submit" name="submit_observacion_referencias" class="btn btn-secondary">Guardar Observación</button>
+                            <!-- Botón de Rechazo que reutiliza la vista existente -->
+                            <a href="{% url 'rechazar_solicitud' solicitud.id %}" class="btn btn-outline-danger">Rechazar Solicitud</a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- 4. Resultados del Cálculo de Capacidad de Pago -->
     {% if resultado_capacidad %}

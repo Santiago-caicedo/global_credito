@@ -1,4 +1,4 @@
-from .models import HistorialEstado, SolicitudCredito
+from .models import HistorialEstado, ParametrosGlobales, SolicitudCredito
 from usuarios.models import PerfilUsuario
 import random
 from django.db import transaction
@@ -215,9 +215,19 @@ def calcular_oferta_service(solicitud: SolicitudCredito):
     """
     Toma la capacidad de pago y un plazo para calcular el monto máximo del préstamo.
     """
-    TASA_INTERES_MENSUAL = Decimal('0.023')
-    SEGURO_PCT = Decimal('0.0025')
-    FGS_PCT = Decimal('0.0025')
+    try:
+        # Intentamos obtener la única instancia de parámetros globales
+        params = ParametrosGlobales.objects.get(pk=1)
+        TASA_INTERES_MENSUAL = params.tasa_interes_mensual
+        SEGURO_PCT = params.porcentaje_seguro
+        FGS_PCT = params.porcentaje_fgs
+    except ParametrosGlobales.DoesNotExist:
+        # Si el Director aún no ha creado los parámetros, usamos valores seguros por defecto.
+        # Esto evita que el sistema se rompa.
+        TASA_INTERES_MENSUAL = Decimal('0.023')
+        SEGURO_PCT = Decimal('0.0025')
+        FGS_PCT = Decimal('0.0025')
+        print("ADVERTENCIA: No se encontraron Parámetros Globales. Usando valores por defecto.")
 
     cuota_maxima = solicitud.capacidad_pago_calculada or Decimal('0')
     plazo_meses = solicitud.plazo_oferta

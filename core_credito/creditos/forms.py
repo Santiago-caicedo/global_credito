@@ -1,5 +1,6 @@
 from django import forms
-from .models import SolicitudCredito, Documento, Referencia
+from .models import ParametrosGlobales, SolicitudCredito, Documento, Referencia
+from django.contrib.auth.models import User
 
 
 # --- FORMULARIO 1: Para la creación inicial de la solicitud (Asesor) ---
@@ -196,3 +197,75 @@ class DocumentoFinalForm(forms.ModelForm):
         )
         self.fields['nombre_documento'].choices = opciones_cierre
         self.fields['nombre_documento'].label = "Tipo de Documento Final"
+
+
+
+class ParametrosGlobalesForm(forms.ModelForm):
+    class Meta:
+        model = ParametrosGlobales
+        fields = ['smlv', 'tasa_interes_mensual', 'porcentaje_seguro', 'porcentaje_fgs']
+        labels = {
+            'smlv': 'Valor del Salario Mínimo (SMLV)',
+            'tasa_interes_mensual': 'Tasa de Interés Mensual (Ej: 0.023 para 2.3%)',
+            'porcentaje_seguro': 'Porcentaje del Seguro (Ej: 0.0025 para 0.25%)',
+            'porcentaje_fgs': 'Porcentaje del Fondo de Garantías (Ej: 0.0025 para 0.25%)',
+        }
+        help_texts = {
+            'tasa_interes_mensual': 'Use punto como separador decimal.',
+            'porcentaje_seguro': 'Use punto como separador decimal.',
+            'porcentaje_fgs': 'Use punto como separador decimal.',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
+
+
+
+class ObservacionReferenciasForm(forms.ModelForm):
+    """
+    Formulario para que el analista ingrese sus observaciones
+    después de validar las referencias.
+    """
+    class Meta:
+        model = SolicitudCredito
+        # Usamos el campo que ya existía en el modelo
+        fields = ['observacion_referencias']
+        labels = {
+            'observacion_referencias': 'Observación General de Referencias'
+        }
+        widgets = {
+            'observacion_referencias': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }
+
+
+
+
+class HistorialFiltroForm(forms.Form):
+    """
+    Un formulario que no está ligado a un modelo, usado para
+    capturar los criterios de búsqueda en el historial.
+    """
+    # Creamos un campo de estado, añadiendo una opción para "Todos"
+    ESTADOS_CHOICES = [('', 'Todos los Estados')] + SolicitudCredito.ESTADOS_CHOICES
+    estado = forms.ChoiceField(choices=ESTADOS_CHOICES, required=False, widget=forms.Select(attrs={'class': 'form-select'}))
+    
+    # Creamos campos para filtrar por fechas
+    fecha_inicio = forms.DateField(required=False, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
+    fecha_fin = forms.DateField(required=False, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
+
+    # Creamos campos para filtrar por usuario (Asesor y Analista)
+    # Usamos ModelChoiceField para crear un menú desplegable con los usuarios
+    asesor = forms.ModelChoiceField(
+        queryset=User.objects.filter(perfil__rol='ASESOR'),
+        required=False,
+        empty_label="Todos los Asesores",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    analista = forms.ModelChoiceField(
+        queryset=User.objects.filter(perfil__rol='ANALISTA'),
+        required=False,
+        empty_label="Todos los Analistas",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )

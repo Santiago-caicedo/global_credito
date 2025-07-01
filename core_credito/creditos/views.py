@@ -3,10 +3,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.paginator import Paginator
 from decimal import Decimal
-from .models import SolicitudCredito, Documento, HistorialEstado
+from .models import ParametrosGlobales, SolicitudCredito, Documento, HistorialEstado
 from .forms import (
-    DocumentoFinalForm, ObservacionAnalisisForm, RechazoDocumentoForm, ReferenciaForm, SolicitudCreditoForm, DocumentoForm, DocumentoAnalisisForm,
+    DocumentoFinalForm, HistorialFiltroForm, ObservacionAnalisisForm, ObservacionReferenciasForm, ParametrosGlobalesForm, RechazoDocumentoForm, ReferenciaForm, SolicitudCreditoForm, DocumentoForm, DocumentoAnalisisForm,
     AnalisisRiesgoForm, CapacidadPagoForm, OfertaForm, OfertaDefinitivaForm
 )
 from .services import (
@@ -384,6 +385,15 @@ def capacidad_pago_view(request, solicitud_id):
             else:
                 messages.error(request, "Error al añadir la referencia. Revise los campos.")
             return redirect('capacidad_pago', solicitud_id=solicitud.id)
+        
+        elif 'submit_observacion_referencias' in request.POST:
+            form_obs_ref = ObservacionReferenciasForm(request.POST, instance=solicitud)
+            if form_obs_ref.is_valid():
+                form_obs_ref.save()
+                messages.success(request, "Observación de referencias guardada correctamente.")
+            else:
+                messages.error(request, "No se pudo guardar la observación.")
+            return redirect('capacidad_pago', solicitud_id=solicitud.id)
 
     # 4. Lógica de GET y preparación del contexto final para renderizar
     # Si no es POST o si un formulario POST no fue válido, se preparan los formularios aquí.
@@ -392,6 +402,7 @@ def capacidad_pago_view(request, solicitud_id):
     form_oferta = OfertaForm(instance=solicitud, initial={'plazo_oferta': initial_plazo})
     form_oferta_definitiva = OfertaDefinitivaForm(instance=solicitud)
     form_referencia = ReferenciaForm()
+    form_observaciones_ref = ObservacionReferenciasForm(instance=solicitud)
 
     contexto = {
         'solicitud': solicitud,
@@ -399,6 +410,7 @@ def capacidad_pago_view(request, solicitud_id):
         'form_oferta': form_oferta,
         'form_oferta_definitiva': form_oferta_definitiva,
         'form_referencia': form_referencia,
+        'form_observaciones_ref': form_observaciones_ref,
         'resultado_capacidad': None,
         'resultado_oferta': None,
     }
@@ -722,3 +734,194 @@ def devolver_docs_finales_view(request, solicitud_id):
         return redirect('analista_escritorio')
     
     return redirect('analista_escritorio')
+
+
+
+
+
+# ==============================================================================
+# VISTAS DEL DIRECTOR
+# ==============================================================================
+
+@login_required
+def director_escritorio_view(request):
+    """
+    La página de inicio para el Director, que actúa como un centro de control.
+    """
+    # Aquí podríamos pasar estadísticas en el futuro
+    contexto = {}
+    return render(request, 'creditos/director_escritorio.html', contexto)
+
+
+
+@login_required
+def gestion_parametros_view(request):
+    # Obtenemos la única instancia de parámetros, o creamos una si no existe.
+    parametros, created = ParametrosGlobales.objects.get_or_create(pk=1)
+    
+    if request.method == 'POST':
+        form = ParametrosGlobalesForm(request.POST, instance=parametros)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Los parámetros globales han sido actualizados correctamente.")
+            return redirect('gestion_parametros')
+    else:
+        form = ParametrosGlobalesForm(instance=parametros)
+
+    contexto = {
+        'form': form
+    }
+    return render(request, 'creditos/gestion_parametros.html', contexto)
+
+
+
+@login_required
+def director_pendientes_view(request):
+    """
+    Muestra al Director una lista de todas las solicitudes que están
+    en estado 'Pendiente Aprobación Director'.
+    """
+    solicitudes_pendientes = SolicitudCredito.objects.filter(
+        estado=SolicitudCredito.ESTADO_PEND_APROB_DIRECTOR
+    ).order_by('fecha_actualizacion') # Mostramos las más antiguas primero
+
+    contexto = {
+        'solicitudes': solicitudes_pendientes
+    }
+    return render(request, 'creditos/director_pendientes.html', contexto)
+
+
+
+
+@login_required
+def director_detalle_solicitud_view(request, solicitud_id):
+    """
+    Muestra al Director el detalle completo, separando los tipos de documentos
+    para una revisión más clara.
+    """
+    solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id)
+    
+
+    # 1. Definimos los tipos de documentos para cada categoría
+    tipos_iniciales = ['CEDULA', 'DECLARACION_RENTA', 'CERTIFICADO_LABORAL', 'AUTORIZACION_CONSULTA']
+    tipos_cierre = ['PAGARE', 'CARTA_INSTRUCCIONES', 'POLIZA_SEGURO', 'FORMATO_VINCULACION']
+
+    # 2. Filtramos cada lista de documentos por separado
+    documentos_iniciales_asesor = solicitud.documentos.filter(
+        subido_por=solicitud.asesor_comercial,
+        nombre_documento__in=tipos_iniciales
+    )
+    documentos_finales_asesor = solicitud.documentos.filter(
+        subido_por=solicitud.asesor_comercial,
+        nombre_documento__in=tipos_cierre
+    )
+    documentos_analista = solicitud.documentos.filter(subido_por=solicitud.analista_asignado)
+    
+    # 3. Calculamos el desglose de capacidad de pago
+    resultado_capacidad = calcular_capacidad_pago_service(solicitud) if solicitud.capacidad_pago_calculada is not None else None
+
+    # 4. Preparamos el contexto con las listas separadas
+    contexto = {
+        'solicitud': solicitud,
+        'documentos_iniciales_asesor': documentos_iniciales_asesor,
+        'documentos_finales_asesor': documentos_finales_asesor, # Nueva lista
+        'documentos_analista': documentos_analista,
+        'historial': solicitud.historial.all(),
+        'referencias': solicitud.referencias.all(),
+        'resultado_capacidad': resultado_capacidad,
+    }
+    return render(request, 'creditos/director_detalle_solicitud.html', contexto)
+
+
+
+
+
+@login_required
+def aprobar_credito_final_view(request, solicitud_id):
+    """
+    Acción final para APROBAR el crédito. Cambia el estado y cierra el caso.
+    """
+    if request.method == 'POST':
+        solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id)
+        
+        estado_anterior = solicitud.estado
+        solicitud.estado = SolicitudCredito.ESTADO_APROBADO
+        solicitud.save()
+
+        HistorialEstado.objects.create(
+            solicitud=solicitud,
+            estado_anterior=estado_anterior,
+            estado_nuevo=solicitud.estado,
+            usuario_responsable=request.user,
+            observaciones="Director aprobó el crédito definitivamente."
+        )
+        
+        messages.success(request, f"¡Éxito! La Solicitud #{solicitud.id} ha sido APROBADA y el proceso ha finalizado.")
+        return redirect('director_pendientes')
+    
+    return redirect('director_pendientes')
+
+
+@login_required
+def rechazar_credito_final_view(request, solicitud_id):
+    """
+    Acción final para RECHAZAR el crédito. Cambia el estado y cierra el caso.
+    """
+    if request.method == 'POST':
+        solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id)
+        
+        estado_anterior = solicitud.estado
+        solicitud.estado = SolicitudCredito.ESTADO_RECHAZADO_DIRECTOR
+        solicitud.save()
+
+        HistorialEstado.objects.create(
+            solicitud=solicitud,
+            estado_anterior=estado_anterior,
+            estado_nuevo=solicitud.estado,
+            usuario_responsable=request.user,
+            observaciones="Director rechazó el crédito definitivamente."
+        )
+        
+        messages.warning(request, f"La Solicitud #{solicitud.id} ha sido RECHAZADA y el proceso ha finalizado.")
+        return redirect('director_pendientes')
+
+    return redirect('director_pendientes')
+
+
+
+
+@login_required
+def historial_completo_view(request):
+    """
+    Muestra el historial completo de todas las solicitudes con filtros
+    y paginación.
+    """
+    # Empezamos con todas las solicitudes
+    solicitudes_list = SolicitudCredito.objects.all().order_by('-fecha_creacion')
+    
+    # Creamos una instancia del formulario, pasándole los datos de la URL si existen (GET)
+    form = HistorialFiltroForm(request.GET)
+    
+    # Aplicamos los filtros si el formulario es válido
+    if form.is_valid():
+        if form.cleaned_data.get('estado'):
+            solicitudes_list = solicitudes_list.filter(estado=form.cleaned_data['estado'])
+        if form.cleaned_data.get('asesor'):
+            solicitudes_list = solicitudes_list.filter(asesor_comercial=form.cleaned_data['asesor'])
+        if form.cleaned_data.get('analista'):
+            solicitudes_list = solicitudes_list.filter(analista_asignado=form.cleaned_data['analista'])
+        if form.cleaned_data.get('fecha_inicio'):
+            solicitudes_list = solicitudes_list.filter(fecha_creacion__gte=form.cleaned_data['fecha_inicio'])
+        if form.cleaned_data.get('fecha_fin'):
+            solicitudes_list = solicitudes_list.filter(fecha_creacion__lte=form.cleaned_data['fecha_fin'])
+
+    # Paginación: mostramos 20 solicitudes por página
+    paginator = Paginator(solicitudes_list, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    contexto = {
+        'page_obj': page_obj, # Enviamos el objeto de la página a la plantilla
+        'form': form,
+    }
+    return render(request, 'creditos/historial_completo.html', contexto)
