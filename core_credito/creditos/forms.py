@@ -19,6 +19,32 @@ class SolicitudCreditoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
+    
+    def clean(self):
+        """
+        Este método se ejecuta para realizar validaciones personalizadas
+        que involucran múltiples campos del formulario.
+        """
+        cleaned_data = super().clean()
+        fecha_nacimiento = cleaned_data.get("fecha_nacimiento")
+        fecha_expedicion = cleaned_data.get("fecha_expedicion")
+
+        # 1. Comprobamos que ambas fechas existan antes de compararlas
+        if fecha_nacimiento and fecha_expedicion:
+            # 2. Verificamos que la expedición no sea antes del nacimiento
+            if fecha_expedicion < fecha_nacimiento:
+                # Este error se mostrará en la parte superior del formulario
+                raise forms.ValidationError(
+                    "Error de lógica: La fecha de expedición de la cédula no puede ser anterior a la fecha de nacimiento."
+                )
+            
+            # 3. (Opcional pero recomendado) Verificamos una edad mínima para tener cédula
+            if (fecha_expedicion.year - fecha_nacimiento.year) < 18:
+                 raise forms.ValidationError(
+                    "Error de lógica: Debe haber al menos 18 años entre el nacimiento y la expedición de la cédula."
+                )
+
+        return cleaned_data
 
 # --- FORMULARIO 2: Para que el Asesor suba documentos iniciales ---
 class DocumentoForm(forms.ModelForm):

@@ -1,3 +1,4 @@
+import os
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
@@ -69,8 +70,16 @@ class SolicitudCredito(models.Model):
     fecha_expedicion = models.DateField("Fecha de expedición de la cédula")
     ocupacion = models.CharField("Ocupación", max_length=20, choices=OCUPACION_CHOICES)
     ingresos_totales = models.DecimalField("Ingresos Totales (Reportados por Asesor)", max_digits=12, decimal_places=2)
-    monto_solicitado = models.DecimalField("Monto Solicitado por Cliente", max_digits=12, decimal_places=2)
-    plazo_solicitado = models.PositiveSmallIntegerField("Plazo Solicitado por Cliente (meses)")
+    monto_solicitado = models.DecimalField(
+        "Monto Solicitado por Cliente", 
+        max_digits=12, 
+        decimal_places=2,
+        validators=[MinValueValidator(500000, "El monto solicitado debe ser de al menos $500,000.")]
+    )
+    plazo_solicitado = models.PositiveSmallIntegerField(
+        "Plazo Solicitado por Cliente (meses)",
+        validators=[MinValueValidator(6, "El plazo mínimo es de 6 meses.")]
+    )
 
     # ---- 3. CAMPOS DE ANÁLISIS DEL ANALISTA (OPCIONALES a nivel de BD, obligatorios en su propio formulario) ----
     tipo_vivienda = models.CharField("Tipo de Vivienda", max_length=20, choices=VIVIENDA_CHOICES, null=True, blank=True)
@@ -168,6 +177,24 @@ class HistorialEstado(models.Model):
 
     def __str__(self):
         return f"Solicitud #{self.solicitud.id}: {self.estado_anterior} -> {self.estado_nuevo}"
+    
+
+def validate_file_extension_and_size(value):
+    """
+    Validador personalizado para archivos. Comprueba la extensión y el tamaño.
+    """
+    # 1. Obtenemos la extensión del archivo y la pasamos a minúsculas
+    ext = os.path.splitext(value.name)[1].lower()
+    
+    # 2. Definimos las extensiones permitidas
+    valid_extensions = ['.pdf', '.jpg', '.jpeg', '.png']
+    if not ext in valid_extensions:
+        raise ValidationError('Tipo de archivo no permitido. Solo se aceptan PDF, JPG y PNG.')
+        
+    # 3. Definimos el tamaño máximo en bytes (5 MB)
+    max_size = 5 * 1024 * 1024 # 5 Megabytes
+    if value.size > max_size:
+        raise ValidationError('El archivo es demasiado grande. El tamaño máximo permitido es de 5 MB.')
 
 class Documento(models.Model):
     """ Almacena los archivos asociados a una solicitud de crédito. """
@@ -210,7 +237,10 @@ class Documento(models.Model):
 
     solicitud = models.ForeignKey(SolicitudCredito, on_delete=models.CASCADE, related_name='documentos')
     nombre_documento = models.CharField(max_length=100, choices=DOCUMENTOS_CHOICES)
-    archivo = models.FileField(upload_to='documentos/%Y/%m/%d/')
+    archivo = models.FileField(
+        upload_to='documentos/%Y/%m/%d/',
+        validators=[validate_file_extension_and_size] # Aplicamos nuestro guardián
+    )
     # Nuevo campo para saber quién subió el documento
     subido_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='documentos_subidos')
     fecha_carga = models.DateTimeField(auto_now_add=True)

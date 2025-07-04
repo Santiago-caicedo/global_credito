@@ -27,7 +27,12 @@
                             {{ user.username }} ({{ user.perfil.get_rol_display }})
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'admin:logout' %}">Cerrar Sesión</a></li>
+                            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                                </button>
+                            </form>
                         </ul>
                     </li>
                 {% else %}

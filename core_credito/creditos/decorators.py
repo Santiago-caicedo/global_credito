@@ -1,13 +1,34 @@
 from django.core.exceptions import PermissionDenied
 from functools import wraps
 
-def director_required(view_func):
+from django.core.exceptions import PermissionDenied
+from django.contrib import messages
+from django.shortcuts import redirect
+from functools import wraps
+
+def role_required(allowed_roles=[]):
     """
-    Decorador que comprueba si el usuario logueado tiene el rol de DIRECTOR.
+    Decorador genérico que comprueba si un usuario tiene uno de los roles permitidos.
     """
-    @wraps(view_func)
-    def _wrapped_view(request, *args, **kwargs):
-        if not request.user.is_authenticated or not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'DIRECTOR':
-            raise PermissionDenied
-        return view_func(request, *args, **kwargs)
-    return _wrapped_view
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            # Si el usuario no está autenticado o no tiene un perfil, denegar acceso.
+            if not request.user.is_authenticated or not hasattr(request.user, 'perfil'):
+                raise PermissionDenied
+
+            # Si el rol del usuario no está en la lista de roles permitidos, denegar acceso.
+            if request.user.perfil.rol not in allowed_roles:
+                messages.error(request, "No tiene permiso para acceder a esta página.")
+                # Redirigir a una página segura, como el login o un dashboard principal
+                return redirect('login') 
+            
+            # Si pasa todas las comprobaciones, ejecutar la vista original.
+            return view_func(request, *args, **kwargs)
+        return _wrapped_view
+    return decorator
+
+# Creamos decoradores específicos para cada rol usando el genérico
+asesor_required = role_required(allowed_roles=['ASESOR'])
+analista_required = role_required(allowed_roles=['ANALISTA'])
+director_required = role_required(allowed_roles=['DIRECTOR'])

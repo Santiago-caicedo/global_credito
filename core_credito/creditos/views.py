@@ -4,13 +4,15 @@ from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .decorators import director_required
 from django.contrib.auth.models import User
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import AuthenticationForm
 from usuarios.models import PerfilUsuario
 from django.core.paginator import Paginator
 from decimal import Decimal
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth
+from .decorators import asesor_required, analista_required, director_required
 import json
 from .models import ParametrosGlobales, SolicitudCredito, Documento, HistorialEstado
 from .forms import (
@@ -27,7 +29,7 @@ from .services import (
 # ==============================================================================
 # VISTAS DEL ASESOR
 # ==============================================================================
-
+@asesor_required
 @login_required
 def crear_solicitud_view(request):
     action = request.POST.get('action', 'input')
@@ -82,7 +84,7 @@ def crear_solicitud_view(request):
     form = SolicitudCreditoForm(request.POST if action == 'edit' else None)
     return render(request, 'creditos/crear_solicitud.html', {'form': form})
 
-
+@asesor_required
 @login_required
 def listar_solicitudes_view(request):
     """
@@ -118,6 +120,7 @@ def listar_solicitudes_view(request):
     return render(request, 'creditos/listar_solicitudes.html', contexto)
 
 @login_required
+@asesor_required
 def eliminar_documento_asesor_view(request, documento_id):
     """
     Permite a un asesor eliminar un documento que él mismo ha subido,
@@ -148,6 +151,7 @@ def eliminar_documento_asesor_view(request, documento_id):
     return redirect('listar_solicitudes')
 
 @login_required
+@asesor_required
 def solicitud_detalle_view(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id)
     
@@ -210,6 +214,7 @@ def solicitud_detalle_view(request, solicitud_id):
 
 
 @login_required
+@asesor_required
 def enviar_a_asignacion_view(request, solicitud_id):
     if request.method == 'POST':
         solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id)
@@ -235,12 +240,32 @@ def enviar_a_asignacion_view(request, solicitud_id):
     
     return redirect('solicitud_detalle', solicitud_id=solicitud.id)
 
+@login_required
+@asesor_required
+def corregir_documento_view(request, documento_id):
+    if request.method == 'POST':
+        documento = get_object_or_404(Documento, id=documento_id)
+        solicitud_id = documento.solicitud.id
+        
+        # Seguridad: solo el asesor de la solicitud puede borrar el documento
+        if request.user != documento.solicitud.asesor_comercial:
+            messages.error(request, "Acción no permitida.")
+            return redirect('listar_solicitudes')
+            
+        nombre_doc = documento.get_nombre_documento_display()
+        documento.delete()
+        messages.info(request, f"Documento '{nombre_doc}' eliminado. Por favor, vuelva a subir la versión correcta.")
+        return redirect('solicitud_detalle', solicitud_id=solicitud_id)
+
+    # Si no es POST, simplemente redirigir
+    return redirect('listar_solicitudes')
 
 # ==============================================================================
 # VISTAS DEL ANALISTA
 # ==============================================================================
 
 @login_required
+@analista_required
 def analista_caso_activo_view(request):
     if not hasattr(request.user, 'perfil'):
         messages.error(request, "No tienes un perfil de usuario asignado."); return redirect('analista_escritorio')
@@ -288,6 +313,7 @@ def analista_caso_activo_view(request):
 
 
 @login_required
+@analista_required
 def preaprobar_solicitud_view(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
     
@@ -316,6 +342,7 @@ def preaprobar_solicitud_view(request, solicitud_id):
 
 
 @login_required
+@analista_required
 def rechazar_solicitud_view(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
     estado_anterior = solicitud.estado
@@ -336,7 +363,7 @@ def rechazar_solicitud_view(request, solicitud_id):
 
 
 @login_required
-@login_required
+@analista_required
 def capacidad_pago_view(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
     
@@ -462,6 +489,7 @@ def capacidad_pago_view(request, solicitud_id):
 
 
 @login_required
+@analista_required
 def validar_documento_view(request, documento_id):
     documento = get_object_or_404(Documento, id=documento_id)
     solicitud = documento.solicitud
@@ -498,6 +526,7 @@ def validar_documento_view(request, documento_id):
 
 
 @login_required
+@analista_required
 def devolver_a_asesor_view(request, solicitud_id):
     if request.method == 'POST':
         solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
@@ -524,25 +553,6 @@ def devolver_a_asesor_view(request, solicitud_id):
     return redirect('analista_escritorio')
 
 
-
-@login_required
-def corregir_documento_view(request, documento_id):
-    if request.method == 'POST':
-        documento = get_object_or_404(Documento, id=documento_id)
-        solicitud_id = documento.solicitud.id
-        
-        # Seguridad: solo el asesor de la solicitud puede borrar el documento
-        if request.user != documento.solicitud.asesor_comercial:
-            messages.error(request, "Acción no permitida.")
-            return redirect('listar_solicitudes')
-            
-        nombre_doc = documento.get_nombre_documento_display()
-        documento.delete()
-        messages.info(request, f"Documento '{nombre_doc}' eliminado. Por favor, vuelva a subir la versión correcta.")
-        return redirect('solicitud_detalle', solicitud_id=solicitud_id)
-
-    # Si no es POST, simplemente redirigir
-    return redirect('listar_solicitudes')
 
 
 
@@ -583,6 +593,7 @@ def enviar_para_documentos_finales_view(request, solicitud_id):
 
 
 @login_required
+@analista_required
 def enviar_a_validacion_final_view(request, solicitud_id):
         if request.method == 'POST':
             solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, asesor_comercial=request.user)
@@ -608,6 +619,7 @@ def enviar_a_validacion_final_view(request, solicitud_id):
 
 
 @login_required
+@analista_required
 def validacion_final_view(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
     
@@ -641,6 +653,7 @@ def validacion_final_view(request, solicitud_id):
 
 
 @login_required
+@analista_required
 def analista_escritorio_view(request):
     """
     El nuevo escritorio del analista, con estadísticas y un diseño profesional.
@@ -681,6 +694,7 @@ def analista_escritorio_view(request):
 
 
 @login_required
+@analista_required
 def historial_analista_view(request):
     """
     Muestra el historial de solicitudes atendidas por el analista,
@@ -725,6 +739,7 @@ def historial_analista_view(request):
 
 
 @login_required
+@analista_required
 def enviar_a_director_view(request, solicitud_id):
     """
     Acción final del analista. Cambia el estado, libera al analista
@@ -767,6 +782,7 @@ def enviar_a_director_view(request, solicitud_id):
 
 
 @login_required
+@analista_required
 def devolver_docs_finales_view(request, solicitud_id):
     """
     Devuelve el caso al asesor para corregir DOCUMENTOS FINALES,
@@ -797,6 +813,7 @@ def devolver_docs_finales_view(request, solicitud_id):
 
 
 @login_required
+@analista_required
 def analista_detalle_historial_view(request, solicitud_id):
     """
     Muestra a un analista el detalle completo de una solicitud que ya ha procesado.
@@ -831,6 +848,24 @@ def analista_detalle_historial_view(request, solicitud_id):
     return render(request, 'creditos/analista_detalle_historial.html', contexto)
 
 
+@login_required
+@analista_required
+def eliminar_documento_analista_view(request, documento_id):
+    """
+    Permite al analista eliminar un documento que él mismo ha subido.
+    """
+    if request.method == 'POST':
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Seguridad: solo el analista asignado puede borrar el documento
+        if request.user == documento.solicitud.analista_asignado:
+            nombre_doc = documento.get_nombre_documento_display()
+            documento.delete()
+            messages.success(request, f"Documento '{nombre_doc}' eliminado correctamente.")
+        else:
+            messages.error(request, "Acción no permitida.")
+            
+    return redirect('analista_caso_activo')
 
 
 # ==============================================================================
@@ -1060,26 +1095,7 @@ def historial_completo_view(request):
 
 
 
-#Nuevas vistas para analista
 
-
-@login_required
-def eliminar_documento_analista_view(request, documento_id):
-    """
-    Permite al analista eliminar un documento que él mismo ha subido.
-    """
-    if request.method == 'POST':
-        documento = get_object_or_404(Documento, id=documento_id)
-        
-        # Seguridad: solo el analista asignado puede borrar el documento
-        if request.user == documento.solicitud.analista_asignado:
-            nombre_doc = documento.get_nombre_documento_display()
-            documento.delete()
-            messages.success(request, f"Documento '{nombre_doc}' eliminado correctamente.")
-        else:
-            messages.error(request, "Acción no permitida.")
-            
-    return redirect('analista_caso_activo')
 
 #vista para gestionar usuarios desde perfil de director
 
