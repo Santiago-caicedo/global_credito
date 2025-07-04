@@ -1,66 +1,92 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear Nueva Solicitud de Crédito</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container mt-5 mb-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-header">
-                        <h2 class="text-center">Crear Nueva Solicitud de Crédito</h2>
-                    </div>
-                    <div class="card-body">
-                        <form method="post" novalidate>
-                            {% csrf_token %}
+{% extends 'base.html' %}
+{% load humanize %}
 
-                            <!-- Mostramos errores generales del formulario, si los hay -->
-                            {% if form.non_field_errors %}
-                                <div class="alert alert-danger">
-                                    {{ form.non_field_errors }}
-                                </div>
-                            {% endif %}
+{% block title %}Nueva Solicitud de Crédito{% endblock %}
 
-                            <!-- Iteramos sobre cada campo para tener control total -->
-                            {% for field in form %}
-                                <div class="mb-3">
-                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                    {{ field }} {# Esto renderiza el input (ej: <input type="text" ...>) #}
-                                    
-                                    {# Mostramos los errores específicos de este campo, si existen #}
-                                    {% if field.errors %}
-                                        <div class="alert alert-danger p-2 mt-2">
-                                            {{ field.errors.as_text }}
-                                        </div>
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="text-center mb-4">
+            <h1 class="h2">Nueva Solicitud de Crédito</h1>
+            <p class="text-muted">
+                {% if confirmation_mode %}
+                    Paso 2 de 2: Confirme los datos antes de enviar.
+                {% else %}
+                    Paso 1 de 2: Complete todos los campos para iniciar el proceso.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if confirmation_mode %}
+                        <!-- ====================================================== -->
+                        <!--    MODO CONFIRMACIÓN: Mostramos el resumen y los botones finales -->
+                        <!-- ====================================================== -->
+                        <h5 class="mb-3">Por favor, revise los datos antes de enviar:</h5>
+                        <dl class="row">
+                            {# La vista ahora nos da una lista 'confirmation_data' ya preparada #}
+                            {% for item in confirmation_data %}
+                                <dt class="col-sm-4">{{ item.label }}</dt>
+                                <dd class="col-sm-8">
+                                    {% if 'monto' in item.name or 'ingresos' in item.name %}
+                                        ${{ item.value|intcomma }}
+                                    {% elif 'plazo' in item.name %}
+                                        {{ item.value }} meses
+                                    {% elif 'fecha' in item.name %}
+                                        {{ item.value|date:"d F, Y" }}
+                                    {% else %}
+                                        {{ item.value }}
                                     {% endif %}
+                                </dd>
+                            {% endfor %}
+                        </dl>
+                        
+                        <!-- Campos ocultos para reenviar los datos -->
+                        {% for field in form %}
+                            <input type="hidden" name="{{ field.name }}" value="{{ field.value }}">
+                        {% endfor %}
+                        
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" name="action" value="edit" class="btn btn-secondary btn-lg">Editar Datos</button>
+                            <button type="submit" name="action" value="confirm" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle-fill me-2"></i>Confirmar y Enviar
+                            </button>
+                        </div>
+
+                    {% else %}
+                        <!-- ====================================================== -->
+                        <!--    MODO ENTRADA: Mostramos el formulario para llenar   -->
+                        <!-- ====================================================== -->
+                        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                        <div class="row g-3">
+                            {% for field in form %}
+                                <div class="col-md-6">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors.as_text }}</div>{% endif %}
                                 </div>
                             {% endfor %}
-
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg">Crear y Evaluar Solicitud</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-grid">
+                            <button type="submit" name="action" value="review" class="btn btn-primary btn-lg">
+                                <i class="bi bi-eye-fill me-2"></i>Revisar Datos
+                            </button>
+                        </div>
+                    {% endif %}
+                </form>
             </div>
         </div>
-        
-        <!-- Para mostrar mensajes de éxito/error de la vista -->
-        {% if messages %}
-            <div class="row justify-content-center mt-4">
-                <div class="col-md-8">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}" role="alert">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        {% endif %}
     </div>
-</body>
-</html>
+</div>
+
+{% endblock %}

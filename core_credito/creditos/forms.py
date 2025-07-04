@@ -269,3 +269,77 @@ class HistorialFiltroForm(forms.Form):
         empty_label="Todos los Analistas",
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+
+
+
+class AnalistaHistorialFiltroForm(forms.Form):
+    """
+    Un formulario para que el analista filtre su historial de casos atendidos.
+    """
+    # Creamos un campo de estado, con los estados finales relevantes
+    ESTADOS_FINALES_CHOICES = [
+        ('', 'Todos los Estados'),
+        (SolicitudCredito.ESTADO_RECHAZADO_ANALISTA, 'Rechazado por mí'),
+        (SolicitudCredito.ESTADO_APROBADO, 'Aprobado por Director'),
+        (SolicitudCredito.ESTADO_RECHAZADO_DIRECTOR, 'Rechazado por Director'),
+    ]
+    estado = forms.ChoiceField(
+        label="Estado Final",
+        choices=ESTADOS_FINALES_CHOICES, 
+        required=False, 
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    # Creamos campos para filtrar por rango de fechas
+    fecha_inicio = forms.DateField(
+        label="Desde",
+        required=False, 
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    fecha_fin = forms.DateField(
+        label="Hasta",
+        required=False, 
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+
+
+class CrearUsuarioForm(forms.Form):
+    """
+    Formulario para que el Director cree nuevos usuarios, ahora incluyendo el teléfono.
+    """
+    username = forms.CharField(label="Nombre de Usuario (único)", max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    first_name = forms.CharField(label="Nombres", max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(label="Apellidos", max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(label="Correo Electrónico", widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    
+    # --- CAMPO AÑADIDO ---
+    telefono = forms.CharField(label="Número de Teléfono", max_length=20, required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    
+    password = forms.CharField(label="Contraseña Temporal", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+
+
+class AsesorHistorialFiltroForm(forms.Form):
+    """
+    Un formulario para que el asesor filtre su propia lista de solicitudes.
+    """
+    # Creamos un campo de estado, añadiendo una opción para "Todos"
+    ESTADOS_CHOICES = [('', 'Todos los Estados')] + SolicitudCredito.ESTADOS_CHOICES
+    estado = forms.ChoiceField(
+        label="Estado",
+        choices=ESTADOS_CHOICES, 
+        required=False, 
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    # Creamos campos para filtrar por rango de fechas
+    fecha_inicio = forms.DateField(
+        label="Desde",
+        required=False, 
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    fecha_fin = forms.DateField(
+        label="Hasta",
+        required=False, 
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )

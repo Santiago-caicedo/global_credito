@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalle de Solicitud #{{ solicitud.id }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 <div class="container mt-5 mb-5">
@@ -36,7 +37,6 @@
     <hr>
 
     <div class="row g-4">
-        <!-- Columna Izquierda: Ver y gestionar documentos cargados -->
         <div class="col-md-7">
             <div class="card h-100">
                 <div class="card-header"><h5 class="mb-0">Documentos Cargados</h5></div>
@@ -44,24 +44,52 @@
                     {% if not documentos_cargados %}
                         <p class="text-muted">Aún no se han cargado documentos para esta etapa.</p>
                     {% else %}
-                        <ul class="list-group list-group-flush">
+                        <div class="list-group">
                             {% for doc in documentos_cargados %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center {% if not doc.ok_analista %}list-group-item-danger{% endif %}">
-                                    <div>
-                                        {{ doc.get_nombre_documento_display }}
-                                        {% if not doc.ok_analista and doc.observacion_correccion %}
-                                            <p class="small text-danger mb-0 mt-1 fst-italic"><strong>Motivo:</strong> "{{ doc.observacion_correccion }}"</p>
-                                        {% endif %}
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <!-- Icono y Nombre -->
+                                        <div class="me-3 fs-3 {% if not doc.ok_analista and doc.observacion_correccion %}text-danger{% else %}text-success{% endif %}">
+                                            <i class="bi bi-file-earmark-text-fill"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{{ doc.get_nombre_documento_display }}</h6>
+                                            {% if not doc.ok_analista and doc.observacion_correccion %}
+                                                <small class="text-danger fst-italic">Requiere corrección: "{{ doc.observacion_correccion }}"</small>
+                                            {% else %}
+                                                <small class="text-muted">{{ doc.archivo.size|filesizeformat }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <!-- Acciones -->
+                                        <div class="ms-3">
+                                            <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-outline-secondary btn-sm">Ver</a>
+                                            
+                                            <!-- ====================================================== -->
+                                            <!--    LÓGICA CORREGIDA PARA LOS BOTONES                   -->
+                                            <!-- ====================================================== -->
+                                            {% if not doc.ok_analista and doc.observacion_correccion %}
+                                                {# Si el documento fue RECHAZADO, mostramos el botón "Corregir" #}
+                                                <form action="{% url 'corregir_documento' doc.id %}" method="post" class="d-inline ms-1" onsubmit="return confirm('¿Está seguro de que desea eliminar este documento para reemplazarlo?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger btn-sm" title="Corregir Documento">
+                                                        <i class="bi bi-trash-fill me-1"></i>Corregir
+                                                    </button>
+                                                </form>
+                                            {% elif solicitud.estado in "PEND_DOCUMENTOS,DOCS_CORRECCION,PEND_DOCS_ADICIONALES,DOCS_FINALES_CORRECCION" %}
+                                                {# Si el documento está OK pero la solicitud aún es editable, mostramos el botón "Eliminar" #}
+                                                <form action="{% url 'eliminar_documento_asesor' doc.id %}" method="post" class="d-inline ms-1" onsubmit="return confirm('¿Está seguro de que desea eliminar este documento?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Documento">
+                                                        <i class="bi bi-trash-fill"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            <!-- ====================================================== -->
+                                        </div>
                                     </div>
-                                    <div>
-                                        <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-secondary btn-sm">Ver</a>
-                                        {% if not doc.ok_analista %}
-                                        <form action="{% url 'corregir_documento' doc.id %}" method="post" class="d-inline ms-2">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Corregir</button></form>
-                                        {% endif %}
-                                    </div>
-                                </li>
+                                </div>
                             {% endfor %}
-                        </ul>
+                        </div>
                     {% endif %}
                 </div>
             </div>

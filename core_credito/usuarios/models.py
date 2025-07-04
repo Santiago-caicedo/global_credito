@@ -14,12 +14,13 @@ class PerfilUsuario(models.Model):
     ]
     usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
     rol = models.CharField(max_length=10, choices=ROLES)
+    telefono = models.CharField("Teléfono", max_length=20, blank=True, null=True)
 
     # --- NUEVO CAMPO ---
     # Si este campo apunta a una solicitud, el analista está ocupado.
     # Si es NULL, está libre.
     solicitud_actual = models.OneToOneField(
-        SolicitudCredito,
+        'creditos.SolicitudCredito',
         on_delete=models.SET_NULL, # Si la solicitud se borra, el analista queda libre
         null=True,
         blank=True,

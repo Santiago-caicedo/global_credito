@@ -224,6 +224,13 @@ class Documento(models.Model):
     def __str__(self):
         return f"{self.get_nombre_documento_display()} de Solicitud #{self.solicitud.id}"
     
+    @property
+    def extension(self):
+        # Devuelve la extensión del archivo en mayúsculas (ej: 'PDF', 'PNG')
+        import os
+        name, extension = os.path.splitext(self.archivo.name)
+        return extension.replace('.', '').upper()
+    
 
 
 

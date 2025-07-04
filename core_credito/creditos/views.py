@@ -1,13 +1,20 @@
 # En tu archivo: creditos/views.py
 
+from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from .decorators import director_required
+from django.contrib.auth.models import User
+from usuarios.models import PerfilUsuario
 from django.core.paginator import Paginator
 from decimal import Decimal
+from django.db.models import Count, Sum
+from django.db.models.functions import TruncMonth
+import json
 from .models import ParametrosGlobales, SolicitudCredito, Documento, HistorialEstado
 from .forms import (
-    DocumentoFinalForm, HistorialFiltroForm, ObservacionAnalisisForm, ObservacionReferenciasForm, ParametrosGlobalesForm, RechazoDocumentoForm, ReferenciaForm, SolicitudCreditoForm, DocumentoForm, DocumentoAnalisisForm,
+    AnalistaHistorialFiltroForm, AsesorHistorialFiltroForm, CrearUsuarioForm, DocumentoFinalForm, HistorialFiltroForm, ObservacionAnalisisForm, ObservacionReferenciasForm, ParametrosGlobalesForm, RechazoDocumentoForm, ReferenciaForm, SolicitudCreditoForm, DocumentoForm, DocumentoAnalisisForm,
     AnalisisRiesgoForm, CapacidadPagoForm, OfertaForm, OfertaDefinitivaForm
 )
 from .services import (
@@ -23,49 +30,122 @@ from .services import (
 
 @login_required
 def crear_solicitud_view(request):
-    if request.method == 'POST':
+    action = request.POST.get('action', 'input')
+
+    # Si el usuario envía el formulario para revisión
+    if request.method == 'POST' and action == 'review':
+        form = SolicitudCreditoForm(request.POST)
+        if form.is_valid():
+            # --- ¡AQUÍ ESTÁ LA LÓGICA CORREGIDA! ---
+            # Preparamos los datos para la pantalla de confirmación
+            confirmation_data = []
+            for name, value in form.cleaned_data.items():
+                field = form.fields[name]
+                display_value = value
+                # Obtenemos el texto legible para los campos con opciones (choices)
+                if hasattr(field, 'choices'):
+                    display_value = dict(field.choices).get(value, value)
+                
+                confirmation_data.append({
+                    'label': field.label,
+                    'value': display_value,
+                    'name': name, # Guardamos el nombre técnico para el formateo
+                })
+            
+            contexto = {
+                'form': form, # Pasamos el form original para los campos ocultos
+                'confirmation_mode': True,
+                'confirmation_data': confirmation_data, # Pasamos la lista preparada
+            }
+            return render(request, 'creditos/crear_solicitud.html', contexto)
+        else:
+            # Si hay errores, mostramos el formulario de nuevo con los errores
+            return render(request, 'creditos/crear_solicitud.html', {'form': form})
+
+    # Si el usuario confirma el envío final
+    elif request.method == 'POST' and action == 'confirm':
         form = SolicitudCreditoForm(request.POST)
         if form.is_valid():
             solicitud = form.save(commit=False)
             solicitud.asesor_comercial = request.user
             solicitud.save()
-
-            HistorialEstado.objects.create(
-                solicitud=solicitud,
-                estado_nuevo=solicitud.estado,
-                usuario_responsable=request.user,
-                observaciones="Creación de la solicitud por asesor."
-            )
-            
+            HistorialEstado.objects.create(solicitud=solicitud, estado_nuevo=solicitud.estado, usuario_responsable=request.user, observaciones="Creación de la solicitud por asesor.")
             nuevo_estado, observacion_motor = ejecutar_motor_inicial(solicitud)
-            
             estado_anterior = solicitud.estado
             solicitud.estado = nuevo_estado
             solicitud.save()
-
-            HistorialEstado.objects.create(
-                solicitud=solicitud,
-                estado_anterior=estado_anterior,
-                estado_nuevo=nuevo_estado,
-                usuario_responsable=None,
-                observaciones=f"Resultado del motor inicial: {observacion_motor}"
-            )
-            
+            HistorialEstado.objects.create(solicitud=solicitud, estado_anterior=estado_anterior, estado_nuevo=nuevo_estado, usuario_responsable=None, observaciones=f"Resultado del motor inicial: {observacion_motor}")
             messages.success(request, f"Solicitud #{solicitud.id} ha sido creada y procesada exitosamente.")
             return redirect('listar_solicitudes')
-        else:
-            messages.error(request, "Error al crear la solicitud. Por favor, revise los campos obligatorios.")
-    else:
-        form = SolicitudCreditoForm()
-        
+    
+    # Si es la primera vez que se carga la página (GET) o si se hace clic en "Editar"
+    form = SolicitudCreditoForm(request.POST if action == 'edit' else None)
     return render(request, 'creditos/crear_solicitud.html', {'form': form})
 
 
 @login_required
 def listar_solicitudes_view(request):
-    solicitudes_del_asesor = SolicitudCredito.objects.filter(asesor_comercial=request.user)
-    return render(request, 'creditos/listar_solicitudes.html', {'solicitudes': solicitudes_del_asesor})
+    """
+    Muestra el historial de solicitudes del asesor con filtros y paginación.
+    """
+    # Base queryset: solo las solicitudes del asesor logueado
+    solicitudes_list = SolicitudCredito.objects.filter(
+        asesor_comercial=request.user
+    ).order_by('-fecha_creacion')
 
+    # Aplicamos los filtros si se enviaron en la URL (método GET)
+    form = AsesorHistorialFiltroForm(request.GET)
+    if form.is_valid():
+        if form.cleaned_data.get('estado'):
+            solicitudes_list = solicitudes_list.filter(estado=form.cleaned_data['estado'])
+        if form.cleaned_data.get('fecha_inicio'):
+            solicitudes_list = solicitudes_list.filter(fecha_creacion__gte=form.cleaned_data['fecha_inicio'])
+        if form.cleaned_data.get('fecha_fin'):
+            # Usamos __lt (menor que) para el día siguiente para incluir el día final completo
+            from datetime import timedelta
+            fecha_fin = form.cleaned_data['fecha_fin'] + timedelta(days=1)
+            solicitudes_list = solicitudes_list.filter(fecha_creacion__lt=fecha_fin)
+
+    # Paginación: mostramos 15 solicitudes por página
+    paginator = Paginator(solicitudes_list, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    contexto = {
+        'page_obj': page_obj, # Enviamos el objeto de la página a la plantilla
+        'form': form,
+    }
+    return render(request, 'creditos/listar_solicitudes.html', contexto)
+
+@login_required
+def eliminar_documento_asesor_view(request, documento_id):
+    """
+    Permite a un asesor eliminar un documento que él mismo ha subido,
+    siempre y cuando la solicitud esté en una etapa editable.
+    """
+    if request.method == 'POST':
+        documento = get_object_or_404(Documento, id=documento_id)
+        solicitud_id = documento.solicitud.id
+        
+        # Doble chequeo de seguridad:
+        # 1. ¿El usuario actual es el dueño del documento?
+        # 2. ¿La solicitud está en un estado que permite la edición?
+        estados_permitidos = [
+            SolicitudCredito.ESTADO_PEND_DOCUMENTOS,
+            SolicitudCredito.ESTADO_DOCS_CORRECCION,
+            SolicitudCredito.ESTADO_PEND_DOCS_ADICIONALES,
+            SolicitudCredito.ESTADO_DOCS_FINALES_CORRECCION
+        ]
+        if request.user == documento.subido_por and documento.solicitud.estado in estados_permitidos:
+            nombre_doc = documento.get_nombre_documento_display()
+            documento.delete()
+            messages.success(request, f"Documento '{nombre_doc}' eliminado correctamente.")
+        else:
+            messages.error(request, "Acción no permitida.")
+            
+        return redirect('solicitud_detalle', solicitud_id=solicitud_id)
+
+    return redirect('listar_solicitudes')
 
 @login_required
 def solicitud_detalle_view(request, solicitud_id):
@@ -162,108 +242,47 @@ def enviar_a_asignacion_view(request, solicitud_id):
 
 @login_required
 def analista_caso_activo_view(request):
-    # 1. Verificación inicial del perfil y la solicitud asignada
     if not hasattr(request.user, 'perfil'):
-        messages.error(request, "No tienes un perfil de usuario asignado.")
-        return redirect('/') # O una página de inicio segura
-
+        messages.error(request, "No tienes un perfil de usuario asignado."); return redirect('analista_escritorio')
     solicitud_asignada = request.user.perfil.solicitud_actual
     if not solicitud_asignada:
-        return render(request, 'creditos/analista_caso_activo.html', {'solicitud': None})
-
-    # 2. Lógica de POST: Procesamiento de los diferentes formularios
+        messages.info(request, "No tiene casos asignados actualmente."); return redirect('analista_escritorio')
     if request.method == 'POST':
-        # Instanciamos los formularios con los datos del POST
-        form_documento = DocumentoAnalisisForm(request.POST, request.FILES)
-        form_observacion = ObservacionAnalisisForm(request.POST, instance=solicitud_asignada)
-        form_riesgo = AnalisisRiesgoForm(request.POST, instance=solicitud_asignada)
-
         if 'submit_documento' in request.POST:
-            if form_documento.is_valid():
-                doc = form_documento.save(commit=False)
-                doc.solicitud = solicitud_asignada
-                doc.subido_por = request.user
-                doc.save()
+            form = DocumentoAnalisisForm(request.POST, request.FILES);
+            if form.is_valid():
+                doc = form.save(commit=False); doc.solicitud = solicitud_asignada; doc.subido_por = request.user; doc.save()
                 messages.success(request, f"Documento '{doc.get_nombre_documento_display()}' cargado.")
             return redirect('analista_caso_activo')
-
         elif 'submit_observacion' in request.POST:
-            if form_observacion.is_valid():
-                form_observacion.save()
-                messages.success(request, "Observación guardada.")
+            form = ObservacionAnalisisForm(request.POST, instance=solicitud_asignada)
+            if form.is_valid(): form.save(); messages.success(request, "Observación guardada.")
             return redirect('analista_caso_activo')
-        
-        elif 'submit_observacion' in request.POST:
-            form_observacion = ObservacionAnalisisForm(request.POST, instance=solicitud_asignada)
-            if form_observacion.is_valid():
-                form_observacion.save()
-                messages.success(request, "Observación guardada correctamente.")
-            else:
-                messages.error(request, "No se pudo guardar la observación.")
-            return redirect('analista_caso_activo')
-
         elif 'submit_riesgo' in request.POST:
-            if form_riesgo.is_valid():
-                form_riesgo.save()
-                aprobado, recomendacion_texto = ejecutar_motor_recomendacion(form_riesgo.cleaned_data)
-                solicitud_asignada.recomendacion_sistema_aprobada = aprobado
-                solicitud_asignada.recomendacion_sistema_texto = recomendacion_texto
-                solicitud_asignada.save()
+            form_riesgo_post = AnalisisRiesgoForm(request.POST, instance=solicitud_asignada)
+            if form_riesgo_post.is_valid():
+                form_riesgo_post.save()
+                aprobado, recomendacion_texto = ejecutar_motor_recomendacion(form_riesgo_post.cleaned_data)
+                solicitud_asignada.recomendacion_sistema_aprobada = aprobado; solicitud_asignada.recomendacion_sistema_texto = recomendacion_texto; solicitud_asignada.save()
                 messages.info(request, "Recomendación del sistema generada y guardada.")
-            else:
-                messages.error(request, "Error al generar la recomendación. Por favor, revise los campos.")
-            # NO redirigimos, para mostrar el resultado inmediatamente
-        
-    # 3. Lógica de GET y preparación del contexto final para renderizar
-    # Se ejecuta en peticiones GET o después de un POST que no redirige
-    
-    # Preparamos los formularios (o los volvemos a crear si es una petición GET)
-    form_documento = DocumentoAnalisisForm()
-    form_observacion = ObservacionAnalisisForm(instance=solicitud_asignada)
-    form_riesgo = AnalisisRiesgoForm(instance=solicitud_asignada)
-    
-    # Preparamos el resto del contexto
     documentos_del_asesor = solicitud_asignada.documentos.filter(subido_por=solicitud_asignada.asesor_comercial)
     documentos_del_analista = solicitud_asignada.documentos.filter(subido_por=request.user)
-
-    # Adjuntamos una instancia del formulario de rechazo a cada documento del asesor
-    for doc in documentos_del_asesor:
-        doc.rechazo_form = RechazoDocumentoForm(instance=doc)
-
+    for doc in documentos_del_asesor: doc.rechazo_form = RechazoDocumentoForm(instance=doc)
+    necesita_correccion = any(not doc.ok_analista and doc.observacion_correccion for doc in documentos_del_asesor)
     docs_obligatorios = {'HISTORIAL_CREDITO', 'PROCESOS_JUDICIALES'}
     docs_cargados_analista = {doc.nombre_documento for doc in documentos_del_analista}
-
-
-    necesita_correccion = any(
-        not doc.ok_analista and doc.observacion_correccion
-        for doc in documentos_del_asesor
-    )
-    
+    documentos_obligatorios_ok = docs_obligatorios.issubset(docs_cargados_analista)
+    active_step = 1
+    if documentos_obligatorios_ok and not necesita_correccion: active_step = 2
+    if solicitud_asignada.recomendacion_sistema_texto: active_step = 3
     contexto = {
-        'solicitud': solicitud_asignada,
+        'solicitud': solicitud_asignada, 'form_documento': DocumentoAnalisisForm(),
         'form_observacion': ObservacionAnalisisForm(instance=solicitud_asignada),
-        'form_observacion': form_observacion,
-        'form_riesgo': form_riesgo,
-        'form_documento': DocumentoAnalisisForm(), 
-        'documentos_del_asesor': documentos_del_asesor,
-        'documentos_del_analista': documentos_del_analista,
-        'documentos_obligatorios_ok': docs_obligatorios.issubset(docs_cargados_analista),
-        'necesita_correccion': necesita_correccion,
-        'recomendacion': solicitud_asignada.recomendacion_sistema_texto,
-        'recomendacion_aprobada': solicitud_asignada.recomendacion_sistema_aprobada
+        'form_riesgo': AnalisisRiesgoForm(instance=solicitud_asignada),
+        'documentos_del_asesor': documentos_del_asesor, 'documentos_del_analista': documentos_del_analista,
+        'documentos_obligatorios_ok': documentos_obligatorios_ok, 'necesita_correccion': necesita_correccion,
+        'active_step': active_step,
     }
-
-
-    if request.method == 'POST' and 'submit_riesgo' in request.POST:
-        form_riesgo_post = AnalisisRiesgoForm(request.POST, instance=solicitud_asignada)
-        if form_riesgo_post.is_valid():
-            form_riesgo_post.save()
-            aprobado, recomendacion_texto = ejecutar_motor_recomendacion(form_riesgo_post.cleaned_data)
-            contexto['recomendacion'] = recomendacion_texto
-            contexto['recomendacion_aprobada'] = aprobado
-        contexto['form_riesgo'] = form_riesgo_post
-    
-    # 4. Devolvemos la respuesta final
     return render(request, 'creditos/analista_caso_activo.html', contexto)
 
 
@@ -664,23 +683,40 @@ def analista_escritorio_view(request):
 @login_required
 def historial_analista_view(request):
     """
-    Muestra una lista de todas las solicitudes que un analista ha finalizado.
+    Muestra el historial de solicitudes atendidas por el analista,
+    con filtros y paginación.
     """
-    # Estados que consideramos "finalizados" desde la perspectiva del analista
     estados_finalizados = [
         SolicitudCredito.ESTADO_RECHAZADO_ANALISTA,
-        SolicitudCredito.ESTADO_PEND_APROB_DIRECTOR,
         SolicitudCredito.ESTADO_APROBADO,
         SolicitudCredito.ESTADO_RECHAZADO_DIRECTOR,
+        SolicitudCredito.ESTADO_PEND_APROB_DIRECTOR # Incluimos los que envió al director
     ]
     
-    solicitudes_atendidas = SolicitudCredito.objects.filter(
+    # Obtenemos la base de solicitudes del analista
+    solicitudes_list = SolicitudCredito.objects.filter(
         analista_asignado=request.user,
         estado__in=estados_finalizados
     ).order_by('-fecha_actualizacion')
-    
+
+    # Aplicamos los filtros si se enviaron en la URL
+    form = AnalistaHistorialFiltroForm(request.GET)
+    if form.is_valid():
+        if form.cleaned_data.get('estado'):
+            solicitudes_list = solicitudes_list.filter(estado=form.cleaned_data['estado'])
+        if form.cleaned_data.get('fecha_inicio'):
+            solicitudes_list = solicitudes_list.filter(fecha_actualizacion__gte=form.cleaned_data['fecha_inicio'])
+        if form.cleaned_data.get('fecha_fin'):
+            solicitudes_list = solicitudes_list.filter(fecha_actualizacion__lte=form.cleaned_data['fecha_fin'])
+
+    # Paginación: mostramos 15 solicitudes por página
+    paginator = Paginator(solicitudes_list, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     contexto = {
-        'solicitudes': solicitudes_atendidas
+        'page_obj': page_obj,
+        'form': form,
     }
     return render(request, 'creditos/historial_analista.html', contexto)
 
@@ -760,6 +796,41 @@ def devolver_docs_finales_view(request, solicitud_id):
 
 
 
+@login_required
+def analista_detalle_historial_view(request, solicitud_id):
+    """
+    Muestra a un analista el detalle completo de una solicitud que ya ha procesado.
+    Es una vista de solo lectura.
+    """
+    # Seguridad: Solo el analista que trabajó en el caso puede verlo.
+    solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, analista_asignado=request.user)
+    
+    # Recopilamos toda la información para mostrarla
+    tipos_iniciales = ['CEDULA', 'DECLARACION_RENTA', 'CERTIFICADO_LABORAL', 'AUTORIZACION_CONSULTA']
+    tipos_cierre = ['PAGARE', 'CARTA_INSTRUCCIONES', 'POLIZA_SEGURO', 'FORMATO_VINCULACION']
+
+    documentos_iniciales_asesor = solicitud.documentos.filter(nombre_documento__in=tipos_iniciales)
+    documentos_finales_asesor = solicitud.documentos.filter(nombre_documento__in=tipos_cierre)
+    documentos_analista = solicitud.documentos.filter(subido_por=solicitud.analista_asignado)
+    
+    # --- ¡AQUÍ ESTÁ LA LÓGICA AÑADIDA! ---
+    # Volvemos a calcular el desglose de capacidad de pago para mostrarlo
+    resultado_capacidad = None
+    if solicitud.capacidad_pago_calculada is not None:
+        resultado_capacidad = calcular_capacidad_pago_service(solicitud)
+    # ------------------------------------
+
+    contexto = {
+        'solicitud': solicitud,
+        'documentos_iniciales_asesor': documentos_iniciales_asesor,
+        'documentos_finales_asesor': documentos_finales_asesor,
+        'documentos_analista': documentos_analista,
+        'referencias': solicitud.referencias.all(),
+        'resultado_capacidad': resultado_capacidad, # Pasamos el desglose a la plantilla
+    }
+    return render(request, 'creditos/analista_detalle_historial.html', contexto)
+
+
 
 
 # ==============================================================================
@@ -767,17 +838,51 @@ def devolver_docs_finales_view(request, solicitud_id):
 # ==============================================================================
 
 @login_required
+@director_required
 def director_escritorio_view(request):
     """
-    La página de inicio para el Director, que actúa como un centro de control.
+    El nuevo dashboard del Director, con estadísticas, gráficos y
+    una visión general del rendimiento del negocio.
     """
-    # Aquí podríamos pasar estadísticas en el futuro
-    contexto = {}
+    # --- 1. Tarjetas de Estadísticas (KPIs) ---
+    solicitudes_pendientes_count = SolicitudCredito.objects.filter(estado=SolicitudCredito.ESTADO_PEND_APROB_DIRECTOR).count()
+    solicitudes_aprobadas_count = SolicitudCredito.objects.filter(estado=SolicitudCredito.ESTADO_APROBADO).count()
+    total_desembolsado = SolicitudCredito.objects.filter(estado=SolicitudCredito.ESTADO_APROBADO).aggregate(Sum('monto_aprobado_calculado'))['monto_aprobado_calculado__sum'] or 0
+    
+    # --- 2. Datos para el Gráfico de Líneas (Solicitudes por Mes) ---
+    solicitudes_por_mes = SolicitudCredito.objects.annotate(month=TruncMonth('fecha_creacion')).values('month').annotate(count=Count('id')).order_by('month')
+    
+    # Formateamos los datos para Chart.js
+    labels_line_chart = [s['month'].strftime('%b %Y') for s in solicitudes_por_mes]
+    data_line_chart = [s['count'] for s in solicitudes_por_mes]
+
+    # --- 3. Datos para el Gráfico de Dona (Distribución de Estados) ---
+    estados_finales = [SolicitudCredito.ESTADO_APROBADO, SolicitudCredito.ESTADO_RECHAZADO_DIRECTOR, SolicitudCredito.ESTADO_RECHAZADO_ANALISTA, SolicitudCredito.ESTADO_RECHAZADO_AUTO]
+    distribucion_estados = SolicitudCredito.objects.filter(estado__in=estados_finales).values('estado').annotate(count=Count('id'))
+    
+    # Formateamos los datos para Chart.js
+    labels_donut_chart = [dict(SolicitudCredito.ESTADOS_CHOICES).get(d['estado']) for d in distribucion_estados]
+    data_donut_chart = [d['count'] for d in distribucion_estados]
+
+    # --- 4. Tabla de Acciones Inmediatas ---
+    ultimas_pendientes = SolicitudCredito.objects.filter(estado=SolicitudCredito.ESTADO_PEND_APROB_DIRECTOR).order_by('fecha_actualizacion')[:5]
+
+    contexto = {
+        'solicitudes_pendientes_count': solicitudes_pendientes_count,
+        'solicitudes_aprobadas_count': solicitudes_aprobadas_count,
+        'total_desembolsado': total_desembolsado,
+        'ultimas_pendientes': ultimas_pendientes,
+        'labels_line_chart': json.dumps(labels_line_chart),
+        'data_line_chart': json.dumps(data_line_chart),
+        'labels_donut_chart': json.dumps(labels_donut_chart),
+        'data_donut_chart': json.dumps(data_donut_chart),
+    }
     return render(request, 'creditos/director_escritorio.html', contexto)
 
 
 
 @login_required
+@director_required
 def gestion_parametros_view(request):
     # Obtenemos la única instancia de parámetros, o creamos una si no existe.
     parametros, created = ParametrosGlobales.objects.get_or_create(pk=1)
@@ -799,6 +904,7 @@ def gestion_parametros_view(request):
 
 
 @login_required
+@director_required
 def director_pendientes_view(request):
     """
     Muestra al Director una lista de todas las solicitudes que están
@@ -817,6 +923,7 @@ def director_pendientes_view(request):
 
 
 @login_required
+@director_required
 def director_detalle_solicitud_view(request, solicitud_id):
     """
     Muestra al Director el detalle completo, separando los tipos de documentos
@@ -858,8 +965,8 @@ def director_detalle_solicitud_view(request, solicitud_id):
 
 
 
-
 @login_required
+@director_required
 def aprobar_credito_final_view(request, solicitud_id):
     """
     Acción final para APROBAR el crédito. Cambia el estado y cierra el caso.
@@ -886,6 +993,7 @@ def aprobar_credito_final_view(request, solicitud_id):
 
 
 @login_required
+@director_required
 def rechazar_credito_final_view(request, solicitud_id):
     """
     Acción final para RECHAZAR el crédito. Cambia el estado y cierra el caso.
@@ -914,6 +1022,7 @@ def rechazar_credito_final_view(request, solicitud_id):
 
 
 @login_required
+@director_required
 def historial_completo_view(request):
     """
     Muestra el historial completo de todas las solicitudes con filtros
@@ -948,3 +1057,122 @@ def historial_completo_view(request):
         'form': form,
     }
     return render(request, 'creditos/historial_completo.html', contexto)
+
+
+
+#Nuevas vistas para analista
+
+
+@login_required
+def eliminar_documento_analista_view(request, documento_id):
+    """
+    Permite al analista eliminar un documento que él mismo ha subido.
+    """
+    if request.method == 'POST':
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Seguridad: solo el analista asignado puede borrar el documento
+        if request.user == documento.solicitud.analista_asignado:
+            nombre_doc = documento.get_nombre_documento_display()
+            documento.delete()
+            messages.success(request, f"Documento '{nombre_doc}' eliminado correctamente.")
+        else:
+            messages.error(request, "Acción no permitida.")
+            
+    return redirect('analista_caso_activo')
+
+#vista para gestionar usuarios desde perfil de director
+
+@login_required
+@director_required
+def gestion_usuarios_view(request):
+    """Página principal de Gestión de Usuarios, con enlaces a Asesores y Analistas."""
+    return render(request, 'creditos/gestion_usuarios.html')
+
+@login_required
+@director_required
+def gestion_rol_view(request, rol):
+    """Página intermedia que ofrece las opciones de 'Ver' o 'Añadir' para un rol específico."""
+    rol_mayuscula = rol.upper()
+    if rol_mayuscula not in ['ASESOR', 'ANALISTA']:
+        raise Http404("Rol no válido")
+    
+    contexto = {
+        'rol': rol,
+        'rol_display': 'Asesores' if rol_mayuscula == 'ASESOR' else 'Analistas'
+    }
+    return render(request, 'creditos/gestion_rol.html', contexto)
+
+@login_required
+@director_required
+def listar_usuarios_por_rol_view(request, rol):
+    """Muestra una lista de todos los usuarios para un rol específico."""
+    rol_mayuscula = rol.upper()
+    if rol_mayuscula not in ['ASESOR', 'ANALISTA']:
+        raise Http404("Rol no válido")
+    
+    usuarios = User.objects.filter(perfil__rol=rol_mayuscula).order_by('username')
+    contexto = {
+        'rol': rol,
+        'rol_display': 'Asesores' if rol_mayuscula == 'ASESOR' else 'Analistas',
+        'usuarios': usuarios
+    }
+    return render(request, 'creditos/listar_usuarios.html', contexto)
+
+@login_required
+@director_required
+def crear_usuario_rol_view(request, rol):
+    rol_mayuscula = rol.upper()
+    if rol_mayuscula not in ['ASESOR', 'ANALISTA']:
+        raise Http404("Rol no válido")
+
+    if request.method == 'POST':
+        form = CrearUsuarioForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            if User.objects.filter(username=username).exists():
+                messages.error(request, f"El nombre de usuario '{username}' ya existe.")
+            else:
+                # Creamos el usuario de Django
+                new_user = User.objects.create_user(
+                    username=form.cleaned_data['username'],
+                    password=form.cleaned_data['password'],
+                    email=form.cleaned_data['email'],
+                    first_name=form.cleaned_data['first_name'],
+                    last_name=form.cleaned_data['last_name'],
+                    is_staff=True
+                )
+                # --- ¡AQUÍ ESTÁ LA LÓGICA AÑADIDA! ---
+                # Creamos el perfil y guardamos el teléfono
+                PerfilUsuario.objects.create(
+                    usuario=new_user, 
+                    rol=rol_mayuscula,
+                    telefono=form.cleaned_data.get('telefono')
+                )
+                # ------------------------------------
+                messages.success(request, f"Usuario '{username}' creado exitosamente.")
+                return redirect('listar_usuarios', rol=rol)
+    else:
+        form = CrearUsuarioForm()
+
+    contexto = {
+        'form': form,
+        'rol': rol,
+        'rol_display': 'Asesor' if rol_mayuscula == 'ASESOR' else 'Analista'
+    }
+    return render(request, 'creditos/crear_usuario.html', contexto)
+@login_required
+@director_required
+def eliminar_usuario_view(request, usuario_id):
+    """Procesa la eliminación de un usuario."""
+    if request.method == 'POST':
+        usuario_a_eliminar = get_object_or_404(User, id=usuario_id)
+        rol = usuario_a_eliminar.perfil.rol.lower()
+        if usuario_a_eliminar == request.user:
+            messages.error(request, "No puede eliminarse a sí mismo.")
+        else:
+            username = usuario_a_eliminar.username
+            usuario_a_eliminar.delete()
+            messages.warning(request, f"Usuario '{username}' eliminado permanentemente.")
+        return redirect('listar_usuarios', rol=rol)
+    return redirect('gestion_usuarios')

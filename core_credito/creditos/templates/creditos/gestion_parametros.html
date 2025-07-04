@@ -1,28 +1,80 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestión de Parámetros Globales</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container mt-5">
-    <a href="{% url 'director_escritorio' %}">&larr; Volver al Escritorio</a>
-    <h2 class="mt-2">Gestión de Parámetros Globales</h2>
-    <p class="text-muted">Estos valores afectan todos los cálculos de oferta de crédito en el sistema.</p>
-    <hr>
-    
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
+{% extends 'base.html' %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary mt-3">Guardar Cambios</button>
-    </form>
+{% block title %}Gestión de Parámetros Globales{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <!-- Encabezado de la Página -->
+        <div class="text-center mb-4">
+            <a href="{% url 'director_escritorio' %}" class="d-block mb-3">&larr; Volver al Escritorio</a>
+            <h1 class="h2">Parámetros Globales del Sistema</h1>
+            <p class="text-muted">Estos valores afectan todos los cálculos de oferta de crédito. Modifíquelos con cuidado.</p>
+        </div>
+
+        <!-- Mensajes del Sistema -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Formulario dentro de una Tarjeta -->
+        <div class="card shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <!-- Renderizamos cada campo manualmente para un control total -->
+                    <div class="mb-4">
+                        <label for="{{ form.smlv.id_for_label }}" class="form-label fw-bold">{{ form.smlv.label }}</label>
+                        {{ form.smlv }}
+                        {% if form.smlv.help_text %}<div class="form-text">{{ form.smlv.help_text }}</div>{% endif %}
+                        {% if form.smlv.errors %}<div class="invalid-feedback d-block">{{ form.smlv.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.tasa_interes_mensual.id_for_label }}" class="form-label fw-bold">{{ form.tasa_interes_mensual.label }}</label>
+                        {{ form.tasa_interes_mensual }}
+                        {% if form.tasa_interes_mensual.help_text %}<div class="form-text">{{ form.tasa_interes_mensual.help_text }}</div>{% endif %}
+                        {% if form.tasa_interes_mensual.errors %}<div class="invalid-feedback d-block">{{ form.tasa_interes_mensual.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.porcentaje_seguro.id_for_label }}" class="form-label fw-bold">{{ form.porcentaje_seguro.label }}</label>
+                        {{ form.porcentaje_seguro }}
+                        {% if form.porcentaje_seguro.help_text %}<div class="form-text">{{ form.porcentaje_seguro.help_text }}</div>{% endif %}
+                        {% if form.porcentaje_seguro.errors %}<div class="invalid-feedback d-block">{{ form.porcentaje_seguro.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.porcentaje_fgs.id_for_label }}" class="form-label fw-bold">{{ form.porcentaje_fgs.label }}</label>
+                        {{ form.porcentaje_fgs }}
+                        {% if form.porcentaje_fgs.help_text %}<div class="form-text">{{ form.porcentaje_fgs.help_text }}</div>{% endif %}
+                        {% if form.porcentaje_fgs.errors %}<div class="invalid-feedback d-block">{{ form.porcentaje_fgs.errors }}</div>{% endif %}
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save-fill me-2"></i>
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
-</body>
-</html>
+
+{% endblock %}

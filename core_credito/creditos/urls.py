@@ -5,6 +5,7 @@ urlpatterns = [
     path('crear/', views.crear_solicitud_view, name='crear_solicitud'),
     path('lista/', views.listar_solicitudes_view, name='listar_solicitudes'),
     path('<int:solicitud_id>/', views.solicitud_detalle_view, name='solicitud_detalle'),
+    path('documento/asesor/<int:documento_id>/eliminar/', views.eliminar_documento_asesor_view, name='eliminar_documento_asesor'),
     path('<int:solicitud_id>/enviar_asignacion/', views.enviar_a_asignacion_view, name='enviar_a_asignacion'),
     path('analista/caso_activo/', views.analista_caso_activo_view, name='analista_caso_activo'),
     path('solicitud/<int:solicitud_id>/preaprobar/', views.preaprobar_solicitud_view, name='preaprobar_solicitud'),
@@ -27,6 +28,14 @@ urlpatterns = [
     path('director/solicitud/<int:solicitud_id>/aprobar/', views.aprobar_credito_final_view, name='aprobar_credito_final'),
     path('director/solicitud/<int:solicitud_id>/rechazar/', views.rechazar_credito_final_view, name='rechazar_credito_final'),
     path('director/historial/', views.historial_completo_view, name='historial_completo'),
+    path('documento/analista/<int:documento_id>/eliminar/', views.eliminar_documento_analista_view, name='eliminar_documento_analista'),
+    path('analista/historial/<int:solicitud_id>/', views.analista_detalle_historial_view, name='analista_detalle_historial'),
+        # --- NUEVAS URLs para Gestión de Usuarios ---
+    path('director/usuarios/', views.gestion_usuarios_view, name='gestion_usuarios'),
+    path('director/usuarios/<str:rol>/', views.gestion_rol_view, name='gestion_rol'),
+    path('director/usuarios/<str:rol>/listar/', views.listar_usuarios_por_rol_view, name='listar_usuarios'),
+    path('director/usuarios/<str:rol>/crear/', views.crear_usuario_rol_view, name='crear_usuario'),
+    path('director/usuarios/eliminar/<int:usuario_id>/', views.eliminar_usuario_view, name='eliminar_usuario'),
 
 
 ]
