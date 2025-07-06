@@ -39,9 +39,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'axes',
     'usuarios.apps.UsuariosConfig',
     'creditos.apps.CreditosConfig',
     
+]
+
+
+AUTHENTICATION_BACKENDS = [
+    # AxesBackend debe ser el primero para verificar los intentos de acceso.
+    'axes.backends.AxesBackend',
+
+    # El backend por defecto de Django debe mantenerse.
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [
@@ -52,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'core_credito.urls'
@@ -135,3 +146,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = 'login'
+
+
+# --- CONFIGURACIÓN DE TIMEOUT DE SESIÓN ---
+# Duración de la sesión en segundos (ej: 15 minutos * 60 segundos = 900)
+SESSION_COOKIE_AGE = 900
+
+
+# Le decimos a Django que resetee el contador de inactividad con cada petición.
+# Esto significa que mientras el usuario esté activo, su sesión no expirará.
+SESSION_SAVE_EVERY_REQUEST = True

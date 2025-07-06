@@ -269,9 +269,16 @@ def corregir_documento_view(request, documento_id):
 def analista_caso_activo_view(request):
     if not hasattr(request.user, 'perfil'):
         messages.error(request, "No tienes un perfil de usuario asignado."); return redirect('analista_escritorio')
+    
     solicitud_asignada = request.user.perfil.solicitud_actual
     if not solicitud_asignada:
         messages.info(request, "No tiene casos asignados actualmente."); return redirect('analista_escritorio')
+    
+    if solicitud_asignada.estado != SolicitudCredito.ESTADO_EN_ANALISIS:
+        messages.warning(request, f"La solicitud #{solicitud_asignada.id} ya no está en la etapa de análisis de riesgo.")
+        # Lo redirigimos a su escritorio para que vea el estado actualizado.
+        return redirect('analista_escritorio')
+    
     if request.method == 'POST':
         if 'submit_documento' in request.POST:
             form = DocumentoAnalisisForm(request.POST, request.FILES);
@@ -593,27 +600,39 @@ def enviar_para_documentos_finales_view(request, solicitud_id):
 
 
 @login_required
-@analista_required
+@asesor_required # Aseguramos que solo un asesor pueda acceder
 def enviar_a_validacion_final_view(request, solicitud_id):
-        if request.method == 'POST':
-            solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, asesor_comercial=request.user)
-            
-            estado_anterior = solicitud.estado
-            solicitud.estado = SolicitudCredito.ESTADO_EN_VALIDACION_DOCS
-            solicitud.save()
+    """
+    Acción final del asesor para enviar los documentos de cierre a validación.
+    """
+    if request.method == 'POST':
+        # 1. Obtenemos la solicitud y verificamos que el asesor sea el dueño
+        solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id, asesor_comercial=request.user)
+        
+        # 2. Guardamos el estado anterior para el historial
+        estado_anterior = solicitud.estado
+        
+        # 3. Cambiamos el estado de la solicitud al siguiente paso
+        solicitud.estado = SolicitudCredito.ESTADO_EN_VALIDACION_DOCS
+        solicitud.save()
 
-            HistorialEstado.objects.create(
-                solicitud=solicitud,
-                estado_anterior=estado_anterior,
-                estado_nuevo=solicitud.estado,
-                usuario_responsable=request.user,
-                observaciones="Asesor cargó documentos finales y envió a validación."
-            )
-            
-            messages.success(request, f"Solicitud #{solicitud.id} enviada a validación final.")
-            return redirect('solicitud_detalle', solicitud_id=solicitud_id)
-            
-        return redirect('listar_solicitudes')
+        # 4. Creamos un registro en el historial para auditoría
+        HistorialEstado.objects.create(
+            solicitud=solicitud,
+            estado_anterior=estado_anterior,
+            estado_nuevo=solicitud.estado,
+            usuario_responsable=request.user,
+            observaciones="Asesor cargó documentos finales y envió a validación."
+        )
+        
+        # 5. Notificamos al asesor que la acción fue exitosa
+        messages.success(request, f"Solicitud #{solicitud.id} enviada a validación final. El analista será notificado.")
+        
+        # 6. Redirigimos de vuelta a la página de detalle, donde verá el estado actualizado
+        return redirect('solicitud_detalle', solicitud_id=solicitud.id)
+    
+    # Si la petición no es POST, por seguridad, lo devolvemos a su lista
+    return redirect('listar_solicitudes')
 
 
 

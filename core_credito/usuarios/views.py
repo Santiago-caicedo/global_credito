@@ -8,7 +8,6 @@ def login_view(request):
     Maneja el inicio de sesión de los usuarios y los redirige
     según su rol.
     """
-    # Si el usuario ya está autenticado, lo redirigimos a su escritorio
     if request.user.is_authenticated:
         if hasattr(request.user, 'perfil'):
             if request.user.perfil.rol == 'ASESOR':
@@ -17,18 +16,21 @@ def login_view(request):
                 return redirect('analista_escritorio')
             elif request.user.perfil.rol == 'DIRECTOR':
                 return redirect('director_escritorio')
-        return redirect('/') # Redirección por defecto
+        return redirect('/')
 
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+            
+            # --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+            # Ahora pasamos el objeto 'request' a la función authenticate.
+            user = authenticate(request, username=username, password=password)
+            
             if user is not None:
                 login(request, user)
-                messages.info(request, f"Bienvenido de nuevo, {username}.")
-                # Redirigir según el rol después del login
+                # La redirección según el rol se mantiene igual
                 if hasattr(user, 'perfil'):
                     if user.perfil.rol == 'ASESOR':
                         return redirect('listar_solicitudes')
