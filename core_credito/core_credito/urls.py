@@ -12,8 +12,10 @@ urlpatterns = [
     # --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
     # Esta línea redirige la raíz del sitio ('/') a la página de login ('/cuentas/login/').
     path('', RedirectView.as_view(url='/cuentas/login/', permanent=True)),
+    path('__debug__/', include('debug_toolbar.urls')),
 ]
 
-# La configuración para servir archivos multimedia se mantiene igual
+
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
