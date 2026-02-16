@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #4d5572; margin: 0; padding: 0; background-color: #f0efef; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #a3b38d 0%, #8fa07a 100%); color: white; padding: 30px; text-align: center; border-radius: 12px 12px 0 0; }
+        .header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
+        .header p { margin: 10px 0 0; opacity: 0.9; }
+        .content { background: white; padding: 30px; border: 1px solid #e2dfdd; }
+        .footer { background: #4d5572; color: rgba(255,255,255,0.8); padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 12px 12px; }
+        .success-box { background: linear-gradient(135deg, #f0f5ed 0%, #e8efe5 100%); border-left: 4px solid #a3b38d; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; text-align: center; }
+        .amount { font-size: 32px; color: #a3b38d; font-weight: bold; display: block; margin: 10px 0; }
+        .golden-line { width: 60px; height: 3px; background: #c9a86c; margin: 15px auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {% if logo_url %}
+            <img src="{{ logo_url }}" alt="Global Care F.S." style="max-width: 180px; height: auto; margin-bottom: 15px;">
+            {% endif %}
+            <h1>Felicitaciones!</h1>
+            <div class="golden-line"></div>
+            <p>Tu credito ha sido aprobado</p>
+        </div>
+        <div class="content">
+            <h2 style="color: #4d5572; margin-top: 0;">Hola {{ nombre_corto }},</h2>
+
+            <p>Nos complace informarle que su solicitud de credito <strong>#{{ solicitud.id }}</strong> ha sido <strong style="color: #a3b38d;">APROBADA</strong>.</p>
+
+            <div class="success-box">
+                <strong style="color: #4d5572;">Detalles de su credito aprobado:</strong><br>
+                <span class="amount">${{ solicitud.monto_aprobado_calculado|floatformat:0 }}</span>
+                <span style="color: #7a87a5;">Plazo: <strong>{{ solicitud.plazo_oferta }} meses</strong></span>
+            </div>
+
+            <p>Pronto nos comunicaremos con usted para coordinar los pasos siguientes del desembolso.</p>
+
+            <p>Gracias por confiar en Global Care Financial Services.</p>
+
+            <p style="margin-top: 30px;">Atentamente,<br>
+            <strong style="color: #4d5572;">Equipo Global Care F.S.</strong></p>
+        </div>
+        <div class="footer">
+            Este es un correo automatico, por favor no responda a este mensaje.<br>
+            <span style="color: #c9a86c;">Solicitud #{{ solicitud.id }}</span><br>
+            <small style="opacity: 0.7;">Global Care Financial Services - Alianzas de Bienestar</small>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Gestion de Usuarios{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'director_escritorio' %}">&larr; Volver al Escritorio</a>
+            <h1 class="h2 mt-2">Gestion de Usuarios</h1>
+            <p class="text-muted">Seleccione el rol que desea gestionar.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Tarjeta para Gestionar Analistas -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center d-flex flex-column p-4">
+                    <div class="display-4 mb-3" style="color: var(--gc-azul-oscuro);"><i class="bi bi-person-workspace"></i></div>
+                    <h4 class="card-title" style="color: var(--gc-azul-oscuro);">Analistas de Credito</h4>
+                    <p class="card-text text-muted">Ver la lista de analistas, crear nuevos o eliminarlos del sistema.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'gestion_rol' 'analista' %}" class="btn btn-gc-primary">Gestionar Analistas</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

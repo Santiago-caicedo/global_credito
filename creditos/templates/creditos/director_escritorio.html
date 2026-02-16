@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard del Director{% endblock %}
+
+{% block extra_css %}
+<style>
+    .action-link {
+        display: block;
+        padding: 1.25rem;
+        text-decoration: none;
+        color: var(--gc-azul-oscuro);
+        background-color: #fff;
+        border: 2px solid var(--gc-gris-claro);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .action-link:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(77, 85, 114, 0.15);
+        border-color: var(--gc-dorado);
+        color: var(--gc-azul-oscuro);
+    }
+    .action-link i {
+        color: var(--gc-azul-medio);
+        transition: all 0.3s ease;
+    }
+    .action-link:hover i {
+        color: var(--gc-dorado);
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Encabezado -->
+<div class="page-header">
+    <h2><i class="bi bi-speedometer2 me-2" style="color: var(--gc-dorado);"></i>Dashboard del Director</h2>
+    <p class="subtitle">Panel de control y estadisticas generales</p>
+</div>
+
+<!-- Tarjetas de Estadisticas -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-4 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="stat-number">{{ solicitudes_pendientes_count }}</div>
+            <div class="stat-label">Pendientes de Aprobacion</div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-number">{{ solicitudes_aprobadas_count }}</div>
+            <div class="stat-label">Creditos Aprobados</div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-number" style="font-size: 1.5rem;">${{ total_desembolsado|intcomma }}</div>
+            <div class="stat-label">Total Desembolsado</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modulos de Gestion -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="bi bi-grid-3x3-gap me-2" style="color: var(--gc-dorado);"></i>Modulos de Gestion</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'director_pendientes' %}" class="action-link">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-inbox-fill fs-2 me-3"></i>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Solicitudes Pendientes</h6>
+                            <small class="text-muted">Revisar y decidir casos</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'historial_completo' %}" class="action-link">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-archive-fill fs-2 me-3"></i>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Historial Completo</h6>
+                            <small class="text-muted">Consultar todas las solicitudes</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'gestion_usuarios' %}" class="action-link">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-people-fill fs-2 me-3"></i>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Gestion de Usuarios</h6>
+                            <small class="text-muted">Administrar personal</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'gestion_parametros' %}" class="action-link">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-sliders fs-2 me-3"></i>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Parametros Globales</h6>
+                            <small class="text-muted">Editar tasas y configuracion</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graficos -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="bi bi-graph-up me-2" style="color: var(--gc-dorado);"></i>Solicitudes Creadas por Mes</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="lineChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="bi bi-pie-chart me-2" style="color: var(--gc-dorado);"></i>Distribucion de Estados</h5>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="donutChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Acciones Inmediatas -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="bi bi-lightning me-2" style="color: var(--gc-dorado);"></i>Acciones Inmediatas</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-gc mb-0">
+                <thead>
+                    <tr>
+                        <th># Sol.</th>
+                        <th>Cliente</th>
+                        <th>Analista</th>
+                        <th class="text-end">Monto</th>
+                        <th class="text-end">Accion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for solicitud in ultimas_pendientes %}
+                    <tr>
+                        <td><strong>#{{ solicitud.id }}</strong></td>
+                        <td>{{ solicitud.nombre_completo }}</td>
+                        <td>{{ solicitud.analista_asignado.username }}</td>
+                        <td class="text-end">${{ solicitud.monto_aprobado_calculado|intcomma }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'director_detalle_solicitud' solicitud.id %}" class="btn btn-gc-primary btn-sm">
+                                <i class="bi bi-eye me-1"></i>Revisar
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-check-circle" style="font-size: 2rem; color: var(--gc-verde-salvia);"></i>
+                            <p class="mt-2 mb-0 text-muted">Excelente! No hay solicitudes pendientes</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Grafico de Lineas con colores Global Care
+        const ctxLine = document.getElementById('lineChart');
+        if (ctxLine) {
+            new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: {{ labels_line_chart|safe }},
+                    datasets: [{
+                        label: 'Solicitudes Creadas',
+                        data: {{ data_line_chart|safe }},
+                        borderColor: '#4d5572',
+                        backgroundColor: 'rgba(77, 85, 114, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#c9a86c',
+                        pointBorderColor: '#c9a86c'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Grafico de Dona con colores Global Care
+        const ctxDonut = document.getElementById('donutChart');
+        if (ctxDonut) {
+            new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ labels_donut_chart|safe }},
+                    datasets: [{
+                        label: 'Distribucion',
+                        data: {{ data_donut_chart|safe }},
+                        backgroundColor: [
+                            '#a3b38d',  // verde salvia - aprobados
+                            '#c0392b',  // rojo - rechazados
+                            '#c9a86c',  // dorado - pendientes
+                            '#7a87a5'   // azul medio - otros
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

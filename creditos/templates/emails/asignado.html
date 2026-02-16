@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.8; color: #4d5572; margin: 0; padding: 0; background-color: #f0efef; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #a3b38d 0%, #8fa178 100%); color: white; padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; }
+        .header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
+        .header p { margin: 15px 0 0; opacity: 0.9; font-style: italic; }
+        .content { background: white; padding: 40px 35px; border: 1px solid #e2dfdd; }
+        .footer { background: #4d5572; color: rgba(255,255,255,0.8); padding: 25px; text-align: center; font-size: 12px; border-radius: 0 0 12px 12px; }
+        .success-box { background: linear-gradient(135deg, #e8efe5 0%, #f0f5ed 100%); border-left: 4px solid #a3b38d; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .golden-line { width: 60px; height: 3px; background: #c9a86c; margin: 15px auto; }
+        .signature { margin-top: 35px; padding-top: 25px; border-top: 1px solid #e2dfdd; }
+        .status-badge { display: inline-block; background: #a3b38d; color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {% if logo_url %}
+            <img src="{{ logo_url }}" alt="Global Care F.S." style="max-width: 180px; height: auto; margin-bottom: 15px;">
+            {% else %}
+            <h1>GLOBAL CARE F.S.</h1>
+            {% endif %}
+            <div class="golden-line"></div>
+            <p>Alianzas de Bienestar</p>
+        </div>
+        <div class="content">
+            <h2 style="color: #4d5572; margin-top: 0;">Buenas noticias, {{ nombre_corto }}</h2>
+
+            <p>
+                Tu solicitud de credito <strong>#{{ solicitud.id }}</strong> ha sido asignada
+                a uno de nuestros analistas para su revision.
+            </p>
+
+            <div style="text-align: center;">
+                <span class="status-badge">En revision por analista</span>
+            </div>
+
+            <div class="success-box">
+                <strong style="color: #a3b38d;">¿Que sigue ahora?</strong>
+                <p style="margin: 10px 0 0; color: #4d5572;">
+                    Nuestro analista revisara cuidadosamente tu informacion y documentos.
+                    Este proceso puede tomar entre 1 y 3 dias habiles dependiendo de la complejidad
+                    del caso.
+                </p>
+            </div>
+
+            <p>
+                Durante la revision, es posible que te contactemos si necesitamos informacion
+                adicional o si alguno de tus documentos requiere correccion.
+            </p>
+
+            <p style="color: #7a87a5;">
+                Te notificaremos por correo electronico cuando haya novedades sobre tu solicitud.
+                Tambien puedes ingresar a tu cuenta para ver el estado en tiempo real.
+            </p>
+
+            <div class="signature">
+                <p style="color: #a3b38d; font-style: italic; margin-bottom: 5px;">Estamos trabajando en tu solicitud,</p>
+                <p style="color: #4d5572; font-weight: bold; margin-top: 0;">Equipo Global Care F.S.</p>
+            </div>
+        </div>
+        <div class="footer">
+            Este es un correo automatico, por favor no responda a este mensaje.<br>
+            <span style="color: #c9a86c;">Solicitud #{{ solicitud.id }}</span><br>
+            <small style="opacity: 0.7;">Global Care Financial Services - Alianzas de Bienestar</small>
+        </div>
+    </div>
+</body>
+</html>

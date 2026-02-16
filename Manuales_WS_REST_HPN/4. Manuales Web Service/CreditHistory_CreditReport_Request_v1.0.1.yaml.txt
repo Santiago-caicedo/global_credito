@@ -1,0 +1,263 @@
+openapi: 3.0.3
+info:
+  title: Credit History
+  description: |-
+    Associated services of customer credit history information
+
+  contact:
+    name: Rodrigo Fonseca
+    email: rodrigo.fonseca@experian.com
+  version: 1.0.1
+
+tags:
+  - name: Natural Person
+    description: Obtain credit services associated with the history of the client's financial obligations
+
+paths:
+  /cs/credit-history/v1/hdcplus:
+    post:
+      tags:
+        - Natural Person
+      summary: report
+      operationId: Findy by Person Id Number
+      description: Returns a single Historial Report
+      parameters:
+        - name: userIpAddress
+          in: header
+          description: IP del usuario
+          required: false
+          explode: true
+          schema:
+            type: string
+            format: ipv4
+            example: "198.51.100.42"
+        - name: serverIpAddress
+          in: header
+          description: IP del server
+          required: true
+          explode: true
+          schema:
+            type: string
+            format: ipv4
+            example: "198.51.101.42"
+        - name: ProductId
+          in: header
+          description: ID del producto
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "64"
+        - name: InfoAccountType
+          in: header
+          description: Nuevos tipos de cartera
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "1"
+        - name: Client_id
+          in: header
+          description: Client ID
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "SKDhuD5aQzxbpDJSHdNDeJgLKZtrsaL7"
+        - name: Client_secret
+          in: header
+          description: Client Secret
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "zSDKidfHdNDeJ"
+        - name: Authorization
+          in: header
+          description: Authorization Token
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "Bearer SJDhie8PKDiehEIHD34nike..."
+      requestBody:
+        description: Create a new request of Credit score
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/identifyingAttributes"
+        required: true
+
+      responses:
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/badRequest_errorMessage"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorized_errorMessage"
+        503:
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unavailable_errorMessage"
+
+      x-codegen-request-body-name: body
+
+components:
+  schemas:
+    badRequest_errorMessage:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                example: 400
+              message:
+                type: string
+                example: OASValidation OAS-Validation
+        uri:
+          type: string
+          example: /cs/credit-history/v1/hdcplus
+
+    unauthorized_errorMessage:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                example: 401
+              message:
+                type: string
+                example: Unauthorized
+        uri:
+          type: string
+          example: /cs/credit-history/v1/hdcplus
+
+    unavailable_errorMessage:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                example: 503
+              message:
+                type: string
+                example: The Service is temporarily unavailable
+        uri:
+          type: string
+          example: /cs/credit-history/v1/hdcplus
+
+    identifyingAttributes:
+      type: object
+      properties:
+        user:
+          type: string
+          example: 8001201341
+        password:
+          type: string
+          example: XYZS
+        identifyingTrx:
+          type: object
+          description: Identificacion del cliente a consultars
+          properties:
+            requestUUID:
+              type: string
+              description: Identificacion de la sesion del usuario en el sistema cliente
+              format: uuid
+            dateTime:
+              description: fecha en la que se realiza la peticion del sistema
+              type: string
+              format: date-time
+              example: "2021-05-01T16:04:02-05:00"
+            originatorChannelName:
+              description: Canal de origen de la trx
+              type: string
+              pattern: ^.*$
+              example: Canal XYZ
+            originatorChannelType:
+              description: codigo de cnala origen de la trx
+              type: string
+              pattern: ^.*$
+              example: 42
+
+        identifyingUser:
+          type: object
+          description: Identificacion del cliente a consultars
+          properties:
+            person:
+              $ref: "#/components/schemas/IdentifyingAttributes"
+
+        parameters:
+          type: array
+          items:
+            title: lista de parametros para el Backend
+            type: object
+            properties:
+              type:
+                title: type
+                type: string
+                example: 0
+                description: Llave para el Tipo de parámetro.
+              nameParameter:
+                type: string
+                description: Nombre de parámetro
+                example: codigos
+              valueParameter:
+                type: string
+                description: Valor de parámetro.
+                example: TOM-001
+
+    IdentifyingAttributes:
+      type: object
+      description: informacion llave
+      properties:
+        personId:
+          $ref: "#/components/schemas/KeyInformation"
+        personLastName:
+          type: string
+          description: apellido digitado en la consulta
+          example: VIDAL
+
+    KeyInformation:
+      type: object
+      description: informacion llave
+      properties:
+        personIdNumber:
+          type: string
+          default: ""
+          example: 79995359
+        personIdType:
+          type: integer
+          example: 1
+        personIdDesc:
+          type: string
+          example: NÚMERO DE IDENTIFICACIÓN TRIBUTARIA
+          description: Descripcion tipo de identificacion

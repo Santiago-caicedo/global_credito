@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Analisis de Solicitud #{{ solicitud.id }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos para el menu de navegacion lateral */
+    .step-nav .list-group-item {
+        border: none;
+        padding: 1rem 1.25rem;
+        font-weight: 500;
+        color: var(--gc-azul-medio);
+        border-left: 4px solid transparent;
+        transition: all 0.2s ease-in-out;
+    }
+    .step-nav .list-group-item.active {
+        color: var(--gc-azul-oscuro);
+        background-color: rgba(77, 85, 114, 0.1);
+        border-left-color: var(--gc-azul-oscuro);
+        font-weight: bold;
+    }
+    .step-nav .list-group-item.completed {
+        color: var(--gc-verde-salvia);
+        font-weight: bold;
+    }
+    .step-nav .list-group-item .bi-check-circle-fill {
+        margin-right: 8px;
+    }
+    .step-nav .list-group-item.disabled {
+        color: #adb5bd;
+        background-color: #f8f9fa;
+        pointer-events: none;
+    }
+    .card-header h5, .card-header h6 {
+        margin-bottom: 0;
+    }
+</style>
+
+<!-- Encabezado -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <a href="{% url 'analista_escritorio' %}" class="text-decoration-none" style="color: var(--gc-azul-medio);">&larr; Volver al Escritorio</a>
+        <h2 class="mt-2" style="color: var(--gc-azul-oscuro);">Analisis de Caso Activo: Solicitud #{{ solicitud.id }}</h2>
+    </div>
+    <span class="badge {{ solicitud.get_estado_color_class }} fs-6">{{ solicitud.get_estado_display }}</span>
+</div>
+<p class="text-muted">Cliente: {{ solicitud.nombre_completo }}</p>
+<hr>
+{% if messages %}{% for message in messages %}<div class="alert alert-gc-{{ message.tags }} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>{% endfor %}{% endif %}
+
+{% if solicitud %}
+
+    <!-- Tarjeta de Resumen con Diseno Profesional -->
+    <div class="card mb-4 shadow-sm overflow-hidden">
+        <div class="card-header p-4" style="background: linear-gradient(135deg, var(--gc-azul-oscuro) 0%, var(--gc-azul-medio) 100%); color: white;">
+            <div class="d-flex align-items-center">
+                <div class="me-3"><i class="bi bi-person-circle" style="font-size: 3.5rem;"></i></div>
+                <div><h4 class="mb-0">{{ solicitud.nombre_completo }}</h4><p class="mb-0 opacity-75">Cedula: {{ solicitud.cedula }}</p></div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-lg-6 border-end pe-lg-4">
+                    <h5 class="text-muted mb-3">Perfil del Solicitante</h5>
+                    <ul class="list-unstyled">
+                        <li class="d-flex mb-2"><i class="bi bi-briefcase-fill me-3 fs-5" style="color: var(--gc-azul-oscuro);"></i><div><strong>Ocupacion:</strong> {{ solicitud.get_ocupacion_display }}</div></li>
+                        <li class="d-flex mb-2"><i class="bi bi-cash-stack me-3 fs-5" style="color: var(--gc-verde-salvia);"></i><div><strong>Ingresos Reportados:</strong> ${{ solicitud.ingresos_totales|intcomma }}</div></li>
+                        <li class="d-flex"><i class="bi bi-calendar-event-fill me-3 fs-5" style="color: var(--gc-azul-medio);"></i><div><strong>Nacimiento:</strong> {{ solicitud.fecha_nacimiento|date:"Y-m-d" }} ({{ solicitud.edad }} anos)</div></li>
+                    </ul>
+                </div>
+                <div class="col-lg-6">
+                    <h5 class="text-muted mb-3">Detalles del Credito Solicitado</h5>
+                    <div class="text-center">
+                        <div class="mb-3"><h6 class="text-muted">Monto Solicitado</h6><p class="display-6 fw-bold mb-0" style="color: var(--gc-azul-oscuro);">${{ solicitud.monto_solicitado|intcomma }}</p></div>
+                        <div><h6 class="text-muted">Plazo Solicitado</h6><p class="fs-4 fw-medium mb-0">{{ solicitud.plazo_solicitado }} <span class="fs-6 text-muted">meses</span></p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout Principal de Dos Columnas -->
+    <div class="row g-5">
+        <!-- Columna de Navegacion Izquierda -->
+        <div class="col-md-4">
+            <div class="card shadow-sm sticky-top">
+                <div class="card-header" style="background: var(--gc-azul-oscuro); color: white;"><h5 class="mb-0">Pasos del Analisis</h5></div>
+                <div class="list-group list-group-flush step-nav">
+                    <a href="#paso1" class="list-group-item list-group-item-action {% if active_step == 1 %}active{% endif %} {% if active_step > 1 %}completed{% endif %}">{% if active_step > 1 %}<i class="bi bi-check-circle-fill"></i>{% endif %}Paso 1: Validacion y Documentacion</a>
+                    <a href="#paso2" class="list-group-item list-group-item-action {% if active_step == 2 %}active{% endif %} {% if active_step > 2 %}completed{% endif %} {% if not documentos_obligatorios_ok or necesita_correccion %}disabled{% endif %}">{% if active_step > 2 %}<i class="bi bi-check-circle-fill"></i>{% endif %}Paso 2: Analisis de Riesgo</a>
+                    <a href="#paso3" class="list-group-item list-group-item-action {% if active_step == 3 %}active{% endif %} {% if not solicitud.recomendacion_sistema_texto %}disabled{% endif %}">Paso 3: Decision Final</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna de Contenido Derecha -->
+        <div class="col-md-8">
+            <!-- Paso 1: Validacion de Documentos -->
+            <div class="card mb-4" id="paso1">
+                <div class="card-header" style="background: var(--gc-arena);"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 1: Validacion y Documentacion</h5></div>
+                <div class="card-body p-4">
+                    <h6 style="color: var(--gc-azul-medio);">1.1 Validar Documentos del Aspirante</h6>
+                    <p class="text-muted small">Revise cada documento. Si alguno es incorrecto, marquelo y devuelva el caso.</p>
+                    <div class="list-group mb-4">
+                        {% for doc in documentos_del_aspirante %}
+                            <div class="list-group-item list-group-item-action"><div class="d-flex w-100 justify-content-between align-items-center"><div class="d-flex align-items-center"><div class="me-3 fs-3">{% if doc.ok_analista %}<i class="bi bi-file-earmark-check-fill" style="color: var(--gc-verde-salvia);"></i>{% elif doc.observacion_correccion %}<i class="bi bi-file-earmark-excel-fill text-danger"></i>{% else %}<i class="bi bi-file-earmark-text text-secondary"></i>{% endif %}</div><div><h6 class="mb-0"><a href="{{ doc.archivo.url }}" target="_blank" class="text-decoration-none" style="color: var(--gc-azul-medio);">{{ doc.get_nombre_documento_display }}</a></h6>{% if doc.ok_analista %}<small style="color: var(--gc-verde-salvia);">Documento correcto.</small>{% elif doc.observacion_correccion %}<small class="text-danger">Requiere correccion: "{{ doc.observacion_correccion }}"</small>{% else %}<small class="text-muted">Pendiente de revision.</small>{% endif %}</div></div><div class="ms-3"><form action="{% url 'validar_documento' doc.id %}" method="post" class="d-inline-block me-1">{% csrf_token %}<button type="submit" name="aprobar" class="btn btn-outline-success btn-sm" title="Marcar como Correcto"><i class="bi bi-check-lg"></i></button></form><button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalRechazo{{ doc.id }}" title="Marcar para Correccion"><i class="bi bi-x-lg"></i></button></div></div></div>
+                            <div class="modal fade" id="modalRechazo{{ doc.id }}" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header" style="background: var(--gc-azul-oscuro); color: white;"><h5 class="modal-title">Motivo de Correccion</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><form action="{% url 'validar_documento' doc.id %}" method="post">{% csrf_token %}<div class="modal-body text-start"><p>Describa por que el documento <strong>"{{ doc.get_nombre_documento_display }}"</strong> es incorrecto:</p>{{ doc.rechazo_form.as_p }}</div><div class="modal-footer"><button type="button" class="btn btn-gc-outline" data-bs-dismiss="modal">Cancelar</button><button type="submit" name="rechazar" class="btn btn-gc-danger">Marcar para Correccion</button></div></form></div></div></div>
+                        {% empty %}<div class="list-group-item text-center text-muted">No hay documentos del aspirante.</div>{% endfor %}
+                    </div>
+                    <h6 style="color: var(--gc-azul-medio);">1.2 Cargar Documentos de Analisis y Dejar Observacion</h6>
+                    <div class="row g-4">
+                        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h6 class="mb-0" style="color: var(--gc-azul-oscuro);">Cargar Soportes</h6></div><div class="card-body"><form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form_documento.as_p }}<div class="d-grid mt-2"><button type="submit" name="submit_documento" class="btn btn-gc-primary">Subir Documento</button></div></form></div></div></div>
+                        <div class="col-lg-6"><h6 style="color: var(--gc-azul-oscuro);">Documentos de Analisis Cargados</h6><div class="list-group mb-3">{% for doc in documentos_del_analista %}<div class="list-group-item"><div class="d-flex align-items-center"><div class="me-3"><div class="bg-light border rounded px-2 py-1 text-center" style="width: 50px;"><strong class="small" style="color: var(--gc-azul-oscuro);">{{ doc.extension }}</strong></div></div><div class="flex-grow-1"><a href="{{ doc.archivo.url }}" target="_blank" class="text-decoration-none fw-bold" style="color: var(--gc-azul-medio);">{{ doc.get_nombre_documento_display }}</a><div class="text-muted small">{{ doc.archivo.size|filesizeformat }}</div></div><div><form action="{% url 'eliminar_documento_analista' doc.id %}" method="post" onsubmit="return confirm('Esta seguro de que desea eliminar este documento?');">{% csrf_token %}<button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Documento"><i class="bi bi-trash-fill"></i></button></form></div></div></div>{% empty %}<div class="list-group-item text-muted">Aun no ha subido documentos.</div>{% endfor %}</div><div class="card mt-3"><div class="card-header"><h6 class="mb-0" style="color: var(--gc-azul-oscuro);">Observacion General</h6></div><div class="card-body"><form method="post">{% csrf_token %}{{ form_observacion.as_p }}<div class="d-grid mt-2"><button type="submit" name="submit_observacion" class="btn btn-gc-outline">Guardar Observacion</button></div></form></div></div></div>
+                    </div>
+                    <hr class="my-4">
+                    <h6 style="color: var(--gc-azul-medio);">1.3 Siguiente Accion</h6>
+                    {% if necesita_correccion %}<div class="alert alert-gc-danger"><h5 class="alert-heading">Accion Requerida: Devolver Caso</h5><p>Ha marcado documentos para correccion. Devuelva el caso al aspirante.</p><form action="{% url 'devolver_a_aspirante' solicitud.id %}" method="post" class="mt-2">{% csrf_token %}<div class="d-grid"><button type="submit" class="btn btn-gc-danger fw-bold">Devolver Caso al Aspirante</button></div></form></div>
+                    {% elif not documentos_obligatorios_ok %}<div class="alert alert-gc-warning"><h5 class="alert-heading">Pendiente</h5><p class="mb-0">Debe cargar los documentos obligatorios para continuar.</p></div>
+                    {% else %}<div class="alert alert-gc-success"><h5 class="alert-heading">Paso 1 Completo!</h5><p class="mb-0">Ya puede proceder a la <strong>Fase 2: Analisis de Riesgo</strong>.</p></div>{% endif %}
+                </div>
+            </div>
+            <!-- Paso 2: Analisis de Riesgo -->
+            <div class="card mb-4" id="paso2">
+                <div class="card-header" style="background: var(--gc-arena);"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 2: Analisis de Riesgo</h5></div>
+                <div class="card-body p-4">
+                    {% if not documentos_obligatorios_ok or necesita_correccion %}
+                        <div class="alert alert-gc-warning">Debe completar el Paso 1 para habilitar esta seccion.</div>
+                    {% else %}
+                        <p class="text-muted">Marque todas las alertas de riesgo que haya encontrado.</p>
+                        <form method="post">{% csrf_token %}<div class="mb-4"><label for="{{ form_riesgo.huellas_consulta.id_for_label }}" class="form-label fw-bold">{{ form_riesgo.huellas_consulta.label }}</label><input type="number" name="{{ form_riesgo.huellas_consulta.name }}" id="{{ form_riesgo.huellas_consulta.id_for_label }}" value="{{ form_riesgo.huellas_consulta.value|default:0 }}" class="form-control form-control-lg text-center" style="max-width: 150px;"><div class="form-text">Consultas a centrales en los ultimos 6 meses.</div></div><hr><div class="list-group"><label for="{{ form_riesgo.tiene_procesos_judiciales.id_for_label }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"><div><i class="bi bi-gavel me-2"></i><strong>{{ form_riesgo.tiene_procesos_judiciales.label }}</strong></div><div class="form-check form-switch">{{ form_riesgo.tiene_procesos_judiciales }}</div></label><label for="{{ form_riesgo.mora_telco_mayor_300k.id_for_label }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"><div><i class="bi bi-phone-fill me-2"></i><strong>{{ form_riesgo.mora_telco_mayor_300k.label }}</strong></div><div class="form-check form-switch">{{ form_riesgo.mora_telco_mayor_300k }}</div></label><label for="{{ form_riesgo.mora_otros_mayor_500k.id_for_label }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"><div><i class="bi bi-credit-card-2-front-fill me-2"></i><strong>{{ form_riesgo.mora_otros_mayor_500k.label }}</strong></div><div class="form-check form-switch">{{ form_riesgo.mora_otros_mayor_500k }}</div></label><label for="{{ form_riesgo.es_tipo_0.id_for_label }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"><div><i class="bi bi-person-slash-fill me-2"></i><strong>{{ form_riesgo.es_tipo_0.label }}</strong><div class="form-text">Marque si el cliente no tiene experiencia crediticia.</div></div><div class="form-check form-switch">{{ form_riesgo.es_tipo_0 }}</div></label></div><div class="d-grid mt-4"><button type="submit" name="submit_riesgo" class="btn btn-gc-primary btn-lg"><i class="bi bi-robot me-2"></i>Generar Recomendacion del Sistema</button></div></form>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Paso 3: Decision Final -->
+            <div class="card mb-4" id="paso3">
+                <div class="card-header" style="background: var(--gc-arena);"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 3: Decision Final de Pre-Aprobacion</h5></div>
+                <div class="card-body p-4 text-center">
+                    {% if not solicitud.recomendacion_sistema_texto %}
+                        <div class="alert alert-gc-warning">Debe generar una recomendacion en el Paso 2 para habilitar esta seccion.</div>
+                    {% else %}
+                        <div class="alert {% if solicitud.recomendacion_sistema_aprobada %}alert-gc-success{% else %}alert-gc-danger{% endif %}"><strong>Recomendacion del Sistema:</strong> {{ solicitud.recomendacion_sistema_texto }}</div>
+                        <p class="text-muted">Tome una decision basada en la recomendacion y su criterio profesional.</p>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center"><a href="{% url 'preaprobar_solicitud' solicitud.id %}" class="btn btn-gc-success btn-lg">Pre-Aprobar y Continuar</a><a href="{% url 'rechazar_solicitud' solicitud.id %}" class="btn btn-gc-danger btn-lg">Rechazar Solicitud</a></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-gc-info" role="alert"><h4 class="alert-heading">Estas al dia!</h4><p>No tienes ninguna solicitud asignada en este momento.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Revision Final - Solicitud #{{ solicitud.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+
+    <!-- 1. Enlace de "Volver" Inteligente -->
+    {% if solicitud.estado == solicitud.ESTADO_PEND_APROB_DIRECTOR %}
+        <a href="{% url 'director_pendientes' %}" class="text-decoration-none" style="color: var(--gc-azul-medio);">&larr; Volver a la lista de pendientes</a>
+    {% else %}
+        <a href="{% url 'historial_completo' %}" class="text-decoration-none" style="color: var(--gc-azul-medio);">&larr; Volver al Historial Completo</a>
+    {% endif %}
+
+    <!-- 2. Titulo con Estado Visible -->
+    <div class="d-flex justify-content-between align-items-center mt-2">
+        <h2 style="color: var(--gc-azul-oscuro);">Revision Final: Expediente #{{ solicitud.id }}</h2>
+        <span class="badge {{ solicitud.get_estado_color_class }} fs-5">{{ solicitud.get_estado_display }}</span>
+    </div>
+    <p class="text-muted">Cliente: {{ solicitud.nombre_completo }} | Analizado por: {{ solicitud.analista_asignado.username }}</p>
+    <hr>
+
+    <!-- 1. Resumen de la Oferta Pre-Aprobada -->
+    <div class="card mb-4 shadow-sm" style="border-color: var(--gc-verde-salvia);">
+        <div class="card-header text-white" style="background: var(--gc-verde-salvia);"><h5 class="mb-0">Oferta Pre-Aprobada por Analista</h5></div>
+        <div class="card-body text-center">
+            <div class="row">
+                <div class="col"><h6 class="card-title">Monto Aprobado</h6><p class="card-text fs-4 fw-bold" style="color: var(--gc-verde-salvia);">${{ solicitud.monto_aprobado_calculado|intcomma }}</p></div>
+                <div class="col"><h6 class="card-title">Plazo</h6><p class="card-text fs-4 fw-bold">{{ solicitud.plazo_oferta }} meses</p></div>
+            </div>
+            {% if solicitud.observacion_oferta_final %}<footer class="blockquote-footer mt-3">Justificacion de la oferta: <cite>"{{ solicitud.observacion_oferta_final }}"</cite></footer>{% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Columna Izquierda: Informacion del Cliente y Financiera -->
+        <div class="col-lg-7">
+            <div class="card h-100"><div class="card-header" style="background: var(--gc-azul-oscuro); color: white;"><h5 class="mb-0">Informacion del Cliente y Analisis</h5></div>
+                <div class="card-body">
+                    <h6 style="color: var(--gc-azul-medio);">Datos del Cliente</h6>
+                    <div class="row">
+                        <div class="col-sm-6"><p><strong>Nombre:</strong> {{ solicitud.nombre_completo }}</p><p><strong>Cedula:</strong> {{ solicitud.cedula }}</p><p><strong>Nacimiento:</strong> {{ solicitud.fecha_nacimiento|date:"Y-m-d" }}</p></div>
+                        <div class="col-sm-6"><p><strong>Ocupacion:</strong> {{ solicitud.get_ocupacion_display }}</p><p><strong>Ingresos:</strong> ${{ solicitud.ingresos_totales|intcomma }}</p><p><strong>Estado Civil:</strong> {{ solicitud.get_estado_civil_display }}</p></div>
+                    </div>
+                    <hr>
+
+                    <!-- SECCION DE RECOMENDACION DEL SISTEMA -->
+                    <h6 style="color: var(--gc-azul-medio);">Analisis de Riesgo (Motor Automatico)</h6>
+                    {% if solicitud.recomendacion_sistema_texto %}
+                        <div class="alert {% if solicitud.recomendacion_sistema_aprobada %}alert-gc-success{% else %}alert-gc-danger{% endif %} mb-3">
+                            <strong>Recomendacion del Sistema:</strong> {{ solicitud.recomendacion_sistema_texto }}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">El analisis de riesgo no genero una recomendacion automatica.</p>
+                    {% endif %}
+
+                    <h6 style="color: var(--gc-azul-medio);">Analisis Financiero (Capacidad de Pago)</h6>
+                    {% if resultado_capacidad %}
+                        <ul class="list-group list-group-flush">
+                        {% for key, value in resultado_capacidad.items %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center p-1"><small>{{ key }}</small>{% if 'FINAL' in key %}<span class="badge badge-gc badge-gc-success rounded-pill">${{ value|intcomma }}</span>{% else %}<span class="badge bg-light text-dark rounded-pill">${{ value|intcomma }}</span>{% endif %}</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}<p class="text-muted">No se realizo el calculo de capacidad de pago.</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Soportes y Observaciones -->
+        <div class="col-lg-5">
+            <div class="card h-100"><div class="card-header" style="background: var(--gc-azul-oscuro); color: white;"><h5 class="mb-0">Soportes y Observaciones</h5></div>
+                <div class="card-body">
+                    <h6 style="color: var(--gc-azul-medio);">Documentos Iniciales (Aspirante)</h6>
+                    <ul class="list-group list-group-flush mb-3">{% for doc in documentos_iniciales_aspirante %}<li class="list-group-item p-1"><small><a href="{{ doc.archivo.url }}" target="_blank" style="color: var(--gc-azul-medio);">{{ doc.get_nombre_documento_display }}</a></small></li>{% empty %}<li class="list-group-item p-1"><small>No hay.</small></li>{% endfor %}</ul>
+                    <h6 style="color: var(--gc-azul-medio);">Documentos de Cierre (Aspirante)</h6>
+                    <ul class="list-group list-group-flush mb-3">{% for doc in documentos_finales_aspirante %}<li class="list-group-item p-1"><small><a href="{{ doc.archivo.url }}" target="_blank" style="color: var(--gc-azul-medio);">{{ doc.get_nombre_documento_display }}</a></small></li>{% empty %}<li class="list-group-item p-1"><small>No hay.</small></li>{% endfor %}</ul>
+                    <h6 style="color: var(--gc-azul-medio);">Documentos de Analisis (Analista)</h6>
+                    <ul class="list-group list-group-flush mb-3">{% for doc in documentos_analista %}<li class="list-group-item p-1"><small><a href="{{ doc.archivo.url }}" target="_blank" style="color: var(--gc-azul-medio);">{{ doc.get_nombre_documento_display }}</a></small></li>{% empty %}<li class="list-group-item p-1"><small>No hay.</small></li>{% endfor %}</ul>
+
+                    <!-- SECCION DE REFERENCIAS -->
+                    <h6 style="color: var(--gc-azul-medio);">Referencias Verificadas</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for ref in referencias %}<li class="list-group-item p-1"><small><strong>{{ ref.get_tipo_display }}:</strong> {{ ref.nombre_completo }} ({{ ref.numero_contacto }})</small></li>{% empty %}<li class="list-group-item p-1"><small>No se registraron referencias.</small></li>{% endfor %}
+                    </ul>
+
+                    <h6 style="color: var(--gc-azul-medio);">Observaciones del Analista</h6>
+
+                    {# Observacion sobre los documentos #}
+                    {% if solicitud.observacion_analisis_documentos %}
+                        <p class="small"><strong>Sobre los documentos:</strong> "{{ solicitud.observacion_analisis_documentos }}"</p>
+                    {% else %}
+                        <p class="small text-muted">No hay observaciones sobre los documentos.</p>
+                    {% endif %}
+
+                    {# Observacion sobre las referencias #}
+                    {% if solicitud.observacion_referencias %}
+                        <p class="small"><strong>Sobre las referencias:</strong> "{{ solicitud.observacion_referencias }}"</p>
+                    {% else %}
+                        <p class="small text-muted">No hay observaciones sobre las referencias.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decision Final del Director -->
+     {# Solo mostramos los botones si la solicitud esta pendiente de aprobacion #}
+    {% if solicitud.estado == solicitud.ESTADO_PEND_APROB_DIRECTOR %}
+    <div class="card mt-4" style="border-color: var(--gc-azul-oscuro);">
+        <div class="card-header text-white" style="background: var(--gc-azul-oscuro);"><h5 class="mb-0">Decision Final del Director</h5></div>
+        <div class="card-body text-center">
+            <p>Despues de revisar todo el expediente, por favor, tome la decision final.</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <form action="{% url 'aprobar_credito_final' solicitud.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-gc-success btn-lg">Aprobar Credito Definitivamente</button>
+                </form>
+                <form action="{% url 'rechazar_credito_final' solicitud.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-gc-danger btn-lg">Rechazar Credito Definitivamente</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

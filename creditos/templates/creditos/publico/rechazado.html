@@ -1,0 +1,82 @@
+{% extends 'base_publico.html' %}
+
+{% block title %}Informacion sobre tu solicitud{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card text-center">
+            <div class="card-body p-5">
+                <div class="mb-4">
+                    <div style="width: 100px; height: 100px; margin: 0 auto; background: linear-gradient(135deg, var(--gc-azul-medio), var(--gc-azul-oscuro)); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-info-circle text-white" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+
+                <h3 style="font-family: 'Cormorant Garamond', serif; color: var(--gc-azul-oscuro); font-size: 1.8rem;">
+                    Gracias por tu interes, {{ solicitud.nombre_completo.split.0 }}
+                </h3>
+
+                <div class="text-start mt-4 mb-4" style="color: var(--gc-azul-oscuro); line-height: 1.8;">
+                    <p>
+                        Valoramos que hayas considerado a <strong>Global Care F.S.</strong> para tu solicitud de credito.
+                    </p>
+
+                    <p>
+                        Despues de evaluar la informacion proporcionada, en este momento
+                        <strong>no nos es posible continuar con tu solicitud</strong>.
+                    </p>
+
+                    <div class="alert" style="background: #f8f9fa; border-left: 4px solid var(--gc-azul-medio);">
+                        <p class="mb-0" style="color: var(--gc-azul-oscuro);">
+                            <strong style="color: var(--gc-azul-medio);">Esto no significa que las puertas esten cerradas.</strong><br>
+                            Las circunstancias cambian y cada solicitud se evalua de manera independiente.
+                            Te invitamos a volver a aplicar mas adelante.
+                        </p>
+                    </div>
+
+                    <p>
+                        Si crees que hubo algun error en los datos que ingresaste, puedes intentar
+                        nuevamente asegurandote de que toda la informacion sea correcta.
+                    </p>
+                </div>
+
+                <div class="alert text-start" style="background: var(--gc-arena); border-left: 4px solid var(--gc-dorado);">
+                    <strong style="color: var(--gc-dorado);"><i class="bi bi-envelope-check me-2"></i>Te enviamos un correo</strong>
+                    <p class="mb-0 mt-2 small" style="color: var(--gc-azul-medio);">
+                        Revisa tu bandeja de entrada en <strong>{{ solicitud.email_aspirante }}</strong>
+                        para mas informacion.
+                    </p>
+                </div>
+
+                <hr class="my-4" style="border-color: var(--gc-gris-claro);">
+
+                <div class="d-grid gap-2">
+                    <a href="{% url 'aplicar_credito' %}" class="btn btn-gc-primary">
+                        <i class="bi bi-arrow-repeat me-2"></i>
+                        Intentar Nuevamente
+                    </a>
+                </div>
+
+                <div class="mt-4">
+                    <p class="small text-muted mb-2">
+                        Si tienes preguntas, estamos disponibles para orientarte.
+                    </p>
+                    <small style="color: var(--gc-azul-medio);">
+                        <i class="bi bi-envelope me-1"></i> info@globalcarefs.com
+                    </small>
+                </div>
+
+                <div class="mt-4 pt-3" style="border-top: 1px solid var(--gc-gris-claro);">
+                    <p class="mb-1" style="color: var(--gc-verde-salvia); font-style: italic;">
+                        Atentamente,
+                    </p>
+                    <p class="mb-0" style="color: var(--gc-azul-oscuro); font-weight: 500;">
+                        Equipo Global Care F.S.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

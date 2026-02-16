@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Solicitudes Pendientes de Aprobación{% endblock %}
+
+{% block content %}
+
+    <!-- Encabezado de la Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'director_escritorio' %}">&larr; Volver al Escritorio</a>
+            <h1 class="h2 mt-2">Solicitudes Pendientes de Aprobación Final</h1>
+            <p class="text-muted">Estos casos han sido completamente procesados por los analistas y requieren su decisión final.</p>
+        </div>
+    </div>
+
+    <!-- Mensajes del Sistema -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Tabla de Solicitudes con Diseño Mejorado -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr class="text-muted">
+                            <th scope="col" style="width: 10%;"># Solicitud</th>
+                            <th scope="col" style="width: 25%;">Cliente</th>
+                            <th scope="col" style="width: 15%;">Analista</th>
+                            <th scope="col" style="width: 20%;">Monto Aprobado</th>
+                            <th scope="col" style="width: 15%;">Plazo</th>
+                            <th scope="col" style="width: 15%;" class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for solicitud in solicitudes %}
+                        <tr>
+                            <td><strong>#{{ solicitud.id }}</strong></td>
+                            <td>
+                                <div class="fw-bold">{{ solicitud.nombre_completo }}</div>
+                                <div class="small text-muted">{{ solicitud.cedula }}</div>
+                            </td>
+                            <td>{{ solicitud.analista_asignado.username }}</td>
+                            <td>${{ solicitud.monto_aprobado_calculado|intcomma }}</td>
+                            <td>{{ solicitud.plazo_oferta }} meses</td>
+                            <td class="text-end">
+                                <a href="{% url 'director_detalle_solicitud' solicitud.id %}" class="btn btn-gc-primary btn-sm">
+                                    Revisar y Decidir <i class="bi bi-arrow-right-short"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted p-5">
+                                <p class="mb-1 fs-5">¡Excelente trabajo!</p>
+                                <p class="small">No hay solicitudes pendientes de aprobación en este momento.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

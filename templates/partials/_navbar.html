@@ -1,0 +1,92 @@
+<nav class="navbar navbar-expand-lg navbar-gc">
+    <div class="container">
+        <a class="navbar-brand" href="{% if user.is_authenticated %}{% if user.perfil.rol == 'ASPIRANTE' %}{% url 'aspirante_escritorio' %}{% elif user.perfil.rol == 'ANALISTA' %}{% url 'analista_escritorio' %}{% elif user.perfil.rol == 'DIRECTOR' %}{% url 'director_escritorio' %}{% endif %}{% else %}/{% endif %}">
+            <img src="/static/img/logo-globalcare.png" alt="Logo" onerror="this.style.display='none'">
+            GLOBAL CARE F.S.
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color: rgba(255,255,255,0.3);">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <!-- Enlaces segun rol -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                {% if user.is_authenticated %}
+                    {% if user.perfil.rol == 'ASPIRANTE' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'aspirante_escritorio' %}">
+                                <i class="bi bi-house-door me-1"></i>Mi Solicitud
+                            </a>
+                        </li>
+                    {% elif user.perfil.rol == 'ANALISTA' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'analista_escritorio' %}">
+                                <i class="bi bi-clipboard-data me-1"></i>Mi Escritorio
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'historial_analista' %}">
+                                <i class="bi bi-clock-history me-1"></i>Historial
+                            </a>
+                        </li>
+                    {% elif user.perfil.rol == 'DIRECTOR' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'director_escritorio' %}">
+                                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'director_pendientes' %}">
+                                <i class="bi bi-hourglass-split me-1"></i>Pendientes
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-gear me-1"></i>Administracion
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'gestion_usuarios' %}"><i class="bi bi-people me-2"></i>Usuarios</a></li>
+                                <li><a class="dropdown-item" href="{% url 'gestion_parametros' %}"><i class="bi bi-sliders me-2"></i>Parametros</a></li>
+                                <li><a class="dropdown-item" href="{% url 'historial_completo' %}"><i class="bi bi-journal-text me-2"></i>Historial Completo</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+
+            <!-- Usuario y Logout -->
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle user-badge" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>
+                            {{ user.username }}
+                            <span class="role-badge">{{ user.perfil.get_rol_display }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <span class="dropdown-item-text text-muted small">
+                                    <i class="bi bi-envelope me-2"></i>{{ user.email|default:"Sin email" }}
+                                </span>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{% url 'logout' %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesion
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Iniciar Sesion
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

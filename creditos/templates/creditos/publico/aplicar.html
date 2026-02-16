@@ -1,0 +1,224 @@
+{% extends 'base_publico.html' %}
+{% load humanize %}
+
+{% block title %}Solicitar Credito{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header-gc">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-file-earmark-text fs-4 me-3" style="color: var(--gc-dorado);"></i>
+                    <div>
+                        <h5>Solicitud de Credito</h5>
+                        <small style="opacity: 0.8;">
+                            {% if confirmation_mode %}
+                                Paso 2 de 2: Confirme sus datos
+                            {% else %}
+                                Paso 1 de 2: Complete sus datos personales
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong><i class="bi bi-exclamation-triangle me-2"></i>Por favor corrija los siguientes errores:</strong>
+                        <ul class="mb-0 mt-2">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{% if field != '__all__' %}<strong>{{ field }}:</strong> {% endif %}{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                {% if confirmation_mode %}
+                    <!-- MODO CONFIRMACION -->
+                    <div class="alert alert-gc-info mb-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Por favor revise que todos los datos sean correctos antes de enviar su solicitud.
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-gc">
+                            <tbody>
+                                {% for item in confirmation_data %}
+                                <tr>
+                                    <th class="w-50">{{ item.label }}</th>
+                                    <td>
+                                        {% if 'monto' in item.name or 'ingreso' in item.name %}
+                                            ${{ item.value|intcomma }}
+                                        {% elif 'fecha' in item.name %}
+                                            {{ item.value|date:"d M, Y" }}
+                                        {% elif 'plazo' in item.name %}
+                                            {{ item.value }} meses
+                                        {% else %}
+                                            {{ item.value }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <input type="hidden" name="{{ field.name }}" value="{{ field.value|default_if_none:'' }}">
+                        {% endfor %}
+
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" name="action" value="edit" class="btn btn-gc-outline">
+                                <i class="bi bi-pencil me-1"></i> Editar Datos
+                            </button>
+                            <button type="submit" name="action" value="confirm" class="btn btn-gc-success flex-grow-1">
+                                <i class="bi bi-check-circle me-1"></i> Confirmar y Enviar Solicitud
+                            </button>
+                        </div>
+                    </form>
+
+                {% else %}
+                    <!-- MODO FORMULARIO -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="review">
+
+                        <div class="section-title">
+                            <i class="bi bi-person"></i> Datos Personales
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Numero de Cedula <span class="text-danger">*</span></label>
+                                {{ form.cedula }}
+                                {% if form.cedula.errors %}
+                                    <div class="text-danger small mt-1">{{ form.cedula.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre Completo <span class="text-danger">*</span></label>
+                                {{ form.nombre_completo }}
+                                {% if form.nombre_completo.errors %}
+                                    <div class="text-danger small mt-1">{{ form.nombre_completo.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                                {{ form.fecha_nacimiento }}
+                                {% if form.fecha_nacimiento.errors %}
+                                    <div class="text-danger small mt-1">{{ form.fecha_nacimiento.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha de Expedicion de la Cedula <span class="text-danger">*</span></label>
+                                {{ form.fecha_expedicion }}
+                                {% if form.fecha_expedicion.errors %}
+                                    <div class="text-danger small mt-1">{{ form.fecha_expedicion.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <div class="section-title">
+                            <i class="bi bi-briefcase"></i> Informacion Laboral y Financiera
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ocupacion <span class="text-danger">*</span></label>
+                                {{ form.ocupacion }}
+                                {% if form.ocupacion.errors %}
+                                    <div class="text-danger small mt-1">{{ form.ocupacion.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ingresos Mensuales <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.ingresos_totales }}
+                                </div>
+                                {% if form.ingresos_totales.errors %}
+                                    <div class="text-danger small mt-1">{{ form.ingresos_totales.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Monto que Desea Solicitar <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.monto_solicitado }}
+                                </div>
+                                <small class="text-gc-muted">Minimo $500,000</small>
+                                {% if form.monto_solicitado.errors %}
+                                    <div class="text-danger small mt-1">{{ form.monto_solicitado.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Plazo Deseado <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    {{ form.plazo_solicitado }}
+                                    <span class="input-group-text" style="border-left: none; border-right: 2px solid var(--gc-gris-claro);">meses</span>
+                                </div>
+                                <small class="text-gc-muted">Minimo 6 meses</small>
+                                {% if form.plazo_solicitado.errors %}
+                                    <div class="text-danger small mt-1">{{ form.plazo_solicitado.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <div class="section-title">
+                            <i class="bi bi-envelope"></i> Datos de Contacto
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Correo Electronico <span class="text-danger">*</span></label>
+                                {{ form.email_aspirante }}
+                                <small class="text-gc-muted">Le enviaremos notificaciones sobre su solicitud</small>
+                                {% if form.email_aspirante.errors %}
+                                    <div class="text-danger small mt-1">{{ form.email_aspirante.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Numero de Telefono <span class="text-danger">*</span></label>
+                                {{ form.telefono_aspirante }}
+                                {% if form.telefono_aspirante.errors %}
+                                    <div class="text-danger small mt-1">{{ form.telefono_aspirante.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="alert alert-gc-warning mt-4">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Importante:</strong> Al enviar esta solicitud, autoriza a Global Care Financial Services a consultar sus datos en centrales de riesgo para evaluar su solicitud de credito.
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" name="action" value="review" class="btn btn-gc-primary btn-lg">
+                                <i class="bi bi-arrow-right me-2"></i> Revisar mis Datos
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'login' %}" class="link-gc">
+                <i class="bi bi-box-arrow-in-right me-1"></i>
+                Ya tengo una cuenta - Ingresar
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

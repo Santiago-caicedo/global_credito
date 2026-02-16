@@ -1,0 +1,97 @@
+{% extends 'base_publico.html' %}
+
+{% block title %}Crear Cuenta{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header-gc">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div style="width: 50px; height: 50px; background: var(--gc-verde-salvia); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem;">
+                        <i class="bi bi-check-lg text-white fs-4"></i>
+                    </div>
+                    <div class="text-start">
+                        <h5>Pre-Aprobacion Exitosa</h5>
+                        <small style="opacity: 0.8;">Cree su cuenta para continuar</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-gc-success mb-4">
+                    <i class="bi bi-emoji-smile me-2"></i>
+                    <strong>Felicitaciones {{ solicitud.nombre_completo.split.0 }}!</strong><br>
+                    Su solicitud ha pasado la evaluacion inicial.
+                    Cree una cuenta para gestionar sus documentos.
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-gc-danger">
+                        {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-person me-1" style="color: var(--gc-dorado);"></i>
+                            {{ form.username.label }}
+                        </label>
+                        {{ form.username }}
+                        <small class="text-gc-muted">Elija un nombre de usuario unico para acceder al sistema</small>
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-lock me-1" style="color: var(--gc-dorado);"></i>
+                            {{ form.password1.label }}
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                            <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-lock-fill me-1" style="color: var(--gc-dorado);"></i>
+                            {{ form.password2.label }}
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="alert alert-gc-info">
+                        <small>
+                            <i class="bi bi-envelope me-1"></i>
+                            Se enviaran notificaciones a: <strong>{{ solicitud.email_aspirante }}</strong>
+                        </small>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-gc-success btn-lg">
+                            <i class="bi bi-person-plus me-1"></i>
+                            Crear Cuenta y Continuar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <small style="color: rgba(255,255,255,0.6);">
+                Solicitud #{{ solicitud.id }} | {{ solicitud.fecha_creacion|date:"d M, Y" }}
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}

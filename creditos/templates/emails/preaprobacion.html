@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.8; color: #4d5572; margin: 0; padding: 0; background-color: #f0efef; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #4d5572 0%, #7a87a5 100%); color: white; padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; }
+        .header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
+        .header p { margin: 15px 0 0; opacity: 0.9; font-style: italic; }
+        .content { background: white; padding: 40px 35px; border: 1px solid #e2dfdd; }
+        .footer { background: #4d5572; color: rgba(255,255,255,0.8); padding: 25px; text-align: center; font-size: 12px; border-radius: 0 0 12px 12px; }
+        .highlight-box { background: linear-gradient(135deg, #e8efe5 0%, #f0efef 100%); border-left: 4px solid #a3b38d; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .highlight-box strong { color: #a3b38d; }
+        .golden-line { width: 60px; height: 3px; background: #c9a86c; margin: 15px auto; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #a3b38d 0%, #8fa178 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; margin-top: 20px; font-weight: bold; font-size: 16px; }
+        .signature { margin-top: 35px; padding-top: 25px; border-top: 1px solid #e2dfdd; }
+        .warning-box { background: #fff8e6; border-left: 4px solid #c9a86c; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {% if logo_url %}
+            <img src="{{ logo_url }}" alt="Global Care F.S." style="max-width: 180px; height: auto; margin-bottom: 15px;">
+            {% else %}
+            <h1>GLOBAL CARE F.S.</h1>
+            {% endif %}
+            <div class="golden-line"></div>
+            <p>Alianzas de Bienestar</p>
+        </div>
+        <div class="content">
+            <h2 style="color: #4d5572; margin-top: 0;">Hola, {{ nombre_corto }}</h2>
+
+            <p>
+                Tenemos buenas noticias. Hemos revisado tu solicitud de credito y
+                <strong style="color: #a3b38d;">has pasado nuestra evaluacion inicial</strong>.
+            </p>
+
+            <div class="highlight-box">
+                <strong>El siguiente paso es crear tu cuenta</strong>
+                <p style="margin: 10px 0 0; color: #4d5572;">
+                    Necesitamos que crees tus credenciales de acceso para continuar con el proceso.
+                    Desde tu cuenta podras cargar los documentos requeridos y dar seguimiento a tu solicitud.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 35px 0;">
+                <a href="{{ url_registro }}" class="btn">Crear Mi Cuenta</a>
+            </div>
+
+            <div class="warning-box">
+                <strong style="color: #c9a86c;">Importante:</strong>
+                Este enlace expira en <strong>24 horas</strong>. Si no completas el registro en ese tiempo,
+                deberas iniciar una nueva solicitud.
+            </div>
+
+            <p style="color: #7a87a5; margin-top: 25px;">
+                Una vez que crees tu cuenta, podras:
+            </p>
+            <ul style="color: #4d5572;">
+                <li>Cargar los documentos necesarios para tu solicitud</li>
+                <li>Ver el estado de tu proceso en tiempo real</li>
+                <li>Recibir notificaciones sobre cada avance</li>
+            </ul>
+
+            <div class="signature">
+                <p style="color: #a3b38d; font-style: italic; margin-bottom: 5px;">Estamos para ayudarte,</p>
+                <p style="color: #4d5572; font-weight: bold; margin-top: 0;">Equipo Global Care F.S.</p>
+            </div>
+        </div>
+        <div class="footer">
+            Este es un correo automatico, por favor no responda a este mensaje.<br>
+            <span style="color: #c9a86c;">Solicitud #{{ solicitud.id }}</span><br>
+            <small style="opacity: 0.7;">Global Care Financial Services - Alianzas de Bienestar</small>
+        </div>
+    </div>
+</body>
+</html>

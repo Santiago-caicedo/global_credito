@@ -1,0 +1,169 @@
+{
+	"info": {
+		"_postman_id": "a58bc6c2-9db6-4023-96b4-a886de00209e",
+		"name": "RECONOCER_MASTER_DEMO",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29969215"
+	},
+	"item": [
+		{
+			"name": "TOKEN",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic MG9hMmJ2M3V5MXpnYnNBNjAwaDg6Wmt1T0JJRHJoQUxkQTQ2RnUxek5hWUxMaElRNGRFQ0JkNzBvM010MndrRm12aEJjaWxmek9JNGhIV3pLcWczTA==",
+						"type": "text"
+					},
+					{
+						"key": "accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "password"
+						},
+						{
+							"key": "username",
+							"value": "2-901290934.1@demo.datacredito.com.co"
+						},
+						{
+							"key": "password",
+							"value": "3y549oOkqHYS"
+						},
+						{
+							"key": "scope",
+							"value": "expco_reconocer_master"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://experian-latamb.oktapreview.com/oauth2/ausdbwi7pes71n0hU0h7/v1/token",
+					"protocol": "https",
+					"host": [
+						"experian-latamb",
+						"oktapreview",
+						"com"
+					],
+					"path": [
+						"oauth2",
+						"ausdbwi7pes71n0hU0h7",
+						"v1",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Servicio_Reconocer_Master",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept": true,
+					"accept-encoding": true,
+					"connection": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "access_token",
+						"value": "eyJraWQiOiJkdWFoZlkyQXlxUndOOVNLeWtvV3BOREV2TThMV2FDM25yaFZKNDktYmpnIiwiYWxnIjoiUlMyNTYifQ.eyJ2ZXIiOjEsImp0aSI6IkFULmk2aTBZUzdLektfSEpscXFsVFFfMHVnYjRpaktpT0pmY2hDOFB1R19xUFkiLCJpc3MiOiJodHRwczovL2V4cGVyaWFuLWxhdGFtYi5va3RhcHJldmlldy5jb20vb2F1dGgyL2F1c2Rid2k3cGVzNzFuMGhVMGg3IiwiYXVkIjoiaHR0cHM6Ly93d3cuZGF0YWNyZWRpdG8uY29tLmNvL2NsaWVudHMiLCJpYXQiOjE3NjQyOTkzMjYsImV4cCI6MTc2NDMxMzcyNiwiY2lkIjoiMG9hMmJ2M3V5MXpnYnNBNjAwaDgiLCJ1aWQiOiIwMHUyazl5OWk0NGZ4aGhYdTBoOCIsInNjcCI6WyJleHBjb19yZWNvbm9jZXJfbWFzdGVyIl0sImF1dGhfdGltZSI6MTc2NDI5OTMyNiwic3ViIjoiMi05MDEyOTA5MzQuMUBkZW1vLmRhdGFjcmVkaXRvLmNvbS5jbyIsImV4cGNvX2Jhc2VfZW1haWwiOiJtb25pY2Eucm9kcmlndWV6QGdjZnMuY29tLmNvIiwiZXhwY29fYmFzZV9sYXN0TmFtZSI6IkFxIiwiZXhwY29fYmFzZV9pZFR5cGUiOiIyIiwiZXhwY29fYmFzZV9maXJzdE5hbWUiOiJXcyBSZWMiLCJleHBjb19iYXNlX2xvZ2luIjoiMi05MDEyOTA5MzQuMUBkZW1vLmRhdGFjcmVkaXRvLmNvbS5jbyIsImV4cGNvX2Jhc2VfYXBpVXNlciI6dHJ1ZSwiZXhwY29fYXV0aHpfcmVjb25vY2VyX21hc3Rlcl9zZXJ2aWNlIjoie1wiaWRcIjpcIjI0MlwiLFwibmFtZVwiOlwiUmVjTGluZWFXU1wiLFwiY3VzdG9tZXJzXCI6W3tcImlkVHlwZVwiOlwiMlwiLFwiaWRcIjpcIjkwMTI5MDkzNFwiLFwibGVnYWxOYW1lXCI6XCJHTE9CQUwgQ0FSRSBGSU5BTkNJQUwgU0VSVklDRVMgU0FTXCIsXCJ1c2VyTWFpbFwiOlwibW9uaWNhLnJvZHJpZ3VlekBnY2ZzLmNvbS5jb1wiLFwidXNlckNpdHlcIjpcIi0tLS0tLVwiLFwidXNlck9mZmljZVwiOlwiUFJJTkNJUEFMXCIsXCJwcm9maWxlc1wiOlt7XCJpZFwiOlwiNzY0MVwiLFwibmFtZVwiOlwiV1MgR0xPQkFMIEFRXCIsXCJpZFBlcmZpbEFwcFwiOlwiMTM2MTJcIixcImNvbmZpZ3VyYXRpb25cIjp7XCJGTEFHIFNJU1RFTUFcIjpbXCIxXCJdLFwiU1VCUFJJVklMRUdJT1wiOltcIiBcIl0sXCJQUk9EVUNUTyBCQVNFXCI6W1wiLTFcIl0sXCJyb2xlc1wiOltcIlJFQ0xJTkVBX0VTQ0VOQ0lBTDpBUVwiXSxcImNlbnRyb2Nvc3Rvc1wiOltcIjAwMDAwMVwiXSxcImJpbGxhYmxlXCI6W1wiZmFsc2VcIl0sXCJsYXN0TmFtZVZhbGlkYXRpb25cIjpbXCJmYWxzZVwiXSxcIkVTVEFETyBJTklDSUFMXCI6W1wiQ1wiXSxcImxlZ2FjeVByb2ZpbGVzXCI6W3tcImlkXCI6XCJORE5DUmxBPVwiLFwiZXhwaXJhdGlvblwiOlwiMjA3OTc1MjQwMDAwMFwiLFwicHJvZHVjdElkXCI6XCIwMVwifV0sXCJpbnF1aXJ5Rm9vdHByaW50XCI6W1wic29mdFwiXSxcIldBUC1TVVBFUlZJU09SXCI6W1wiMFwiXSxcIkNPRElHTyBTVVNDUklQVE9SXCI6W1wiNDQwNzMxXCJdLFwiUFJJVklMRUdJT1wiOltcIjBcIl0sXCJWSUdFTkNJQVwiOltcIjI3LzExLzIwMzVcIl0sXCJSRUNPTk9DRVIgLSBCRFUgUkVDT05PQ0VSXCI6W1wiLTFcIl0sXCJGTEFHIENPT0tJRVwiOltcIkRcIl0sXCJBU0lHTkFcIjpbXCItMVwiXSxcImNhdG9yY2VcIjpbXCIxXCJdfX1dfV19IiwiZXhwY29fYmFzZV9pZE51bWJlciI6IjkwMTI5MDkzNC4xIn0.Kq94w1R89X72ZlgXtWSknAPXuaYC8-g0tcmrvoKjaCq8eaa_av8VRh39wVOfnLRoQQZoMcCGS5qY4HGJPYHdA8-_apOZSCsgGs5Dq83Ab7FkWGr2ELPYuXzPLzijlRNc4aYqeUHWTGqMrkkAsrk9HZfAxeFvXOtgbug-dMY51IYnJ8UbzoFJVqHqqH2tsNPZkqOpvXAnwTONSkzRz-zcHCmIgaMFLOL-iT1iOE5uzRhzFp0RM2EDhx2109QEg2z0wwUaDiKnTKyFDxvvH7Yvi2Ty4AUVpdKG4QFSyu2tYAYpKgtE6QsXZWzOcsQnJoKy__x25F2odLVUsbqWFJBd2Q",
+						"type": "text"
+					},
+					{
+						"key": "client_id",
+						"value": "0oa2bv3uy1zgbsA600h8",
+						"type": "text"
+					},
+					{
+						"key": "client_secret",
+						"value": "ZkuOBIDrhALdA46Fu1zNaYLLhIQ4dECBd70o3Mt2wkFmvhBcilfzOI4hHWzKqg3L",
+						"type": "text"
+					},
+					{
+						"key": "accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://demo-servicesesb.datacredito.com.co:444/cs/reconocer/v1/location-info?tipoId=2&numeroId=901290934&nit=901290934&tipoIdBuscar=1&numeroIdBuscar=1119623677&primerApellidoBuscar=bogota&validarNombre=false",
+					"protocol": "https",
+					"host": [
+						"demo-servicesesb",
+						"datacredito",
+						"com",
+						"co"
+					],
+					"port": "444",
+					"path": [
+						"cs",
+						"reconocer",
+						"v1",
+						"location-info"
+					],
+					"query": [
+						{
+							"key": "tipoId",
+							"value": "2"
+						},
+						{
+							"key": "numeroId",
+							"value": "901290934"
+						},
+						{
+							"key": "nit",
+							"value": "901290934"
+						},
+						{
+							"key": "tipoIdBuscar",
+							"value": "1"
+						},
+						{
+							"key": "numeroIdBuscar",
+							"value": "1119623677"
+						},
+						{
+							"key": "primerApellidoBuscar",
+							"value": "bogota"
+						},
+						{
+							"key": "validarNombre",
+							"value": "false"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

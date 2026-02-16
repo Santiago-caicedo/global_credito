@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.8; color: #4d5572; margin: 0; padding: 0; background-color: #f0efef; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #4d5572 0%, #7a87a5 100%); color: white; padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; }
+        .header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
+        .header p { margin: 15px 0 0; opacity: 0.9; font-style: italic; }
+        .content { background: white; padding: 40px 35px; border: 1px solid #e2dfdd; }
+        .footer { background: #4d5572; color: rgba(255,255,255,0.8); padding: 25px; text-align: center; font-size: 12px; border-radius: 0 0 12px 12px; }
+        .info-box { background: #f8f9fa; border-left: 4px solid #7a87a5; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .golden-line { width: 60px; height: 3px; background: #c9a86c; margin: 15px auto; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #4d5572 0%, #7a87a5 100%); color: white; padding: 14px 35px; text-decoration: none; border-radius: 8px; margin-top: 20px; font-weight: bold; }
+        .signature { margin-top: 35px; padding-top: 25px; border-top: 1px solid #e2dfdd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {% if logo_url %}
+            <img src="{{ logo_url }}" alt="Global Care F.S." style="max-width: 180px; height: auto; margin-bottom: 15px;">
+            {% else %}
+            <h1>GLOBAL CARE F.S.</h1>
+            {% endif %}
+            <div class="golden-line"></div>
+            <p>Alianzas de Bienestar</p>
+        </div>
+        <div class="content">
+            <h2 style="color: #4d5572; margin-top: 0;">Hola, {{ nombre_corto }}</h2>
+
+            <p>
+                Gracias por considerar a Global Care F.S. para tu solicitud de credito.
+                Valoramos tu confianza y el tiempo que dedicaste a completar el proceso.
+            </p>
+
+            <p>
+                Despues de evaluar la informacion proporcionada, en este momento
+                <strong>no nos es posible continuar con tu solicitud</strong>.
+            </p>
+
+            <div class="info-box">
+                <p style="margin: 0; color: #4d5572;">
+                    <strong style="color: #7a87a5;">Esto no significa que las puertas esten cerradas.</strong><br>
+                    Las circunstancias cambian y cada solicitud se evalua de manera independiente.
+                    Te invitamos a volver a aplicar mas adelante cuando lo consideres oportuno.
+                </p>
+            </div>
+
+            <p>
+                Si crees que hubo algun error en los datos que ingresaste, puedes intentar
+                nuevamente asegurandote de que toda la informacion sea correcta.
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ url_aplicar }}" class="btn">Intentar Nuevamente</a>
+            </div>
+
+            <p style="color: #7a87a5; font-size: 14px;">
+                Si tienes preguntas, nuestro equipo esta disponible para orientarte.
+                Escríbenos a <strong>info@globalcarefs.com</strong> y con gusto te atenderemos.
+            </p>
+
+            <div class="signature">
+                <p style="color: #a3b38d; font-style: italic; margin-bottom: 5px;">Atentamente,</p>
+                <p style="color: #4d5572; font-weight: bold; margin-top: 0;">Equipo Global Care F.S.</p>
+            </div>
+        </div>
+        <div class="footer">
+            Este es un correo automatico, por favor no responda a este mensaje.<br>
+            <small style="opacity: 0.7;">Global Care Financial Services - Alianzas de Bienestar</small>
+        </div>
+    </div>
+</body>
+</html>

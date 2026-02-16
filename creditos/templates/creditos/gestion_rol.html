@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Gestionar {{ rol_display }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'gestion_usuarios' %}">&larr; Volver a Gestión de Usuarios</a>
+            <h1 class="h2 mt-2">Gestionar {{ rol_display }}</h1>
+            <p class="text-muted">Seleccione una acción para continuar.</p>
+        </div>
+    </div>
+
+    <div class="list-group">
+        <a href="{% url 'listar_usuarios' rol %}" class="list-group-item list-group-item-action d-flex align-items-center" style="border-left: 4px solid var(--gc-azul-oscuro);">
+            <i class="bi bi-list-ul fs-3 me-3" style="color: var(--gc-azul-oscuro);"></i>
+            <div>
+                <h5 class="mb-1" style="color: var(--gc-azul-oscuro);">Ver Lista de {{ rol_display }}</h5>
+                <p class="mb-1 text-muted">Consultar y eliminar usuarios existentes.</p>
+            </div>
+        </a>
+        <a href="{% url 'crear_usuario' rol %}" class="list-group-item list-group-item-action d-flex align-items-center" style="border-left: 4px solid var(--gc-verde-salvia);">
+            <i class="bi bi-person-plus-fill fs-3 me-3" style="color: var(--gc-verde-salvia);"></i>
+            <div>
+                <h5 class="mb-1" style="color: var(--gc-azul-oscuro);">Añadir Nuevo {{ rol_display|slice:":-1" }}</h5>
+                <p class="mb-1 text-muted">Crear una nueva cuenta de usuario para este rol.</p>
+            </div>
+        </a>
+    </div>
+{% endblock %}

@@ -1,0 +1,3617 @@
+openapi: 3.0.3
+info:
+  title: Credit History Plus
+  description: |-
+     Associated services of customer credit history information
+
+  contact:
+    name: Jusy Naranjo
+    email: jusy.naranjo@experian.com
+  version: 1.0.1
+
+tags:
+- name: Natural Person
+  description: Obtain credit services associated with the history of the client's financial obligations
+
+paths:
+  /cs/credit-history/v1/hdcplus:
+    post:
+      tags:
+      - Natural Person
+      summary: report
+      operationId: Findy by Person Id Number
+      description: Returns a Single Natural Person's Historical Report      
+      parameters:
+        - name: userIpAddress
+          in: header
+          description: IP del usuario
+          required: false
+          explode: true
+          schema:
+            type: string
+            format: ipv4
+            example: "198.51.100.42"
+        - name: serverIpAddress
+          in: header
+          description: IP del server
+          required: true
+          explode: true
+          schema:
+            type: string
+            format: ipv4
+            example: "198.51.101.42"
+        - name: ProductId
+          in: header
+          description: ID del producto
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "64"      
+        - name: InfoAccountType
+          in: header
+          description: Nuevos tipos de cartera
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "1"      
+        - name: Client_id
+          in: header
+          description: Client ID 
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "SKDhuD5aQzxbpDJSHdNDeJgLKZtrsaL7" 
+        - name: Client_secret
+          in: header
+          description: Client Secret 
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "zSDKidfHdNDeJ"
+        - name: Authorization
+          in: header
+          description: Authorization Token 
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: "Bearer SJDhie8PKDiehEIHD34nike..."   
+      requestBody:
+        description: Create a new request of Credit score
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/identifyingAttributes'
+        required: true
+      responses:
+        200:
+          description: Historical Report of Customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'  
+        400:
+          description: Bad Request
+          content: 
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/badRequest_errorMessage'
+        401:
+          description: Unauthorized
+          content: 
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/unauthorized_errorMessage'
+        503:
+          description: Service Unavailable
+          content: 
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/unavailable_errorMessage'
+      x-codegen-request-body-name: body
+   
+
+components:
+  schemas:
+    badRequest_errorMessage:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        errors: 
+          type: array
+          items:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: 400
+                message:
+                  type: string
+                  example: OASValidation OAS-Validation
+        uri: 
+          type: string
+          example: /cs/credit-history/v1/hdcplus
+
+    unauthorized_errorMessage:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        errors: 
+          type: array
+          items:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: 401
+                message:
+                  type: string
+                  example: Unauthorized
+        uri: 
+          type: string
+          example: /cs/credit-history/v1/hdcplus
+
+    unavailable_errorMessage:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        errors: 
+          type: array
+          items:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: 503
+                message:
+                  type: string
+                  example: The Service is temporarily unavailable
+        uri: 
+          type: string
+          example: /cs/credit-history/v1/hdcplus
+
+    identifyingAttributes:
+      type: object
+      properties:
+        user:
+          type: string
+          example: 8001201341
+        password:
+          type: string
+          example: XYZS
+        identifyingTrx:
+          type: object
+          description: Identificacion del cliente a consultars
+          properties:
+            requestUUID:
+              type: string
+              description: Identificacion de la sesion del usuario en el sistema cliente
+              format: uuid
+            dateTime:
+              description: fecha en la que se realiza la peticion del sistema
+              type: string
+              format: date-time
+              example: "2021-05-01T16:04:02-05:00"
+            originatorChannelName:  
+              description: Canal de origen de la trx
+              type: string
+              pattern: ^.*$
+              example: Canal XYZ
+            originatorChannelType:
+              description: codigo de cnala origen de la trx
+              type: string
+              pattern: ^.*$
+              example: 42
+        identifyingUser:
+          type: object
+          description: Identificacion del cliente a consultars
+          properties:
+            person:
+              $ref: '#/components/schemas/IdentifyingAttributesRequest'
+        parameters:
+          type: array
+          items:
+              title: lista de parametros para el Backend 
+              type: object
+              properties: 
+                  type: 
+                    title: type 
+                    type: string
+                    example: 0
+                    description: Llave para el Tipo de parámetro.
+                  nameParameter:
+                    type: string
+                    description: Nombre de parámetro
+                    example: codigos
+                  valueParameter:
+                    type: string
+                    description: Valor de parámetro.
+                    example: TOM-001
+    
+    Report:
+      type: object
+      description: Reporte de HCD+
+      properties:
+        ReportHDCplus:
+          type: object
+          description: Reporte de HCD+
+          properties:
+            productResult: 
+                 $ref: '#/components/schemas/ProductResult'     
+            identifyingAttributes: 
+                 $ref: '#/components/schemas/IdentifyingAttributes'     
+            basicInformation: 
+                 $ref: '#/components/schemas/BasicInformation'
+            savings: 
+                 $ref: '#/components/schemas/SavingsList'
+            liabilities:            
+                 $ref: '#/components/schemas/LiabilitiesList'
+            checkings: 
+                 $ref: '#/components/schemas/CheckingList'
+            creditCard:  
+                 $ref: '#/components/schemas/CreditCardList'
+            disputes: 
+                $ref: '#/components/schemas/Disputes'
+            location: 
+                  type: object
+                  description: Estado del request.
+                  properties:
+                    nationalNatural: 
+                      $ref: '#/components/schemas/BasicInformationNational'
+                    naturalForeign: 
+                      $ref: '#/components/schemas/BasicInformationForeign'
+                    legalForeign: 
+                      $ref: '#/components/schemas/BasicInformationLegal'
+                    nationallegal: 
+                      $ref: '#/components/schemas/BasicInformationLegal'
+            alerts: 
+                 $ref: '#/components/schemas/AlertList'
+            comments: 
+                 $ref: '#/components/schemas/CommentList'
+            globalIndebtedness: 
+                 $ref: '#/components/schemas/GlobalIndebtednessList'
+            inquiryFootprints: 
+                 $ref: '#/components/schemas/InquiryList'
+            models: 
+                 $ref: '#/components/schemas/Scores'
+            agregatedInfo: 
+                 $ref: '#/components/schemas/AgregatedInfo'
+            agregatedInfoMicrocredit:
+                 $ref: '#/components/schemas/AgregatedInfoMicrocredit'
+            productValueList: 
+                 $ref: '#/components/schemas/ProductValueList'  
+  
+    BasicInformationNational:
+      type: object
+      description: Customer report
+      properties:
+        personId: 
+          type: object
+          description: informacion llave
+          properties:
+            personIdNumber: 
+              type: string
+              example: 0079995359
+        maritalStatusId: 
+          type: string
+          example: 02
+          pattern: ^.*$
+        maritalStatusDesc: 
+          type: string
+          example: Casado/a
+          pattern: ^.*$
+        gender: 
+          type: integer
+          example: 2
+        names: 
+          type: string
+          example: CECILIA MARGARITA
+        firstLastName: 
+          type: string
+          example: PEREZ
+        secondLastName: 
+          type: string
+          example: VIDAL
+        fullName: 
+          type: string
+          example: PEREZ VIDAL CECILIA MARGARITA
+          pattern: ^.*$
+        citizenTaxRegistrationIndicator: 
+          type: boolean
+          example: false
+          default: true
+        officialSourceValidationStatus: 
+          title: Officialsourcevalidationstatus
+          type: boolean
+          example: false
+          default: true
+        identification: 
+             $ref: '#/components/schemas/IdentificationNatural'  
+        age: 
+          type: object
+          properties:
+            min: 
+              type: integer
+              example: 18
+            minDesc: 
+              type: string
+              pattern: ^.*$
+              example: 66 años o más
+            max: 
+              type: integer
+              example: 21
+            maxDesc: 
+              type: string
+              pattern: ^.*$
+              example: 66 años o más
+        location:
+          type: object
+          properties:
+            antiquity: 
+              type: integer
+              example: 18
+              description:  antiguedad
+            type: 
+              type: string
+              pattern: ^.*$
+              example: Urbana
+        demographic:
+          type: object
+          properties:
+            employer: 
+              type: array
+              description:  List of employer
+              items: 
+                 $ref: '#/components/schemas/Employer'
+            economicActivity: 
+              type: array
+              description:  List of economicActivity
+              items:
+                 $ref: '#/components/schemas/EconomicActivity' 
+            identification: 
+              type: array
+              description:  List of identification
+              items:
+                 $ref: '#/components/schemas/DemographicIdentification'   
+            internationalOperations: 
+              type: array
+              description:  List of identification
+              items:
+                 $ref: '#/components/schemas/InternationalOperations'   
+
+    IdentificationNatural: 
+      type: object
+      properties:
+        statusId: 
+          type: string
+          pattern: ^.*$
+          example: 00
+        statusDesc: 
+          type: string
+          example: Vigente
+        issueDate: 
+          description: fecha Expedicion
+          type: string
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          example: 1986-08-20
+        issuingCityName: 
+          description: ciudad
+          type: string
+          pattern: ^.*$
+          example: ZAPATOCA
+        issuingStateName: 
+          description: departamento
+          type: string
+          pattern: ^.*$
+          example: Antioquia
+        personId: 
+          type: object
+          description: informacion llave 
+          properties:
+            personIdNumber: 
+              type: string
+              example: 79995359
+            
+
+    BasicInformationForeign:
+      type: object
+      description: Customer report
+      properties:
+        personId: 
+          type: object
+          description: informacion llave
+          properties:
+            personIdNumber: 
+              type: string
+              example: 79995359
+        names: 
+          type: string
+          example: CECILIA MARGARITA
+        nationalityCode: 
+          title: Nationalitycode 
+          type: string
+          default: 
+          example: 170
+          pattern: ^.*$
+        citizenTaxRegistrationIndicator: 
+          type: boolean
+          example: false
+          default: true
+        officialSourceValidationStatus: 
+          title: Officialsourcevalidationstatus
+          type: boolean
+          example: false
+          default: true
+        location: 
+          type: object
+          properties:
+            antiquity: 
+              type: integer
+              example: 18
+              description:  antiguedad
+            type: 
+              type: string
+              pattern: ^.*$
+              example: Urbana
+        demographic:
+          type: object
+          properties:
+            employer: 
+              type: array
+              description:  List of employer
+              items:
+                 $ref: '#/components/schemas/Employer'
+            economicActivity: 
+              type: array
+              description:  List of economicActivity
+              items:
+                 $ref: '#/components/schemas/EconomicActivity' 
+            identification: 
+              type: array
+              description:  List of identification
+              items:
+                 $ref: '#/components/schemas/DemographicIdentification'   
+            internationalOperations: 
+              type: array
+              description:  List of identification
+              items:
+                 $ref: '#/components/schemas/InternationalOperations'
+
+    Status:
+      type: object
+      description: Estado del request.
+      properties:
+        responseType:
+          type: string
+          description: tipo de respuesta entregada
+          example: INFO
+        statusDesc:
+          type: string
+          example: OK
+        statusCode:
+          type: string
+          example: 00
+        infoResponseBack:
+          title: InfoResponse 
+          type: array
+          items:
+              title: list Response of Backend 
+              type: object
+              properties: 
+                  Key: 
+                    title: Key 
+                    type: string
+                    example: 0
+                    description: Llave para tener el orden en el cual se tuvo la respuesta del backend.
+                  backendCode:
+                    type: string
+                    description: código del backend que esta generando la respuesta
+                    example: TOM-001
+                  backendStatusDesc:
+                    type: string
+                    description: Descripción del mensaje de respuesta del backend.
+                    example: 0018_TrnAuth
+                  backendStatusCode:
+                    type: string
+                    description: Código de la respuesta del Backend
+                    example: 00
+    
+    Scores: 
+      title: Scores 
+      type: array
+      items:
+        title: Items 
+        type: object
+        properties: 
+            ScoreReason: 
+              title: ScoreReasonCode 
+              type: array
+              items:
+                  title: Items of ScoreReasonCode
+                  type: string
+                  example: 99
+                  pattern: ^.*$
+            rating: 
+              title: rating 
+              type: string 
+              description: clasificacion
+            modelCode: 
+              title: Modelcode 
+              type: integer
+              example: 67
+              pattern: ^.*$
+              description: Tabla 19
+            modelCodeDesc: 
+              title: modelCodeDesc 
+              type: string
+              example: Descripcion
+              pattern: ^.*$
+              description: Tabla 19
+            modelName: 
+              title: Modelname 
+              type: array
+              items:
+                title: modelName 
+                type: string
+                example: PHD
+                pattern: ^.*$
+            modelDate: 
+              title: Modeldate 
+              type: string
+              example: 2018-09-01
+              pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+              description: Fecha a la que corresponde el score. 
+            scoreValue: 
+              title: Scorevalue 
+              type: integer
+              example: 685
+              default: 0
+            population: 
+                title: population
+                type: integer
+                description: Porcentaje de poblacion de Acierta sobre la que esta el score
+                example: 0
+                default: 0  
+
+    Disputes:
+      title: Disputes 
+      type: array
+      items:
+          title: Items 
+          type: object
+          properties:
+              primaryKey: 
+                title: primaryKey 
+                description: codigo llave maestra de la entidad
+                type: string
+                example: 1
+                pattern: ^.*$
+              businessLineCode: 
+                title: Businesslinecode 
+                type: string
+                example: 123456
+                description: entidad
+              accountNumber: 
+                title: Accountnumber 
+                type: string
+                example: 1234567890123
+                pattern: ^.*$
+                description: numeroCuenta
+              cutoffDate: 
+                title: cutoffDate
+                description: fecha
+                type: string
+                example: 2018-09-01
+                pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+              disputeTypeCode: 
+                title: Disputetypecode 
+                type: string
+                example: 01
+                pattern: ^.*$
+                description: tipo
+              disputeTypeDesc: 
+                title: DisputeTypeDesc 
+                type: string
+                pattern: ^.*$
+                description: Descripcion tipo
+              disputeIdNumber: 
+                title: Disputeidnumber 
+                type: integer
+                example: 3123123123123
+                description: numero
+              ratified: 
+                title: ratified  - PR 
+                type: integer
+                example: 2
+              DisputeStatusName: 
+                title: NameDisputeStatus
+                type: string
+                example: Modificado
+              DisputeStatusCode: 
+                title: DisputeStatusCode
+                type: string
+                example: 01
+              disputeText: 
+                title: Disputetext 
+                type: string
+                example: citizen complaint
+                pattern: ^.*$
+              disputeCloseDate: 
+                title: disputeCloseDate
+                description: fechaCierre
+                type: string
+                example: 2018-09-01
+                pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+              legendTypeCode: 
+                title: Legendtypecode 
+                type: string
+                example: 1
+                pattern: ^.*$
+              legendTypeDesc: 
+                title: LegendTypeDesc 
+                type: string
+                example: 1
+                pattern: ^.*$
+              subtype: 
+                title: Subtype 
+                type: array
+                items:
+                  title: Items 
+                  type: object
+                  properties:
+                    disputeSubtypeCode: 
+                        description: codigo tabla 27
+                        title: Disputesubtypecode 
+                        type: string
+                        example: 1
+                        pattern: ^.*$
+                    disputeSubtypeName: 
+                      description: codigo tabla 27
+                      title: Disputesubtypecode 
+                      type: string
+                      example: 1
+                      pattern: ^.*$     
+
+    IdentifyingAttributesRequest: 
+      type: object
+      description: informacion llave
+      properties:
+        personId: 
+           type: object
+           description: información llave 
+           properties:
+            personIdNumber: 
+              type: string
+              example: 79995359
+            personIdType: 
+              type: integer
+              example: 1
+        personLastName: 
+          type: string
+          description: apellido digitado en la consulta
+          example: VIDAL
+    
+    IdentifyingAttributes: 
+      type: object
+      description: informacion llave
+      properties:
+        personId: 
+           type: object
+           description: información llave 
+           properties:
+            personIdNumber: 
+              type: integer
+              example: 79995359
+            personIdType: 
+              type: integer
+              example: 1
+        personLastName: 
+          type: string
+          description: apellido digitado en la consulta
+          example: VIDAL
+        tradeHolderIndicator: 
+          description: independiente
+          title: Tradeholderindicator
+          type: boolean
+          example: false
+          default: true
+
+    ProductResult: 
+      type: object
+      description: Informacion base del producto solicitado
+      properties:
+        securityCode: 
+          type: string
+          default: ''
+          example: XXXXX
+        consultDate: 
+          type: string
+          format: date-time
+          description: Fecha de consulta date and time
+          example: "2021-01-30T08:30:00Z"
+        line: 
+          type: number
+        responseCode: 
+          type: integer
+          description: Codigo de respuesta del backend
+          example: 13
+        responseDesc: 
+          type: string
+          example: La consulta fue efectiva
+          description: Descripcion de respuesta del backend
+     
+    SavingsList: 
+      type: array 
+      description:  List of Savings
+      items:
+          $ref: '#/components/schemas/Saving'  
+   
+    VectorAnalysis: 
+        title: VectorAnalysis 
+        type: object
+        properties:
+              sector: 
+                title: sector 
+                type: array
+                items:
+                    title: items 
+                    type: object
+                    properties:                                                 
+                        economicSectorName: 
+                            title: EconomicSectorName  
+                            description: descripcion del sector economico - Tabla 48
+                            type: string
+                            example: Financiero
+                            pattern: ^.*$
+                        maximumOverdue: 
+                            type: object
+                            title: MaximumOverdue  
+                            properties:
+                                characterDate: 
+                                    $ref: '#/components/schemas/CharacterDate'
+                        account: 
+                            title: account 
+                            type: array
+                            items:
+                                title: Items 
+                                type: object
+                                properties: 
+                                    businessName: 
+                                      title: businessName
+                                      description: entidad
+                                      type: string
+                                      example: EXPERIAN
+                                      pattern: ^.*$
+                                    businessBureauEventName: 
+                                      title: BusinessBureauEventName
+                                      description: estado
+                                      type: string
+                                      example: EXPERIAN
+                                      pattern: ^.*$  
+                                    accountType: 
+                                      description: codigoTipoCuenta
+                                      type: string
+                                      example: 02
+                                      pattern: ^.*$
+                                    accountTypeDesc: 
+                                      description: Descricpcion codigoTipoCuenta
+                                      type: string
+                                    accountNumber: 
+                                      title: Accountnumber 
+                                      type: string
+                                      example: 00000005G
+                                      pattern: ^.*$
+                                      description: numero del producto  
+                                    containsData: 
+                                      description: contieneDatos
+                                      title: containsData 
+                                      type: boolean
+                                      example: false
+                                    characterDate: 
+                                       $ref: '#/components/schemas/CharacterDate'
+
+    CharacterDate: 
+      title: CharacterDate 
+      type: array
+      items:
+          title: Items 
+          type: object
+          properties: 
+              behaviourDate: 
+                  title: BehaviourDate
+                  description: fecha
+                  type: string
+                  example: 2018-11-30
+                  pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+              totalValueBalanceOverdue: 
+                  title: TotalValueBalanceOverdue
+                  type: number
+                  example: 150000.25
+                  default: 0.0
+                  description: saldoTotalEnMora
+                  
+                  
+    AgregatedInfoMicrocredit:
+      title: AgregatedInfoMicrocredit 
+      type: object
+      properties: 
+        debtEvolution: 
+          type: object
+          title: DebtEvolution  
+          properties:
+            debtEvolutionSector: 
+              title: debtEvolutionSector 
+              type: array
+              items:
+                title: Items of debtEvolutionSector
+                type: object
+                properties: 
+                    economicSectorName: 
+                        title: EconomicSectorName  
+                        description: descripcion del sector economico - Tabla 48
+                        type: string
+                        example: Financiero
+                        pattern: ^.*$
+                    economicSector: 
+                        title: Economicsector 
+                        type: string
+                        example: 1
+                        pattern: ^.*$   
+                    debtEvolutionAccountType: 
+                        $ref: '#/components/schemas/DebtEvolutionAccountType'
+            trimesterDate: 
+              type: array
+              items:
+                title: trimesterDate
+                description: trimestre
+                type: string
+                example: 2018-11-30
+                pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/      
+        overview: 
+           $ref: '#/components/schemas/OverviewAgregatedInfoMicrocredit'
+        vectorAnalysis: 
+            $ref: '#/components/schemas/VectorAnalysis'
+
+    DebtEvolutionAccountType:
+      title: DebtEvolutionAccountType 
+      type: array
+      items:
+        type: object
+        properties: 
+          accountType: 
+            description: codigoTipoCuenta
+            type: string
+            example: 02
+            pattern: ^.*$
+          accountTypeDesc: 
+            description: Descripción codigoTipoCuenta
+            type: string
+          debtEvolutionTrimesterValue: 
+            title: debtEvolutionTrimesterValue
+            type: array
+            items:
+              type: object 
+              properties:
+                number: 
+                  title: number
+                  type: integer
+                  example: 2
+                  description: numero
+                debtBalance: 
+                  title: DebtBalance
+                  type: number
+                  example: 3895666.7
+                  description: saldo
+                valueMonthlyPaymentOverdue:  
+                  title: valueMonthlyPaymentOverdue
+                  type: number
+                  example: 687.0
+                menorRating: 
+                  title: menorRating
+                  type: string 
+                  description: calificacion
+                  example: A
+                codeLeastRating: 
+                  title: codeLeastRating
+                  type: string 
+                  description: textoMenorCalificacion
+                  example: 1
+                accountType: 
+                  description: codigoTipoCuenta
+                  type: string
+                  example: 5
+                  pattern: ^.*$
+                accountTypeDesc: 
+                  description: Descricpcion codigoTipoCuenta
+                  type: string
+                trimesterDate: 
+                  title: trimesterDate
+                  description: trimestre
+                  type: string
+                  example: 2018-11-30
+                  pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/                
+                valueBalanceOverdue: 
+                  title: valueBalanceOverdue
+                  type: number
+                  example: 3895666.7
+                  description: valor en mora
+                debtPercentage: 
+                  title: debtPercentage
+                  type: number
+                  example: 1.7597658283160342
+                  description: porcentajeDeuda
+                initialValue: 
+                  title: InitialValue
+                  type: number
+                  example: 17389.0
+                  description: cupoTotal
+
+    OverviewAgregatedInfoMicrocredit:
+      title: OverviewAgregatedInfoMicrocredit 
+      type: object
+      properties: 
+        currentIndebtedness:
+           title: Items 
+           type: object
+           properties:
+              sector: 
+                  $ref: '#/components/schemas/sectorListXCurrentIndebtedness'
+        generalProfile: 
+           title: GeneralProfile 
+           type: object
+           properties:  
+              Antiquity: 
+                properties:
+                  sectorXDebtor:
+                    $ref: '#/components/schemas/SectorAntiquity'
+              refinancedDebts: 
+                $ref: '#/components/schemas/AgregatedInfoGeneral'
+              RestructuredDebts: 
+                $ref: '#/components/schemas/AgregatedInfoGeneral'
+              inquiredLast6Months: 
+                $ref: '#/components/schemas/AgregatedInfoGeneral'
+              closedDebts:  
+                $ref: '#/components/schemas/AgregatedInfoGeneral'
+              disputes: 
+                $ref: '#/components/schemas/AgregatedInfoGeneral'
+              currentCredits: 
+                $ref: '#/components/schemas/AgregatedInfoGeneral'
+        debtBalanceAndOverdueVector: 
+              title: debtBalanceAndOverdueVector 
+              type: object
+              properties:
+                hasCooperativeSector: 
+                    description: poseeSectorCooperativo
+                    title: hasCooperativeSector 
+                    type: boolean
+                    example: false
+                    default: true 
+                hasFinancialSector: 
+                    description: poseeSectorFinanciero
+                    title: hasFinancialSector
+                    type: boolean
+                    example: false
+                    default: true 
+                hasRetailSector: 
+                    description: poseeSectorReal
+                    title: hasRetailSector
+                    type: boolean
+                    example: false
+                    default: true 
+                hasTelcosSector: 
+                    description: poseeSectorTelcos
+                    title: hasTelcosSector
+                    type: boolean
+                    example: false
+                    default: true 
+                debtBalanceAndOverdue: 
+                    title: debtBalanceAndOverdue 
+                    type: array
+                    items:
+                        properties:
+                          maximumDelinquency: 
+                              title: maximumDelinquency 
+                              type: integer
+                              example: 30
+                              description: moraMaxima
+                          maxDelinquencyCooperativeSector: 
+                              title: maxDelinquencyCooperativeSector
+                              type: integer
+                              example: 30
+                              description: morasMaxSectorCooperativo
+                          maxDelinquencyFinancialSector: 
+                              title: maxDelinquencyFinancialSector
+                              type: integer
+                              example: 30
+                              description: morasMaxSectorFinanciero
+                          maxDelinquencyRetailSector: 
+                              title: maxDelinquencyRetailSector
+                              type: integer
+                              example: 30
+                              description: morasMaxSectorReal
+                          maxDelinquencyTelcosSector: 
+                              title: maxDelinquencyTelcosSector
+                              type: integer
+                              example: 30
+                              description: morasMaxSectorTelcos
+                          numCredits30: 
+                              title: numCredits30
+                              type: integer
+                              example: 30
+                              description: numCreditos30
+                          numCreditsHigherOrEqual60: 
+                              title: numCreditsHigherOrEqual60
+                              type: integer
+                              example: 30
+                              description: numCreditosMayorIgual60
+                          totalValueBalanceOverdue: 
+                              title: totalValueBalanceOverdue
+                              type: number
+                              example: 150000.25
+                              default: 0.0
+                              description: saldoDeudaTotalMora
+                          totalDelinquencyAccounts: 
+                              title: totalDelinquencyAccounts
+                              type: number
+                              example: 150000.25
+                              default: 0.0
+                              description: totalCuentasMora
+                          totaldebtBalance: 
+                                  title: TotaldebtBalance
+                                  type: number
+                                  example: 150000.25
+                                  default: 0.0
+                                  description: saldoTotal
+                          behaviourDate: 
+                              title: BehaviourDate
+                              description: fecha
+                              type: string
+                              example: 2018-11-30
+                              pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/       
+        graphIndebtednessTrend: 
+              title: graphIndebtednessTrend 
+              type: object
+              properties:
+                series: 
+                    title: series 
+                    type: array
+                    items:
+                      properties:
+                        serieText: 
+                          description: serieText
+                          type: string
+                          pattern: ^.*$
+                          example: text
+                        values: 
+                          title: values 
+                          type: object
+                          properties:
+                            value: 
+                               title: value 
+                               type: array
+                               items:
+                                  properties:
+                                    behaviourDate: 
+                                      title: BehaviourDate
+                                      description: fecha
+                                      type: string
+                                      example: 2018-11-30
+                                      pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+                                    value : 
+                                      title: value
+                                      type: number
+                                      example: 687.0
+
+    DebtParticipation:
+      title: DebtParticipation 
+      description: ParticipacionDeuda
+      type: array
+      items:
+        properties:
+          sectorXDebtor:
+             $ref: '#/components/schemas/SectorListDebtor'
+          MicrocreditXDebtor:
+             $ref: '#/components/schemas/MicrocreditListDebtor'
+          CardMicrocreditDebts:
+             $ref: '#/components/schemas/CardMicrocreditDebts'
+              
+    TotalDebtBalance:      
+      title: TotalDebtBalance 
+      description: TotalSaldo
+      type: array
+      items:
+        properties:
+          sectorXDebtor:
+             $ref: '#/components/schemas/SectorListDebtor'
+          MicrocreditXDebtor:
+             $ref: '#/components/schemas/MicrocreditListDebtor'
+          CardMicrocreditDebts:
+             $ref: '#/components/schemas/CardMicrocreditDebts'
+         
+    CurrentCredits:
+      title: CurrentCredits 
+      type: array
+      items:
+        properties:
+          Agregated:
+             $ref: '#/components/schemas/AgregatedInfoGeneral'
+          sectorXDebtor:
+             $ref: '#/components/schemas/SectorListDebtor'
+          valueMonthlyPaymentOverdue:
+              title: valueMonthlyPaymentOverdue
+              type: number
+              example: 687.0
+          CardMicrocreditDebts:
+             $ref: '#/components/schemas/CardMicrocreditDebts'
+
+    sectorListXCurrentIndebtedness:
+      title: sectorListXCurrentIndebtedness 
+      type: array
+      items:
+        properties:
+          economicSectorName: 
+            title: Economicsector 
+            type: string
+            example: 1
+            pattern: ^.*$
+          economicSector: 
+            title: Economicsector 
+            type: string
+            example: 1
+            pattern: ^.*$
+          accountType: 
+           title: accountType 
+           type: array
+           items:
+              properties:
+                  accountType: 
+                    description: codigoTipoCuenta
+                    type: string
+                    example: 02
+                    pattern: ^.*$
+                  accountTypeDesc: 
+                    description: Descricpcion codigoTipoCuenta
+                    type: string
+                  user: 
+                    title: SectorCurrentIndebtedness 
+                    type: array
+                    items:
+                      properties:
+                        typeOfDebtor: 
+                          type: string
+                          pattern: ^.*$
+                          description: calidad como principal o como codeudor .
+                          example: 2
+                        account: 
+                          $ref: '#/components/schemas/SectorCurrentIndebtedness'
+
+    SectorCurrentIndebtedness:
+      title: SectorCurrentIndebtedness 
+      type: array
+      items: 
+        properties:
+            valueMonthlyPaymentOverdue : 
+              title: valueMonthlyPaymentOverdue
+              type: number
+              example: 687.0
+            Negativebehaviour:  
+              description: independiente
+              title: Negativebehaviour 
+              type: boolean
+              example: false
+              default: true 
+            behaviourName:  
+              title: behaviourName 
+              type: string 
+              description: XX
+              example: En reclamacion
+            initialValue: 
+              title: InitialValue
+              type: number
+              example: 17389.0
+              description: cupoTotal
+            rating: 
+              title: rating 
+              type: string 
+              description: calificacion
+              example: A
+            ratingDesc: 
+              title: rating 
+              type: string 
+            totalDebtBalanceLiabilities: 
+              title: totalDebtBalanceLiabilities
+              type: number
+              example: 1148.7
+              description: saldo
+            debtBalance: 
+              title: DebtBalance
+              type: number
+              example: 3895666.7
+              description: saldo
+            valueBalanceOverdue: 
+              title: valueBalanceOverdue
+              type: number
+              example: 3895666.7
+              description: valor en mora
+
+    DelinquencyObligations:
+      title: DelinquencyObligations 
+      type: array
+      items:
+        properties:
+          sectorXDelinquency:
+             $ref: '#/components/schemas/SectorListDelinquency'
+          microcreditXDelinquency:
+             $ref: '#/components/schemas/MicrocreditListDelinquency'
+          cardMicrocreditDelinquency:
+             $ref: '#/components/schemas/CardMicrocreditDelinquency'
+    
+    NoPendingPayments:
+      title: NoPendingPayments 
+      description: ObligacionesDia
+      type: array
+      items:
+        properties:
+          sectorXDebtor:
+             $ref: '#/components/schemas/SectorListDebtor'
+          MicrocreditXDebtor:
+             $ref: '#/components/schemas/MicrocreditListDebtor'
+          CardMicrocreditDebts:
+             $ref: '#/components/schemas/CardMicrocreditDebts'
+    
+    MicrocreditListDebtor:
+      title: MicrocreditListDebtor 
+      type: array
+      items:
+        properties:
+          MicrocreditXDebtor:
+             $ref: '#/components/schemas/MicrocreditGroupDebts'
+
+    SectorListAntiquity:
+      title: SectorListAntiquity 
+      type: array
+      items:
+        properties:
+          sectorXDebtor:
+             $ref: '#/components/schemas/SectorAntiquity'
+             
+    SectorListDebtor:
+      title: SectorXDebtor 
+      type: array
+      items:
+        properties:
+          sectorXDebtor:
+             $ref: '#/components/schemas/SectorDebts'
+             
+    SectorListDelinquency:
+      title: SectorListDelinquency 
+      type: array
+      items:
+        properties:
+          sectorXDebtor:
+             $ref: '#/components/schemas/SectorXDelinquency'          
+             
+    MicrocreditListDelinquency:
+      title: MicrocreditListDelinquency 
+      type: array
+      items:
+        properties:
+          MicrocreditXDebtor:
+             $ref: '#/components/schemas/MicrocreditGroupDelinquency'   
+
+    CardMicrocreditDelinquency:
+      title: CardMicrocreditDelinquency 
+      type: object
+      properties:
+          valueMonthlyPaymentOverdue: 
+            title: valueMonthlyPaymentOverdue
+            type: number
+            example: 687.0
+          typeOfDebtor:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor .
+            example: 3
+          typeOfDebtorDesc:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor.
+            example: principal
+          numberOfLiabilitiesDelinquency:
+            title: Nnumber Of liabilities with Delinquency
+            type: integer
+            description: Numero de Obligaciones 
+            example: 1
+          valueBalanceLiabilitiesOverdue: 
+            title: valueBalanceLiabilitiesOverdue
+            type: number
+            example: 3895666.7
+            description: saldo Obligacion en mora
+          valueBalanceOverdue:
+            title: valueBalanceOverdue
+            type: number
+            example: 3895666.7
+            description: valor en mora
+
+    MicrocreditGroupDelinquency:
+      title: MicrocreditGroupDelinquency 
+      type: object
+      properties:
+          valueMonthlyPaymentOverdue: 
+            title: valueMonthlyPaymentOverdue
+            type: number
+            example: 687.0
+          typeOfDebtor:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor .
+            example: 3
+          typeOfDebtorDesc:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor.
+            example: principal
+          numberOfLiabilitiesDelinquency:
+            title: Nnumber Of liabilities with Delinquency
+            type: integer
+            description: Numero de Obligaciones 
+            example: 1
+          valueBalanceLiabilitiesOverdue: 
+            title: valueBalanceLiabilitiesOverdue
+            type: number
+            example: 3895666.7
+            description: saldo Obligacion en mora
+          valueBalanceOverdue:
+            title: valueBalanceOverdue
+            type: number
+            example: 3895666.7
+            description: valor en mora
+
+    SectorXDelinquency:
+      title: SectorXDelinquency 
+      type: object
+      properties:
+          valueMonthlyPaymentOverdue: 
+            title: valueMonthlyPaymentOverdue
+            type: number
+            example: 687.0
+          typeOfDebtor:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor .
+            example: 3
+          typeOfDebtorDesc:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor.
+            example: principal
+          economicSectorName: 
+            title: EconomicSectorName  
+            description: descripcion del sector economico - Tabla 48
+            type: string
+            example: Financiero
+            pattern: ^.*$
+          economicSector: 
+            title: Economicsector 
+            type: string
+            example: 1
+            pattern: ^.*$
+          numberOfLiabilitiesDelinquency:
+            title: Nnumber Of liabilities with Delinquency
+            type: integer
+            description: Numero de Obligaciones 
+            example: 1
+          valueBalanceLiabilitiesOverdue: 
+            title: valueBalanceLiabilitiesOverdue
+            type: number
+            example: 3895666.7
+            description: saldo Obligacion en mora
+          valueBalanceOverdue:
+            title: valueBalanceOverdue
+            type: number
+            example: 3895666.7
+            description: valor en mora
+
+    MicrocreditGroupDebts:
+      title: MicrocreditGroupDebts 
+      type: object
+      properties:
+          valueMonthlyPayment: 
+            title: ValueMonthlyPayment
+            type: number
+            example: 687.0
+          typeOfDebtorDesc:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor o NA.
+            example: principal
+          typeOfDebtor:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor * NA.
+            example: 3
+          numberOfliabilities:
+            title: NumberOfliabilities
+            type: integer
+            description: Numero de Obligaciones 
+            example: 1
+          debtBalance: 
+            title: DebtBalance
+            type: number
+            example: 3895666.7
+            description: saldo
+
+
+    CardMicrocreditDebts:
+      title: MicrocreditGroupDebts 
+      type: object
+      properties:
+          valueMonthlyPayment: 
+            title: ValueMonthlyPayment
+            type: number
+            example: 687.0
+          typeOfDebtorDesc:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor o NA.
+            example: principal
+          typeOfDebtor:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor * NA.
+            example: 3
+          numberOfliabilities:
+            title: NumberOfliabilities
+            type: integer
+            description: Numero de Obligaciones 
+            example: 1
+          debtBalance: 
+            title: DebtBalance
+            type: number
+            example: 3895666.7
+            description: saldo
+
+    SectorAntiquity: 
+      title: SectorAntiquity 
+      type: object
+      properties:
+        retailSector: 
+          title: retailSector
+          description: sectorReal
+          type: string
+          example: 2018-09-01
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+        cooperativeSector: 
+          title: cooperativeSector
+          description: sectorCooperativo
+          type: string
+          example: 2018-09-01
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+        financialSector: 
+          title: financialSector
+          description: sectorFinanciero
+          type: string
+          example: 2018-09-01
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+        telcosSector: 
+          title: telcosSector
+          description: sectorTelcos
+          type: string
+          example: 2018-09-01
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+            
+    SectorDebts:
+      title: SectorDebts 
+      type: object
+      properties:
+          valueMonthlyPayment: 
+            title: ValueMonthlyPayment
+            type: number
+            example: 687.0
+          typeOfDebtor:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor .
+            example: 3
+          typeOfDebtorDesc:
+            type: string
+            pattern: ^.*$
+            description: calidad como principal o como codeudor.
+            example: principal
+          economicSectorName: 
+            title: EconomicSectorName  
+            description: descripcion del sector economico - Tabla 48
+            type: string
+            example: Financiero
+            pattern: ^.*$
+          economicSector: 
+            title: Economicsector 
+            type: string
+            example: 1
+            pattern: ^.*$
+          numberOfliabilities:
+            title: NumberOfliabilities
+            type: integer
+            description: Numero de Obligaciones 
+            example: 1
+          debtBalance: 
+            title: DebtBalance
+            type: number
+            example: 3895666.7
+            description: saldo
+                
+    AgregatedInfoGeneral:
+      title: AgregatedInfoGeneral 
+      type: object
+      properties:
+          retailSector: 
+            title: retailSector
+            description: sectorReal
+            type: number
+            example: 0
+          cooperativeSector: 
+            title: cooperativeSector
+            description: sectorCooperativo
+            type: number
+            example: 0
+          financialSector: 
+            title: financialSector
+            description: sectorFinanciero
+            type: number
+            example: 0
+          telcosSector: 
+            title: telcosSector
+            description: sectorTelcos
+            type: number
+            example: 0
+          totalAsCosignerAndOther: 
+            title: totalAsCosignerAndOther
+            description: totalComoCodeudorYOtros
+            type: number
+            example: 0
+          totalAsPrincipal: 
+            title: totalAsPrincipal
+            description: totalComoPrincipal
+            type: number
+            example: 0
+
+    AgregatedInfo:
+      title: AgregatedInfo 
+      type: object
+      properties: 
+        overview: 
+           $ref: '#/components/schemas/OverviewAgregatedInfo'
+        debtEvolution: 
+           $ref: '#/components/schemas/DebtEvolution'
+        checks: 
+           $ref: '#/components/schemas/CheckingValuesList'
+        totals: 
+            title: totals 
+            type: object
+            properties: 
+              total: 
+                  $ref: '#/components/schemas/TotalsDebt'
+              accountType: 
+                  $ref: '#/components/schemas/TotalsDebt'
+        portfolioComposition: 
+            title: portfolioComposition 
+            type: object
+            properties:
+              accountType: 
+                title: Items 
+                type: array
+                items: 
+                    $ref: '#/components/schemas/PortafolioComposition'
+        historicalDebtBalance: 
+            title: historicalDebtBalance 
+            type: object
+            properties: 
+              amounts: 
+                $ref: '#/components/schemas/HistoricalDebtBalanceAmounts'
+              accountType:   
+                  title: accountType 
+                  type: object
+                  properties:
+                     accountType: 
+                       description: codigoTipoCuenta
+                       type: string
+                       example: 02
+                       pattern: ^.*$
+                     accountTypeDesc: 
+                       description: codigoTipoCuenta
+                       type: string
+                       example: Descripcion tipo cuenta
+                       pattern: ^.*$
+                     trimester:
+                       $ref: '#/components/schemas/HistoricalDebtBalance'
+        indebtednessOverview:
+            title: totals 
+            type: object
+            properties:
+              trimester:
+                 $ref: '#/components/schemas/IndebtednessOverview'
+              
+    HistoricalDebtBalanceAmounts:
+      title: HistoricalDebtBalance 
+      type: array
+      items: 
+        type: object
+        properties: 
+          numberOfAccountsConsidered: 
+            title: NumberOfAccountsConsidered
+            type: integer
+            description: cuentasConsideradas
+            example: 1
+          trimesterDate: 
+            title: trimesterDate
+            description: fecha
+            type: string
+            example: 2018-09-01
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          debtBalance: 
+            title: DebtBalance
+            type: number
+            example: 3895666.7
+            description: saldo
+          numberOfAccounts: 
+            title: NumberOfAccounts
+            type: integer
+            description: totalCuentas
+            example: 9            
+            
+    HistoricalDebtBalance:
+      title: HistoricalDebtBalance 
+      type: array
+      items: 
+        type: object
+        properties: 
+          numberOfAccountsConsidered: 
+            title: NumberOfAccountsConsidered
+            type: integer
+            description: cuentasConsideradas
+            example: 1
+          trimesterDate: 
+            title: trimesterDate
+            description: fecha
+            type: string
+            example: 2018-09-01
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          debtBalance: 
+            title: DebtBalance
+            type: number
+            example: 3895666.7
+            description: saldo
+          numberOfAccounts: 
+            title: NumberOfAccounts
+            type: integer
+            description: totalCuentas
+            example: 9
+          
+          
+    OverviewAgregatedInfo:
+      title: OverviewAgregatedInfo 
+      type: object
+      properties: 
+        balances: 
+           $ref: '#/components/schemas/BalancesAgregatedInfo'
+        principals: 
+           $ref: '#/components/schemas/PrincipalsAgregatedInfo'
+        behavior: 
+           title: totals 
+           type: object
+           properties:
+              month: 
+                $ref: '#/components/schemas/BehaviorAgregatedInfo'
+    
+    IndebtednessOverview:
+      title: indebtednessOverview 
+      type: array
+      description:  List of Values of Trimester of  indebtedness
+      items:
+          $ref: '#/components/schemas/TrimesterIndebtednessOverview'   
+      
+    TrimesterIndebtednessOverview:
+      title: TrimesterIndebtednessOverview 
+      type: object
+      properties:
+              trimesterDate: 
+                title: trimesterDate
+                description: fecha
+                type: string
+                example: 2018-09-01
+                pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/              
+              numberOfbusinessLine: 
+                type: number
+                description: numeroEntidades
+              sector: 
+                title: sector 
+                type: array
+                description:  List of Values of Sector of  indebtedness
+                items:
+                     $ref: '#/components/schemas/SectorTrimester'  
+               
+    SectorTrimester:
+      title: SectorTrimester 
+      type: object
+      properties:
+              economicSectorName: 
+                title: EconomicSectorName  
+                description: descripcion del sector economico - Tabla 48
+                type: string
+                example: Financiero
+                pattern: ^.*$
+              economicSector: 
+                title: Economicsector 
+                type: string
+                example: 1
+                pattern: ^.*$
+              admissibleGuarantee: 
+                 $ref: '#/components/schemas/Guarantee'
+              otherGuarantee: 
+                 $ref: '#/components/schemas/Guarantee'
+              liabilities: 
+                title: liabilities sector 
+                type: array
+                description:  List of Values of liabilities sector
+                items:
+                     $ref: '#/components/schemas/SectorLiabilities'   
+              
+    SectorLiabilities:
+      title: SectorLiabilities 
+      type: object
+      properties:
+          numberOfAccounts: 
+            title: NumberOfAccounts
+            type: integer
+            description: cantidad
+            example: 0
+          typeOfDebt: 
+            type: string
+            pattern: ^.*$
+            description: tipo
+            example: Comercial  
+          capitalValue: 
+            title: Capitalvalue 
+            type: number
+            example: 150000.25
+            default: 0.0
+            description: valor
+            
+
+    TotalsDebt:
+      title: trimester 
+      type: array
+      items:
+        type: object
+        properties: 
+          typeOfDebtor: 
+            type: string
+            pattern: ^.*$
+            description: calidad Deudor
+            example: 0  
+          typeOfDebtName: 
+            title: typeOfDebtName
+            type: string
+            pattern: ^.*$
+            description: codigoTipo
+            example: 0
+          typeOfDebtDesc: 
+            type: string
+            pattern: ^.*$
+            description: Descricpcion del tipo de deuda
+            example: Descripcion 
+          valueMonthlyPayment: 
+            title: ValueMonthlyPayment
+            type: number
+            example: 687.0
+            description: cuota
+          initialValue: 
+            title: InitialValue
+            type: number
+            example: 17389.0
+            description: cupoTotal
+          share: 
+            title: share
+            type: number
+            example: 1148.0
+            description: participacion
+          debtBalance: 
+            title: DebtBalance
+            type: number
+            example: 1148.0
+            description: saldo
+          totalValueBalanceOverdue: 
+            title: ValueBalanceOverdue
+            type: number
+            example: 150000.25
+            description: saldoMora
+          typeOfDebt: 
+            title: Typeofdebt
+            type: string
+            pattern: ^.*$
+            description: tipo
+            example: 5
+    
+    DebtEvolution:
+      title: debtEvolution 
+      type: object
+      properties: 
+        averageAnalysis: 
+           $ref: '#/components/schemas/BasicDebtAvg'
+        trimester: 
+           $ref: '#/components/schemas/TrimesterDebt'
+    
+    TrimesterDebt:
+      title: trimester 
+      type: array
+      items: 
+        type: object
+        properties: 
+          trimesterDate: 
+            title: trimesterDate 
+            description: fecha
+            type: string
+            example: 2018-09-01
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          quota: 
+            title: quota
+            type: number
+          monthsMaximumDelinquency: 
+            title: MonthsMaximumDelinquency
+            type: integer
+            description: mesesMoraMaxima
+            example: 0
+          DebBasic: 
+            $ref: '#/components/schemas/BasicDebtAvg'
+           
+           
+    PortafolioComposition:
+      title: PortafolioComposition 
+      type: object
+      properties: 
+        numberOfAccounts: 
+          title: NumberOfAccounts
+          type: integer
+          description: cantidad
+          example: 0
+        accountType: 
+          description: codigoTipoCuenta
+          type: string
+          example: 02
+          pattern: ^.*$
+        accountTypeDesc: 
+          description: Descripcion codigoTipoCuenta
+          type: string
+          example: Tipo Cuenta
+          pattern: ^.*$
+        percentage: 
+          title: percentage
+          type: number
+          example: 1.0
+          description: porcentajeo    
+        typeOfDebtor: 
+          type: string
+          pattern: ^.*$
+          description: calidadDeudor
+          example: 00
+        State:
+          title: State 
+          type: array
+          items: 
+            type: object
+            properties: 
+              code: 
+                title: code 
+                type: string 
+                description: code
+                example: 1
+              codeDesc: 
+                title: codeDesc
+                type: string
+              quantityOfObligations: 
+                title: QuantityOfObligations 
+                type: integer
+                example: 10
+                description: numeroCreditos
+          
+          
+    BasicDebtAvg:       
+      title: BasicDebtAvg 
+      type: object
+      properties: 
+        openingAccounts: 
+          title: OpeningAccounts
+          type: number
+          example: 0.0
+          description: aperturaCuentas
+        valueMonthlyPayment: 
+          title: ValueMonthlyPayment
+          type: number
+          example: -15.3
+          description: cuota
+        debtBalance: 
+          title: DebtBalance
+          type: number
+          example: 29.9
+          description: saldo
+        maximumDelinquency: 
+          title: maximumDelinquency 
+          type: integer
+          example: 30
+          description: moraMaxima
+        closingAccounts: 
+          title: ClosingAccounts
+          type: number
+          example: 0.0
+          description: cierreCuentas
+        initialValue: 
+          title: InitialValue
+          type: number
+          example: 17.1
+          description: cupoTotal
+        usePercentage: 
+          title: UsePercentage
+          type: number
+          example: 1.7597658283160342
+          description: porcentajeUso
+        scoreValue: 
+          title: scoreValue
+          type: number
+          example: 0.0
+          description: score
+        totalOpened: 
+          title: totalOpened
+          type: number
+          example: -27.27272727272727
+          description: totalAbiertas
+        totalClosed: 
+          title: totalClosed
+          type: number
+          example: 23.52941176470588
+          description: totalCerradas
+    
+    BehaviorAgregatedInfo:
+      title: BehaviorAgregatedInfo 
+      type: array
+      items:
+        type: object
+        properties: 
+          behaviourDate: 
+            title: BehaviourDate
+            description: fecha
+            type: string
+            example: 2018-11-30
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          behaviour: 
+            title: Behaviour
+            description: fecha
+            type: string
+            example: 49
+          numberOfAccounts: 
+            title: NumberOfAccounts
+            type: integer
+            description: cantidad
+            example: 0
+
+    PrincipalsAgregatedInfo:
+      title: PrincipalsAgregatedInfo 
+      type: object
+      properties: 
+        maturationSince: 
+          title: MaturationSince
+          description: antiguedadDesde
+          type: string
+          example: 2018-01-31
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+        consultedLast6Months: 
+          title: ConsultedLast6Months
+          type: integer
+          description: consultadasUlt6Meses
+        closedCredits: 
+          title: ClosedCredits
+          type: integer
+          description: creditosCerrados
+          example: 17
+        currentNegativeCredits: 
+          title: CurrentNegativeCredits
+          type: integer
+          description: creditosActualesNegativos
+          example: 0 
+        currentCredits: 
+          title: CurrentCredits
+          type: integer
+          description: creditoVigentes
+          example: 7
+        openedAccountsAHOCCB: 
+          title: openedAccountsAHOCCB
+          type: integer
+          description: cuentasAbiertasAHOCCB
+          example: 1
+        closedAccountsAHOCCB: 
+          title: ConsultedLast6Months
+          type: integer
+          description: cuentasCerradasAHOCCB
+          example: 4
+        totalDisputes: 
+          title: totalDisputes
+          type: integer
+          description: desacuerdosALaFecha
+          example: 4
+        negativeHistoricalLast12Months: 
+          title: NegativeHistoricalLast12Months
+          type: integer
+          description: histNegUlt12Meses
+          example: 0
+        currentDisputes: 
+          title: currentDisputes
+          type: integer
+          description: reclamosVigentes
+          example: 0
+    
+    BalancesAgregatedInfo:
+      title: Balances Agregated Info
+      type: object
+      properties: 
+        valueMonthlyPayment: 
+          title: ValueMonthlyPayment
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: cuotaMensual
+        HightestDebtBalance: 
+          title: HightestDebtBalance
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: saldoCreditoMasAlto
+        debtBalanceD30: 
+          title: DebtBalanceD30
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: saldoM30
+        debtBalanceD60: 
+          title: DebtBalanceD60
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: saldoM60
+        debtBalanceD90: 
+          title: DebtBalanceD90
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: saldoM90
+        totaldebtBalance: 
+          title: TotaldebtBalance
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: saldoTotal
+        totalValueBalanceOverdue: 
+          title: TotalValueBalanceOverdue
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: saldoTotalEnMora
+        month: 
+          $ref: '#/components/schemas/BalancesMonthAgregatedInfo'
+        sector: 
+          $ref: '#/components/schemas/BalancesSectorAgregatedInfo'
+   
+    BalancesMonthAgregatedInfo:
+      title: BalancesMonthAgregatedInfo
+      type: array
+      items:
+        type: object
+        properties: 
+          behaviourDate: 
+            title: BehaviourDate 
+            description: fecha 
+            type: string
+            example: 2018-01-31
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/     
+          totalBalance: 
+            title: TotalBalance
+            type: number
+            example: 150000.25
+            default: 0.0
+            description: saldoTotal
+          totalValueBalanceOverdue: 
+            title: TotalValueBalanceOverdue
+            type: number
+            example: 150000.25
+            default: 0.0
+            description: saldoTotalMora  
+  
+          
+    BalancesSectorAgregatedInfo:
+      title: BalancesSectorAgregatedInfo
+      type: array
+      items:
+        type: object
+        properties: 
+          shareSector: 
+            title: Share
+            type: number
+            example: 150000.25
+            default: 0.0
+            description: saldo
+          debtBalance: 
+            title: DebtBalance
+            type: number
+            example: 150000.25
+            default: 0.0
+            description: saldo
+          economicSector: 
+            description: sector
+            title: Economicsector 
+            type: integer
+            example: 1
+            pattern: ^.*$
+    
+    Saving: 
+      title: Saving 
+      type: object
+      properties: 
+        account: 
+           $ref: '#/components/schemas/BasicAccount'
+        adjective: 
+           $ref: '#/components/schemas/AdjectiveAccount'
+        features: 
+           $ref: '#/components/schemas/FeaturesAccount'
+        status: 
+           $ref: '#/components/schemas/AssetStatus'
+        values: 
+          $ref: '#/components/schemas/SavingsValuesList'
+            
+    CheckingList: 
+      type: array
+      description:  List of Checking
+      items:
+          $ref: '#/components/schemas/Checking'  
+           
+    Checking:
+       title: Cheking 
+       type: object
+       properties: 
+        account: 
+           $ref: '#/components/schemas/BasicAccount'
+        adjective: 
+           $ref: '#/components/schemas/AdjectiveAccount'
+        features: 
+           $ref: '#/components/schemas/FeaturesAccount'
+        status:  
+           $ref: '#/components/schemas/AssetStatus'
+        values: 
+            $ref: '#/components/schemas/CheckingValuesList'
+        overdraft: 
+            $ref: '#/components/schemas/Overdraft'
+
+
+    LiabilitiesList: 
+      type: array
+      description:  List of Checking
+      items:
+          $ref: '#/components/schemas/Liabilities'      
+          
+    Liabilities:
+       title: Liabilities 
+       type: object
+       properties: 
+        account: 
+           $ref: '#/components/schemas/BasicAccount'
+        liabilitiesAccount: 
+           $ref: '#/components/schemas/LiabilitiesAccount'
+        adjective: 
+           $ref: '#/components/schemas/AdjectiveAccount'
+        featuresLiabilities: 
+           $ref: '#/components/schemas/FeaturesLiabilities'
+        status: 
+           $ref: '#/components/schemas/LiabilitiesStatus'
+        values: 
+            $ref: '#/components/schemas/LiabilitiesValuesList'
+
+
+    CreditCardList: 
+      type: array
+      description:  List of Checking
+      items:
+          $ref: '#/components/schemas/CreditCard'      
+          
+    CreditCard:
+       title: CreditCard 
+       type: object
+       properties: 
+        account: 
+           $ref: '#/components/schemas/BasicAccount'
+        creditCardAccount: 
+           $ref: '#/components/schemas/LiabilitiesAccount'
+        adjective: 
+           $ref: '#/components/schemas/AdjectiveAccount'
+        FeaturesCreditCard: 
+           $ref: '#/components/schemas/FeaturesCreditCard'
+        status: 
+           $ref: '#/components/schemas/CrediCardStatus'
+        values: 
+            $ref: '#/components/schemas/LiabilitiesValuesList'
+
+    GlobalIndebtednessList:
+      type: array
+      description:  List of GlobalIndebtedness
+      items:
+          $ref: '#/components/schemas/GlobalIndebtedness' 
+
+    GlobalIndebtedness:
+      title: Values GlobalIndebtedness 
+      type: object
+      properties: 
+        primaryKey: 
+          title: primaryKey 
+          description: codigo llave maestra de la entidad
+          type: string
+          example: 1
+          pattern: ^.*$
+        sourceGlobalIndebtedness: 
+          title: SourceGlobalIndebtedness
+          type: string 
+          description: Tipo de Fuente en Endeudamiento Global
+          example: S
+        sourceGlobalIndebtednessDesc: 
+          title: SourceGlobalIndebtednessDesc
+          type: string 
+          description: Descripcion de Tipo de Fuente en Endeudamiento Global
+          example: Superintendencia
+        quarterQualification: 
+          title: Quarterqualification
+          type: string 
+          description: calificacion
+          example: A
+          pattern: ^.*$
+        quarterQualificationDesc: 
+          title: quarterQualificationDesc
+          type: string 
+          description: calificacion
+          example: A
+          pattern: ^.*$
+        cutoffDate: 
+          title: CutoffDate
+          description: fecha de Reporte
+          type: string
+          example: 2018-01-31
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+        tradeHolderIndicator: 
+          description: independiente
+          title: Tradeholderindicator 
+          type: boolean
+          example: false
+          default: true  
+        currencyType: 
+          type: string 
+          description: Moneda
+          example: 0
+        currencyTypeDesc: 
+          type: string 
+          description: Descripcion de acuerdo a tipo de Moneda - Tabla 12
+          example: No reportado  
+        quantityOfObligations: 
+          title: QuantityOfObligations 
+          type: integer
+          example: 10
+          description: numeroCreditos
+        capitalValue: 
+          title: Capitalvalue 
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: saldoPendiente
+        typeOfCredit: 
+          title: TypeOfCredit
+          type: string 
+          description: tipo Credito
+          example: CMR
+        typeOfCreditDesc: 
+          title: TypeOfCreditDesc
+          type: string
+          pattern: ^.*$
+          description: Descripcion Tipo de Crédito en Endeudamiento Global
+          example: Créditos comerciales
+        entity: 
+         title: Values entity 
+         type: object
+         properties: 
+           businessLineName: 
+             description: entidad
+             title: Businesslinename 
+             type: string
+             example: BCO DAVIVIENDA LIBRE INVERS.
+             pattern: ^.*$
+           counterpartyIdNumber: 
+             description: nit 
+             title: Counterparty idnumber
+             type: string
+             example: 813186501
+             pattern: ^.*$    
+           economicSector: 
+             title: Economicsector 
+             type: string
+             example: 1
+             pattern: ^.*$
+           economicSectorName: 
+             title: economicSectorName  
+             description: descripcion del sector economico - Tabla 48
+             type: string
+             example: Financiero
+             pattern: ^.*$
+        Guarantee: 
+           $ref: '#/components/schemas/Guarantee'   
+
+    Guarantee:
+      title: Values guarantee 
+      type: object
+      properties: 
+        guaranteeDate: 
+         description: fecha  
+         type: string
+         example: 2018-01-31
+         pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+        guaranteeType: 
+         description: tipo de grantia 
+         title: GuaranteeType
+         type: string
+         example: 01
+         pattern: ^.*$    
+        guaranteeTypeName: 
+         title: tipo de grantia - Tabla de garantías endeudamiento global clasificado - 49
+         type: string
+         example: No idónea
+         pattern: ^.*$
+        guaranteeValue: 
+         title: GuaranteeValue   
+         description: valor
+         type: number
+         example: 150000.25
+
+    LiabilitiesValuesList:      
+      type: array 
+      description:  List of Values of Liabilities 
+      items:
+          $ref: '#/components/schemas/LiabilitiesValues'      
+
+    LiabilitiesValues:
+      title: Values Liabilities 
+      type: object
+      properties: 
+        rating: 
+          title: rating 
+          type: string 
+          description: calificacion
+          example: 1
+        ratingDesc: 
+          title: descripcion rating cuenta cartera
+          type: string 
+          description: calificacion - Tabka 14
+          example: A
+        behaviourDate: 
+          title: behaviourDate 
+          description: fecha  de valor
+          type: string
+          example: 2018-01-31
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+        currencyType: 
+          type: string 
+          description: Moneda
+          example: 0
+        currencyTypeDesc: 
+          type: string 
+          description: Descripcion de acuerdo a tipo de Moneda
+          example: No reportado
+        valueMonthlyPayment: 
+          title: ValueMonthlyPayment 
+          type: number
+          example: 150000.25
+          description: cuota
+        paidInstallments: 
+          title: PaidInstallments
+          type: integer
+          example: 12
+          description: cuotasCanceladas
+        installmentsOverdue: 
+          title: InstallmentsOverdue
+          type: integer
+          example: 3
+          description: cuotas en Mora
+        delinquencyMaturation: 
+          title: DelinquencyMaturation 
+          type: integer
+          example: 30
+          description: diasMora
+        availableBalance: 
+          title: AvailableBalance
+          type: number
+          example: 150000.25
+          description: disponible
+        paymentDeadline: 
+          title: PaymentDeadline 
+          description: fecha Limite Pago
+          type: string
+          example: 2018-01-31
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/  
+        paymentDate: 
+          title: PaymentDate
+          description: fechaPagoCuota
+          type: string
+          example: 2018-01-31
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/  
+        periodicityOfPayments: 
+          title: PeriodicityOfPayments 
+          type: integer
+          example: 4
+          description: Modalidad de Pago
+        periodicityOfPaymentsDesc: 
+          title: PeriodicityOfPaymentsDesc 
+          type: string
+          example: Semestral
+          description: Descripcion de Modalidad de Pago
+        businessValueBalanceOverdue: 
+          title: businessValueBalanceOverdue
+          type: number
+          example: 150000.25
+          description: saldo en Mora
+        debtBalance: 
+          title: debtBalance
+          type: number
+          example: 150000.25
+          description: saldo Actual
+        initialValue: 
+          title: initialValue
+          type: number
+          example: 150000.25
+          description: valor Inicial
+        totalNumberOfInstallments: 
+          title: TotalNumberOfInstallments
+          type: integer
+          example: 60
+          description: Modalidad de Pago
+
+    CheckingValuesList:      
+      type: array
+      description:  List of Values of savings account 
+      items:
+          $ref: '#/components/schemas/CheckingValues'      
+
+    CheckingValues:
+      title: Values checking 
+      type: object
+      properties: 
+        rating: 
+          title: rating 
+          type: string 
+          description: calificacion
+          example: 1
+        behaviourDate: 
+          title: date 
+          description: fecha  de valor
+          type: string
+          example: 2018-01-31
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+        currencyType: 
+          type: string 
+          description: Moneda
+          example: 0
+        numberOfChecksReturned: 
+          title: numberOfChecksReturned 
+          type: integer
+          example: 3
+          description: cantidadChequesDevueltos
+        numberOfChecksPaid: 
+          title: numberOfChecksPaid 
+          type: integer
+          example: 2
+          description: cantidadChequesPagados
+        totalValueOfChecksReturned: 
+          title: totalCreditTransfer 
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: valorChequesDevueltos
+        totalValueOfChecksPaid: 
+          title: totalDebitTransfer 
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: valorChequesPagados                 
+          
+    SavingsValuesList: 
+      type: array
+      description:  List of Values of savings account 
+      items:
+          $ref: '#/components/schemas/SavingsValues'  
+
+    SavingsValues:
+      title: Values Asset 
+      type: object
+      properties: 
+        rating: 
+          title: rating 
+          type: string 
+          description: calificacion
+          example: 1
+        ratingDesc: 
+          title: ratingDesc
+          type: string 
+          description: descripcion de calificacion
+        behaviourDate: 
+          title: date 
+          description: fecha  de valor
+          type: string
+          example: 2018-01-31
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+        currencyType: 
+          type: string 
+          description: Moneda
+          example: 0
+        currencyTypeDesc: 
+          type: string 
+          description: Descripcion de acuerdo a tipo de Moneda
+          example: No reportado
+        totalCashCredits: 
+          title: Totalcashcredits 
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: creditosEfectivo
+        totalCashDebits: 
+          title: totalCashDebits 
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: debitosEfectivo
+        totalCreditTransfer: 
+          title: totalCreditTransfer 
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: creditosTransferencia
+        totalDebitTransfer: 
+          title: totalDebitTransfer 
+          type: number
+          example: 150000.25
+          default: 0.0
+          description: debitosTransferencia          
+          
+    Overdraft:
+      title: Comment 
+      type: object
+      properties: 
+        authorizedOverdraftCreditLimit: 
+          title: Authorizedoverdraftcreditlimit
+          type: number 
+          description: clase
+          example: 150000.25
+        authorizedOverdraftDays: 
+          type: integer 
+          description: dias en sobregiro
+          example: 12
+        overdraftReportDate: 
+          title: overdraftReportDate 
+          description: fecha 
+          type: string
+          example: 2022-03-23
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+    
+    FeaturesCreditCard:
+      title: FeaturesCreditCatd 
+      type: object
+      properties: 
+        debtor: 
+          title: debtor
+          type: boolean 
+          description:  amparada
+          example: false
+        cardClass: 
+          title: CardClass
+          type: string
+          pattern: ^.*$
+          description: clase codigo
+          example: 01
+        privateBrandName: 
+          title: privateBrandName
+          type: string
+          pattern: ^.*$
+          description: marca
+        cardClassName: 
+          title: cardClassName
+          type: string
+          pattern: ^.*$
+          description: descripcion de Clase
+          example: 01
+        guaranteeType: 
+          title: Guaranteetype
+          type: string
+          pattern: ^.*$
+          description: Tipo de garantia
+          example: 02
+        guaranteeTypeName: 
+          title: guaranteeTypeName
+          type: string
+          pattern: ^.*$
+          description: Descripcion de tipo de garantia
+          example: Otras garantías idóneas
+        franchiseType: 
+          title: franchiseType
+          type: integer
+          description: franquicia
+          example: 2
+        franchiseName: 
+          title: franchiseName
+          type: string
+          description: nombre franquicia
+          example: Visa
+        typeOfDebtor: 
+          type: string
+          pattern: ^.*$
+          description: calidadDeudor
+          example: 00
+        typeOfDebtorDesc: 
+          type: string
+          pattern: ^.*$
+          description: Descricpcion del tipo de calidad del deudor
+          example: Deudor Principal 
+
+
+    FeaturesLiabilities:
+      title: Comment 
+      type: object
+      properties: 
+        typeOfCredit: 
+          title: TypeOfCredit
+          type: integer 
+          description: tipo Obligacion
+          example: 2
+        typeOfCreditDesc: 
+          title: TypeOfCredit Descripcion 
+          type: string
+          pattern: ^.*$
+          description: tipo Obligacion
+          example: Consumo
+        contractType: 
+          title: ContractType
+          type: integer
+          description: tipoContrato
+          example: 2
+        contractTypeDesc: 
+          title: ContractTypeDesc
+          type: string
+          pattern: ^.*$
+          description: descripcion tipoContrato
+          example: Indefinido
+        contractTerm: 
+          title: ContractTerm
+          type: integer
+          description: meses Permanencia
+          example: 1
+        guaranteeType: 
+          title: Guaranteetype
+          type: integer
+          pattern: ^.*$
+          description: Tipo de garantia
+          example: 02
+        guaranteeTypeName: 
+          title: guaranteeTypeName
+          type: string
+          pattern: ^.*$
+          description: Descripcion de tipo de garantia
+          example: Otras garantías idóneas
+        contractExecution: 
+          title: ContractExecution
+          type: integer
+          description: ejecucionContrato
+          example: 1
+        typeOfDebtor: 
+          type: string
+          pattern: ^.*$
+          description: calidadDeudor
+          example: 00
+        typeOfDebtorDesc: 
+          type: string
+          pattern: ^.*$
+          description: Descricpcion del tipo de calidad del deudor
+          example: Deudor Principal 
+          
+          
+      
+    FeaturesAccount:
+      title: FeaturesAccount 
+      type: object
+      properties: 
+        accountCategory: 
+          type: integer
+          description: Clase
+          example: 1
+        accountCategoryDesc: 
+          type: string 
+          description: Descripcion clase de Cuenta de Ahorros y Corriente
+          example: Nomina
+
+    AssetStatus:
+      title: Comment 
+      type: object
+      properties: 
+        businessBureauEvent: 
+          type: string 
+          description: codigo
+          example: 01
+        businessBureauEventDesc: 
+          type: string 
+          description: Descripcion Estados de Cuentas corrientes y de ahorros
+          example: Vigente
+        behaviourDate: 
+          title: date 
+          description: fecha  del estado
+          type: string
+          example: 2022-03-23
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+          
+    
+    LiabilitiesStatus:
+      type: object
+      description:  Liabilities Status
+      properties:
+        account: 
+           $ref: '#/components/schemas/AccountLiabilitiesStatus'   
+        origin: 
+           $ref: '#/components/schemas/OriginLiabilitiesStatus'         
+        payment:  
+           $ref: '#/components/schemas/PaymentLiabilitiesStatus'         
+    
+    CrediCardStatus:
+      type: object
+      description:  CrediCard Status
+      properties:
+        account: 
+           $ref: '#/components/schemas/AccountLiabilitiesStatus'   
+        origin: 
+           $ref: '#/components/schemas/OriginLiabilitiesStatus'         
+        payment:  
+           $ref: '#/components/schemas/PaymentLiabilitiesStatus'         
+        card: 
+           $ref: '#/components/schemas/PaymentCreditStatus'         
+
+    
+    AccountLiabilitiesStatus :
+      title: Comment 
+      type: object
+      properties: 
+        businessAccountStatus: 
+          type: string 
+          description: codigo
+          example: 01
+        businessAccountStatusDesc: 
+          type: string 
+          description: Descripcion del codigo  -- Tabla 43
+          example: Al día
+        accountStatusDate: 
+          title: accountStatusDate 
+          description: fecha  del estado de la cuenta
+          type: string
+          example: 2022-03-23
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          
+    OriginLiabilitiesStatus :
+      title: Comment 
+      type: object
+      properties: 
+        originStatusOfAccount: 
+          type: string 
+          description: codigo
+          example: 01
+        originStatusOfAccountDesc: 
+          type: string 
+          description: Descripcion del codigo  -- Tabla 44
+          example: Reestructurada          
+        dateOfOriginStatus: 
+          title: dateOfOriginStatus 
+          description: fecha de estado de origen
+          type: string
+          example: 2022-03-23
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+          
+          
+    PaymentLiabilitiesStatus :
+      title: Comment 
+      type: object
+      properties: 
+        businessBureauEvent: 
+          type: integer 
+          description: codigo
+          example: 00
+        businessBureauEventDesc: 
+          type: string 
+          description: Descripcion del codigo  -- Tabla 4
+          example: Información no disponible o no reportada por el suscriptor
+        paymentDate: 
+          title: paymentDate 
+          description: fecha de Pago
+          type: string
+          example: 2022-03-23
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+        paymentMonths: 
+          type: integer 
+          description: codigo
+          example: 00
+    
+    PaymentCreditStatus :
+      title: PaymentCreditStatus 
+      type: object
+      properties: 
+        cardStatusCode: 
+          type: string 
+          description: codigo
+          example: 01
+        cardStatusName: 
+          type: string 
+          description: Descripcion del codigo  -- Tabla 42
+          example: Entregado          
+        dateOfCreditStatus: 
+          title: dateOfOriginStatus 
+          description: fecha de estado de origen
+          type: string
+          example: 2022-03-23
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+          
+                
+    AdjectiveAccount:
+      title: Comment 
+      type: object
+      properties: 
+        code: 
+          title: code 
+          type: string 
+          description: code
+          example: 1
+        codeDesc: 
+          title: code 
+          type: string 
+          description: Descripcion de codigo adjetivo
+          example: 1
+        date: 
+          title: date 
+          description: fecha 
+          type: string
+          example: 2022-03-23
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+          
+          
+    LiabilitiesAccount:
+      title: Comment 
+      type: object
+      properties: 
+        expiryDate: 
+          title: expiryDate 
+          description: fechaVencimiento 
+          type: string
+          example: 2022-03-23
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/    
+        paymentType: 
+          title: paymentType 
+          type: integer
+          example: 0
+          description: formaPago
+        paymentTypeDesc: 
+          title: paymentTypeDesc
+          type: string
+          example: PAGO VOLUNTARIO
+          description: Descripcion forma de pago
+        businessBehaviourVectorProduct: 
+          title: businessBehaviourVectorProduct
+          type: string
+          example: .......................................123.4.3534.n
+          pattern: ^.*$         
+          description: comportamiento
+        probabilityOfDefault: 
+          title: probabilityOfDefault 
+          type: integer
+          example: 0
+          description: probabilidadIncumplimiento
+        ratingHD: 
+          title: ratingHD 
+          type: boolean
+          example: false
+          description: calificacion HD
+
+    BasicAccount:
+      title: Comment 
+      type: object
+      properties: 
+        primaryKey: 
+          title: primaryKey 
+          description: codigo llave maestra de la entidad
+          type: string
+          example: 1
+          pattern: ^.*$
+        block: 
+          title: block 
+          description: bloqueada
+          type: boolean 
+          example: true
+        rating: 
+          title: rating 
+          type: integer 
+          description: calificacion
+          example: 1
+        ratingDesc: 
+          type: string
+          description: Descripcion de calificacion
+          example: NORMAL
+        filingCityName: 
+          title: Filingcityname
+          type: string
+          example: BOGOTA
+          pattern: ^.*$
+        filingCityCode: 
+          title: Filingcitycode 
+          description: codigoDaneCiudad
+          type: string
+          example: 01
+          pattern: ^.*
+        counterpartyIdNumber: 
+          description: Suscriptor
+          title: Counterparty idnumber
+          type: string
+          example: 813186501
+          pattern: ^.*$          
+        businessLineName: 
+          description: entidad
+          title: Businesslinename 
+          type: string
+          example: BCO DAVIVIENDA LIBRE INVERS.
+          pattern: ^.*$        
+        accountOpeningDate: 
+          title: accountOpeningDate 
+          description: fecha de Apertura
+          type: string
+          example: 2010-09-16
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/  
+        tradeHolderIndicator: 
+          description: independiente
+          title: Tradeholderindicator 
+          type: boolean
+          example: false
+          default: true  
+        accountNumber: 
+          title: Accountnumber 
+          type: string
+          example: 00000005G
+          pattern: ^.*$
+          description: numero del producto
+        filingOffice: 
+          title: Filingoffice 
+          type: string
+          example: LOS NOGALES
+          pattern: ^.*$  
+          description: oficina
+        economicSector: 
+          title: Economicsector 
+          type: integer
+          example: 1
+          pattern: ^.*$
+        economicSectorName: 
+          title: economicSectorName  
+          description: descripcion del sector economico
+          type: string
+          example: Financiero
+          pattern: ^.*$
+        stateOfAccountHolder: 
+          title: Stateofaccountholder 
+          type: integer
+          example: 0
+          description: situacion Titular
+        stateOfAccountHolderDesc: 
+          type: string
+          description: Descripcion de situacion titular
+          example: NORMAL
+        personId:
+          type: object
+          description: informacion llave 
+          properties:
+            personIdNumber: 
+              type: string
+              example: 0079995359
+            personIdType: 
+              type: integer
+              example: 1
+            personIdDesc: 
+              type: string
+              example: NÚMERO DE IDENTIFICACIÓN TRIBUTARIA
+              description: Descripcion tipo de identificacion 
+        subAccountTypeName: 
+          description: subtipoCuenta
+          type: string
+          example: TARJETAS DE CREDITO/ Cuenta Ahorros/ Prestamo
+          pattern: ^.*$
+        accountType: 
+          description: codigoTipoCuenta
+          type: integer
+          example: 02
+          pattern: ^.*$
+        subAccountType: 
+          description: codigoSubtipoCuenta
+          type: string
+          example: 00
+          pattern: ^.*$
+        accountTypeDesc: 
+          description: Descripcion codigo tipo cuenta 
+          type: string
+          example: "AHO"
+        subAccountTypeDesc: 
+          description: Descripcion codigo sub tipo cuenta 
+          type: string
+          example: "AHO"
+          
+    CommentList: 
+      type: array
+      description:  List of Comment
+      items:
+          $ref: '#/components/schemas/Comment'      
+          
+    Comment: 
+      title: Comment 
+      type: object
+      properties: 
+        commentExpiryDate: 
+          title: commentExpiryDate 
+          description: fecha de Vencimiento
+          type: string
+          example: 2022-03-23
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+        commentType: 
+          title: Commenttype 
+          type: string
+          example: 01
+          pattern: ^.*$
+        commentDesc: 
+          title: commentDesc 
+          type: string
+          example: Comentario de tutela
+          pattern: ^.*$
+        commentText: 
+          title: commentText 
+          type: string
+          example: Texto del comentario
+          pattern: ^.*$
+        primaryKey: 
+          title: commentText 
+          type: string
+          example: 1
+          pattern: ^.*$
+          
+    ProductValueList: 
+      type: array
+      description:  List of Valores Productos (Arreglo qu)
+      items:
+          $ref: '#/components/schemas/ProductValue' 
+       
+    ProductValue: 
+      title: ProductValue 
+      type: object
+      properties: 
+        productCode: 
+          title: productCode 
+          type: string
+          pattern: ^.*$
+        productName: 
+          title: productName 
+          type: string
+          pattern: ^.*$
+        reason: 
+          type: string
+        value: 
+          type: string
+        valueSMLV: 
+          type: string
+
+
+    AlertList: 
+      type: array
+      description:  List of Customer
+      items:
+          $ref: '#/components/schemas/Alert' 
+       
+    Alert: 
+      title: Alert 
+      type: object
+      properties: 
+        primaryKey:
+          title: primaryKey 
+          description: codigo llave maestra de la entidad
+          type: string
+          example: 1
+          pattern: ^.*$
+        alertCode: 
+          title: Alertcode 
+          description: codigo de alerta
+          type: string
+          example: 990001
+          pattern: ^.*$
+        alertCodeDesc: 
+          title: alertDesc 
+          description: descripcion del codigo de alerta
+          type: string
+          example: Más de 3 consultas de diferentes entidades en los últimos 60 días
+          pattern: ^.*$
+        source: 
+          type: string
+        sourceDescription: 
+          type: string
+        responseDesc: 
+          type: string
+          example: Codigo de suscriptor no existe
+        textAlert: 
+          type: string
+        alertDate: 
+          title: Alertdate 
+          description: fecha de colocacion
+          type: string
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          example: 2022-03-23
+        alertLastUpdated: 
+          title: alertLastUpdated 
+          description: fecha de modificacion
+          type: string
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          example: 2022-03-23
+        alertExpiryDate: 
+          title: alertExpiryDate 
+          description: fecha de vencimiento
+          type: string
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          example: 2022-03-23
+
+
+    InquiryList: 
+      type: array
+      description:  Lista de Huellas de consulta
+      items:
+          $ref: '#/components/schemas/InquiryFootprints'         
+          
+          
+    InquiryFootprints:
+      type: object
+      description: Huellas de consulta
+      properties:
+        primaryKey: 
+          title: primaryKey 
+          description: codigo llave maestra de la entidad
+          type: string
+          example: 1
+          pattern: ^.*$
+        quantity: 
+            type: integer
+        economicSectorName: 
+            title: EconomicSectorName  
+            description: descripcion del sector economico - Tabla 48
+            type: string
+            example: Financiero
+            pattern: ^.*$
+        economicSector: 
+            title: Economicsector 
+            type: string
+            example: 1
+            pattern: ^.*$
+        accountTypeName: 
+          description: Tipo Cuenta
+          type: string
+          example: 1
+          pattern: ^.*$ 
+        accountTypeDesc: 
+          description: descripcion Tipo Cuenta
+          type: string
+          example: CCB
+          pattern: ^.*$ 
+        filingOffice: 
+          title: Filingoffice 
+          type: string
+          example: LOS NOGALES
+          pattern: ^.*$  
+          description: oficina
+        filingCityName: 
+          title: Filingcityname
+          type: string
+          example: BOGOTA
+          pattern: ^.*$
+        inquiryBusinessName: 
+          title: Inquirybusinessname
+          description: entidad
+          type: string
+          example: EXPERIAN
+          pattern: ^.*$
+        counterpartyIdNumber: 
+          description: Suscriptor
+          title: Counterparty idnumber
+          type: string
+          example: 813186501
+          pattern: ^.*$
+        inquiryDate: 
+          title: Inquirydate 
+          description: fecha
+          type: string
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          example: 2022-03-23
+        inquiryReasonCode: 
+          title: Inquiryreasoncode
+          description: Codigo de la razon de la huella
+          type: string
+          example: 01
+          pattern: ^.*$
+        inquiryReasonDesc: 
+          title: InquiryreasonDesc
+          description: Descripcion de la razon de la huella
+          type: string
+          example: Solicitud de producto
+          pattern: ^.*$          
+        
+
+    BasicInformationLegal:   
+      type: object
+      description: Customer report
+      properties:
+        primaryKey: 
+          title: primaryKey 
+          description: codigo llave maestra de la entidad
+          type: string
+          example: 1
+          pattern: ^.*$
+        personId: 
+          type: object
+          description: informacion llave
+          properties:
+            personIdNumber: 
+              type: string
+              example: 79995359
+        officialSourceValidationStatus: 
+          title: Officialsourcevalidationstatus
+          type: boolean
+          example: false
+          default: true
+        businessName:  
+            title: Businessname 
+            type: string
+            example: EXPERIAN COLOMBIA S.A
+            pattern: ^.*$
+          
+          
+    BasicInformation:
+      type: object
+      description: Customer report
+      properties:
+        personId: 
+          type: object
+          description: informacion llave
+          properties:
+            personIdNumber: 
+              type: integer
+              example: 79995359
+            personIdType: 
+              type: integer
+              example: 1
+        maritalStatusId: 
+          type: string
+          example: 02
+          pattern: ^.*$
+        maritalStatusDesc: 
+          type: string
+          example: Casado/a
+          pattern: ^.*$
+        gender: 
+          type: integer
+          example: 2
+        genderDesc: 
+          type: string
+          example: Masculino
+        names: 
+          type: string
+          example: CECILIA MARGARITA
+        firstLastName: 
+          type: string
+          example: PEREZ
+        secondLastName: 
+          type: string
+          example: VIDAL
+        fullName: 
+          type: string
+          example: PEREZ VIDAL CECILIA MARGARITA
+          pattern: ^.*$
+        citizenTaxRegistrationIndicator: 
+          type: boolean
+          example: false
+          default: true
+        officialSourceValidationStatus: 
+          title: Officialsourcevalidationstatus
+          type: boolean
+          example: false
+          default: true
+        identification:
+             $ref: '#/components/schemas/Identification'  
+        age:
+          type: object
+          properties:
+            min: 
+              type: integer
+              example: 18
+            max: 
+              type: integer
+              example: 21
+        location:
+          type: object
+          properties:
+            antiquity: 
+              type: integer
+              example: 18
+              description:  antiguedad
+            type: 
+              type: string
+              pattern: ^.*$
+              example: Urbana
+        demographic:
+          type: object
+          properties:
+            employer: 
+              type: array
+              description:  List of employer
+              items:
+                 $ref: '#/components/schemas/Employer'
+            economicActivity: 
+              type: array
+              description:  List of economicActivity
+              items:
+                 $ref: '#/components/schemas/EconomicActivity' 
+            identification: 
+              type: array
+              description:  List of identification
+              items:
+                 $ref: '#/components/schemas/DemographicIdentification'   
+            internationalOperations: 
+              type: array
+              description:  List of identification
+              items:
+                 $ref: '#/components/schemas/InternationalOperations'    
+  
+  
+    InternationalOperations:
+      type: object
+      description: InternationalOperations
+      properties:
+        recordId: 
+            title: Recordid 
+            type: integer
+            example: 50196765
+            default: 0
+        internationalOperationsLastUpdated: 
+            title: internationalOperationsLastUpdated
+            type: string
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+            example: 1986-08-20
+            description: fecha
+        counterpartyIdNumber: 
+            title: Counterpartyidnumber 
+            type: string
+            description: nitReporta
+            example: 813186501
+            pattern: ^.*$
+        businessName: 
+            title: Businessname 
+            type: string
+            example: EXPERIAN COLOMBIA S.A
+            pattern: ^.*$
+        internationalOperationsIndicator: 
+            description: operaInt
+            title: InternationalOperationsIndicator 
+            type: boolean
+            example: false
+
+
+    DemographicIdentification:
+      type: object
+      description: Customer report
+      properties:
+        recordId: 
+            title: Recordid 
+            type: integer
+            example: 50196765
+            default: 0
+        issueDate: 
+            title: issueDate
+            type: string
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+            example: 1986-08-20
+            description: fechaExpedicion
+        issuingCityNameId: 
+            title: issuingCityNameId
+            type: string
+            example: 27245
+            description: lugarExpedicion codigo
+            pattern: ^.*$
+        counterpartyIdNumber: 
+            title: Counterpartyidnumber 
+            type: string
+            description: nitReporta
+            example: 813186501
+            pattern: ^.*$
+        businessName: 
+            title: Businessname 
+            type: string
+            example: EXPERIAN COLOMBIA S.A
+            pattern: ^.*$
+               
+    EconomicActivity:
+      type: object
+      description: Customer report
+      properties:
+        recordId: 
+            title: Recordid 
+            type: integer
+            example: 50196765
+            default: 0
+        activityType: 
+            title: activityType
+            type: string
+            example: 02
+            pattern: ^.*$
+        activityTypeDesc: 
+            title: activityType
+            type: string
+            example: Independiente
+            description: descripcion tipoContrato Tabla 32
+            pattern: ^.*$
+        status: 
+            title: Status
+            type: string
+            example: 2
+            default: 0
+        mainIsicCode: 
+            title: MainIsicCode
+            type: string
+            pattern: ^.*$
+            example: 012345
+            description: CIUU
+        isicCodeLastUpdated: 
+            title: IsicCodeLastUpdated
+            type: string
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+            example: 1986-08-20
+            description: Fecha
+        counterpartyIdNumber: 
+            title: Counterpartyidnumber 
+            type: string
+            description: nitReporta
+            example: 813186501
+            pattern: ^.*$
+        businessName: 
+            title: Businessname 
+            type: string
+            example: EXPERIAN COLOMBIA S.A
+            pattern: ^.*$
+            
+            
+    Employer:     
+      type: object
+      description: Customer report
+      properties:
+        employerIdNumber: 
+            title: Employeridnumber
+            type: string
+            example: 813186501
+            pattern: ^.*$
+        employerName: 
+            title: Employername
+            type: string
+            default: 
+            example: COLOMBIANA DE TELEVISION
+            pattern: ^.*$
+        employerNameLastUpdated: 
+            title: Employernamelastupdated
+            type: string
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+            example: 1986-08-20
+        contractType: 
+            title: Contracttype
+            type: integer
+            example: 2
+            default: 0
+        contractTypeDesc: 
+          title: ContractTypeDesc
+          type: string
+          pattern: ^.*$
+          description: descripcion tipoContrato Tabla 30
+          example: Término Indefinido    
+        contractStartDate: 
+            title: Contractstartdate
+            type: string
+            pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+            example: 1986-08-20
+        counterpartyIdNumber: 
+            title: Counterpartyidnumber 
+            type: string
+            default: 
+            example: 813186501
+            pattern: ^.*$
+        recordId: 
+            title: Recordid 
+            type: integer
+            example: 50196765
+            default: 0
+        businessName: 
+            title: Businessname 
+            type: string
+            default: 
+            example: EXPERIAN COLOMBIA S.A
+            pattern: ^.*$
+    
+    
+    
+    Identification: 
+      type: object
+      properties:
+        statusId: 
+          type: string
+          pattern: ^.*$
+          example: 00
+        issueDate: 
+          description: fecha Expedicion
+          type: string
+          pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+          example: 1986-08-20
+        issuingCityName: 
+          description: ciudad
+          type: string
+          pattern: ^.*$
+          example: ZAPATOCA
+        issuingCityNameId: 
+          type: string
+          pattern: ^.*$
+          example: 01
+        issuingStateName: 
+          description: departamento
+          type: string
+          pattern: ^.*$
+          example: Antioquia
+        issuingStateNameId: 
+          type: string
+          pattern: ^.*$
+          example: 05
+        personId: 
+          type: object
+          description: informacion llave 
+          properties:
+            personIdNumber: 
+              type: integer
+              example: 79995359
+            personIdType: 
+              type: integer
+              example: 1
+
+    KeyInformation:
+      type: object
+      description: informacion llave 
+      properties:
+        personIdNumber: 
+          type: integer
+          example: 79995359
+        personIdType: 
+          type: integer
+          example: 1
+        personIdDesc: 
+          type: string
+          example: NÚMERO DE IDENTIFICACIÓN TRIBUTARIA
+          description: Descripcion tipo de identificacion 

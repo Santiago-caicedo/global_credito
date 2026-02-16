@@ -1,0 +1,887 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Mi Solicitud - Global Care F.S.{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* === PORTAL BANCARIO STYLES === */
+    .portal-container {
+        background: linear-gradient(180deg, var(--gc-azul-oscuro) 0%, var(--gc-azul-oscuro) 280px, var(--gc-arena) 280px);
+        min-height: 100vh;
+        margin: -1.5rem;
+        padding: 0;
+    }
+
+    /* Header del portal */
+    .portal-header {
+        padding: 2rem 2rem 1rem;
+        color: white;
+    }
+    .portal-greeting {
+        font-size: 1.1rem;
+        opacity: 0.85;
+        margin-bottom: 0.25rem;
+    }
+    .portal-name {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    .portal-date {
+        font-size: 0.85rem;
+        opacity: 0.7;
+    }
+
+    /* Tarjeta principal de estado */
+    .status-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        margin: 0 1.5rem 1.5rem;
+        overflow: hidden;
+    }
+    .status-card-header {
+        background: linear-gradient(135deg, var(--gc-verde-salvia) 0%, #8fa178 100%);
+        padding: 1.5rem;
+        color: white;
+    }
+    .status-card-header.pending {
+        background: linear-gradient(135deg, var(--gc-dorado) 0%, #b8975b 100%);
+    }
+    .status-card-header.rejected {
+        background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+    }
+    .status-card-header.in-progress {
+        background: linear-gradient(135deg, var(--gc-azul-medio) 0%, var(--gc-azul-oscuro) 100%);
+    }
+    .status-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.9;
+    }
+    .status-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin: 0.5rem 0 0;
+    }
+    .status-card-body {
+        padding: 1.5rem;
+    }
+
+    /* Métricas */
+    .metrics-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .metric-item {
+        text-align: center;
+        padding: 1rem 0.5rem;
+        border-radius: 12px;
+        background: var(--gc-arena);
+    }
+    .metric-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--gc-azul-oscuro);
+    }
+    .metric-label {
+        font-size: 0.75rem;
+        color: var(--gc-azul-medio);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Progress tracker */
+    .progress-tracker {
+        padding: 1.5rem;
+        background: var(--gc-arena);
+        border-radius: 12px;
+        margin: 1rem 0;
+    }
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gc-gris-claro);
+        z-index: 1;
+    }
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+        flex: 1;
+    }
+    .step-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--gc-gris-claro);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        color: white;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    .step-circle.completed {
+        background: var(--gc-verde-salvia);
+    }
+    .step-circle.active {
+        background: var(--gc-dorado);
+        box-shadow: 0 0 0 4px rgba(201, 168, 108, 0.3);
+    }
+    .step-circle.rejected {
+        background: #e74c3c;
+    }
+    .step-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        color: var(--gc-azul-medio);
+        text-align: center;
+        max-width: 70px;
+    }
+
+    /* Secciones del portal */
+    .portal-content {
+        padding: 0 1.5rem 2rem;
+    }
+    .portal-section {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    .section-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--gc-gris-claro);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gc-azul-oscuro);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .section-title i {
+        color: var(--gc-dorado);
+    }
+    .section-body {
+        padding: 1.5rem;
+    }
+
+    /* Documentos */
+    .doc-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 12px;
+        background: var(--gc-arena);
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    .doc-item:hover {
+        background: #e8e5e3;
+    }
+    .doc-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.3rem;
+        color: var(--gc-azul-medio);
+    }
+    .doc-info {
+        flex: 1;
+    }
+    .doc-name {
+        font-weight: 600;
+        color: var(--gc-azul-oscuro);
+        margin-bottom: 0.25rem;
+    }
+    .doc-meta {
+        font-size: 0.8rem;
+        color: var(--gc-azul-medio);
+    }
+    .doc-status {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .doc-status.ok {
+        background: rgba(163, 179, 141, 0.2);
+        color: #6b8a4f;
+    }
+    .doc-status.error {
+        background: rgba(231, 76, 60, 0.15);
+        color: #c0392b;
+    }
+    .doc-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+    .doc-actions .btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+    }
+
+    /* Comentario del analista */
+    .doc-comment {
+        margin: -0.5rem 0 0.75rem 4rem;
+        padding: 0.75rem 1rem;
+        background: rgba(201, 168, 108, 0.15);
+        border-left: 3px solid var(--gc-dorado);
+        border-radius: 0 8px 8px 0;
+        font-size: 0.85rem;
+    }
+    .doc-comment i {
+        color: var(--gc-dorado);
+    }
+
+    /* Upload area */
+    .upload-area {
+        border: 2px dashed var(--gc-gris-claro);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .upload-area:hover {
+        border-color: var(--gc-dorado);
+        background: rgba(201, 168, 108, 0.05);
+    }
+    .upload-area i {
+        font-size: 2.5rem;
+        color: var(--gc-azul-medio);
+        margin-bottom: 1rem;
+    }
+
+    /* Quick actions */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    .quick-action-btn {
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--gc-gris-claro);
+        background: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: var(--gc-azul-oscuro);
+    }
+    .quick-action-btn:hover {
+        border-color: var(--gc-dorado);
+        box-shadow: 0 4px 12px rgba(201, 168, 108, 0.2);
+        transform: translateY(-2px);
+    }
+    .quick-action-btn i {
+        font-size: 1.5rem;
+        color: var(--gc-dorado);
+        margin-bottom: 0.5rem;
+    }
+    .quick-action-btn span {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    /* Timeline / Historial */
+    .timeline {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--gc-gris-claro);
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.25rem;
+    }
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: -1.5rem;
+        top: 0;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--gc-dorado);
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px var(--gc-gris-claro);
+    }
+    .timeline-content {
+        padding-left: 0.5rem;
+    }
+    .timeline-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--gc-azul-oscuro);
+    }
+    .timeline-date {
+        font-size: 0.75rem;
+        color: var(--gc-azul-medio);
+    }
+    .timeline-desc {
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 0.25rem;
+    }
+
+    /* Alert banner */
+    .alert-banner {
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .alert-banner.warning {
+        background: linear-gradient(135deg, rgba(201, 168, 108, 0.15) 0%, rgba(201, 168, 108, 0.05) 100%);
+        border: 1px solid rgba(201, 168, 108, 0.3);
+    }
+    .alert-banner.success {
+        background: linear-gradient(135deg, rgba(163, 179, 141, 0.15) 0%, rgba(163, 179, 141, 0.05) 100%);
+        border: 1px solid rgba(163, 179, 141, 0.3);
+    }
+    .alert-banner.danger {
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, rgba(231, 76, 60, 0.02) 100%);
+        border: 1px solid rgba(231, 76, 60, 0.2);
+    }
+    .alert-banner-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .alert-banner.warning .alert-banner-icon {
+        background: rgba(201, 168, 108, 0.2);
+        color: var(--gc-dorado);
+    }
+    .alert-banner.success .alert-banner-icon {
+        background: rgba(163, 179, 141, 0.2);
+        color: var(--gc-verde-salvia);
+    }
+    .alert-banner.danger .alert-banner-icon {
+        background: rgba(231, 76, 60, 0.15);
+        color: #e74c3c;
+    }
+    .alert-banner-content {
+        flex: 1;
+    }
+    .alert-banner-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--gc-azul-oscuro);
+    }
+    .alert-banner-text {
+        font-size: 0.8rem;
+        color: var(--gc-azul-medio);
+        margin: 0;
+    }
+
+    /* CTA Button */
+    .cta-button {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .cta-button.primary {
+        background: linear-gradient(135deg, var(--gc-verde-salvia) 0%, #8fa178 100%);
+        color: white;
+    }
+    .cta-button.primary:hover {
+        box-shadow: 0 4px 15px rgba(163, 179, 141, 0.4);
+        transform: translateY(-2px);
+    }
+    .cta-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+    .empty-state i {
+        font-size: 3.5rem;
+        color: var(--gc-gris-claro);
+        margin-bottom: 1rem;
+    }
+    .empty-state-title {
+        font-weight: 600;
+        color: var(--gc-azul-oscuro);
+        margin-bottom: 0.5rem;
+    }
+    .empty-state-text {
+        color: var(--gc-azul-medio);
+        font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .portal-container {
+            background: linear-gradient(180deg, var(--gc-azul-oscuro) 0%, var(--gc-azul-oscuro) 200px, var(--gc-arena) 200px);
+        }
+        .metrics-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+        .status-card, .portal-content {
+            margin-left: 1rem;
+            margin-right: 1rem;
+        }
+        .doc-item {
+            flex-wrap: wrap;
+        }
+        .doc-actions {
+            width: 100%;
+            margin: 0.75rem 0 0 0;
+            justify-content: flex-end;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="portal-container">
+    <!-- Header del Portal -->
+    <div class="portal-header">
+        <p class="portal-greeting">Bienvenido de nuevo,</p>
+        <h1 class="portal-name">{{ solicitud.nombre_completo }}</h1>
+        <p class="portal-date"><i class="bi bi-calendar3 me-1"></i> {% now "l, d F Y" %}</p>
+    </div>
+
+    <!-- Tarjeta Principal de Estado -->
+    <div class="status-card">
+        <div class="status-card-header {% if 'RECHAZADO' in solicitud.estado %}rejected{% elif solicitud.estado == 'APROBADO' %}{% elif solicitud.estado == 'EN_ANALISIS' or solicitud.estado == 'EN_ASIGNACION' or solicitud.estado == 'PEND_APROB_DIRECTOR' %}in-progress{% else %}pending{% endif %}">
+            <span class="status-label">Estado de tu solicitud</span>
+            <h2 class="status-title">{{ solicitud.get_estado_display }}</h2>
+        </div>
+        <div class="status-card-body">
+            <!-- Métricas principales -->
+            <div class="metrics-row">
+                <div class="metric-item">
+                    <div class="metric-value">${{ solicitud.monto_solicitado|intcomma }}</div>
+                    <div class="metric-label">Solicitado</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">{{ solicitud.plazo_solicitado }}m</div>
+                    <div class="metric-label">Plazo</div>
+                </div>
+                <div class="metric-item">
+                    {% if solicitud.monto_aprobado_calculado %}
+                    <div class="metric-value" style="color: var(--gc-verde-salvia);">${{ solicitud.monto_aprobado_calculado|intcomma }}</div>
+                    <div class="metric-label">Aprobado</div>
+                    {% else %}
+                    <div class="metric-value">--</div>
+                    <div class="metric-label">Aprobado</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div class="progress-tracker">
+                <div class="progress-steps">
+                    <!-- Paso 1: Solicitud -->
+                    <div class="progress-step">
+                        <div class="step-circle completed"><i class="bi bi-check"></i></div>
+                        <span class="step-label">Solicitud</span>
+                    </div>
+
+                    <!-- Paso 2: Documentos -->
+                    <div class="progress-step">
+                        {% if solicitud.estado == 'PEND_DOCUMENTOS' or solicitud.estado == 'DOCS_CORRECCION' %}
+                        <div class="step-circle active"><i class="bi bi-file-earmark"></i></div>
+                        {% elif solicitud.estado == 'RECHAZADO_AUTO' %}
+                        <div class="step-circle rejected"><i class="bi bi-x"></i></div>
+                        {% elif solicitud.estado in 'EN_ASIGNACION,EN_ANALISIS,PREAPROBADO,PEND_DOCS_ADICIONALES,DOCS_FINALES_CORRECCION,EN_VALIDACION_DOCS,PEND_APROB_DIRECTOR,APROBADO' %}
+                        <div class="step-circle completed"><i class="bi bi-check"></i></div>
+                        {% else %}
+                        <div class="step-circle">2</div>
+                        {% endif %}
+                        <span class="step-label">Documentos</span>
+                    </div>
+
+                    <!-- Paso 3: Análisis -->
+                    <div class="progress-step">
+                        {% if solicitud.estado == 'EN_ASIGNACION' or solicitud.estado == 'EN_ANALISIS' %}
+                        <div class="step-circle active"><i class="bi bi-search"></i></div>
+                        {% elif solicitud.estado == 'RECHAZADO_ANALISTA' %}
+                        <div class="step-circle rejected"><i class="bi bi-x"></i></div>
+                        {% elif solicitud.estado in 'PREAPROBADO,PEND_DOCS_ADICIONALES,DOCS_FINALES_CORRECCION,EN_VALIDACION_DOCS,PEND_APROB_DIRECTOR,APROBADO' %}
+                        <div class="step-circle completed"><i class="bi bi-check"></i></div>
+                        {% else %}
+                        <div class="step-circle">3</div>
+                        {% endif %}
+                        <span class="step-label">Analisis</span>
+                    </div>
+
+                    <!-- Paso 4: Aprobación -->
+                    <div class="progress-step">
+                        {% if solicitud.estado == 'PEND_APROB_DIRECTOR' %}
+                        <div class="step-circle active"><i class="bi bi-person-check"></i></div>
+                        {% elif solicitud.estado == 'RECHAZADO_DIRECTOR' %}
+                        <div class="step-circle rejected"><i class="bi bi-x"></i></div>
+                        {% elif solicitud.estado == 'APROBADO' %}
+                        <div class="step-circle completed"><i class="bi bi-check"></i></div>
+                        {% else %}
+                        <div class="step-circle">4</div>
+                        {% endif %}
+                        <span class="step-label">Aprobacion</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido del Portal -->
+    <div class="portal-content">
+        <!-- Alertas de estado -->
+        {% if solicitud.estado == 'APROBADO' %}
+        <div class="alert-banner success">
+            <div class="alert-banner-icon"><i class="bi bi-trophy"></i></div>
+            <div class="alert-banner-content">
+                <div class="alert-banner-title">Felicitaciones! Tu credito ha sido aprobado</div>
+                <p class="alert-banner-text">Monto aprobado: ${{ solicitud.monto_aprobado_calculado|intcomma }} a {{ solicitud.plazo_oferta }} meses. Pronto nos comunicaremos contigo.</p>
+            </div>
+        </div>
+        {% elif 'RECHAZADO' in solicitud.estado %}
+        <div class="alert-banner danger">
+            <div class="alert-banner-icon"><i class="bi bi-info-circle"></i></div>
+            <div class="alert-banner-content">
+                <div class="alert-banner-title">Solicitud no aprobada</div>
+                <p class="alert-banner-text">Lo sentimos, en este momento no podemos aprobar tu solicitud. Para mas informacion contactanos.</p>
+            </div>
+        </div>
+        {% elif necesita_correccion %}
+        <div class="alert-banner warning">
+            <div class="alert-banner-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="alert-banner-content">
+                <div class="alert-banner-title">Algunos documentos requieren correccion</div>
+                <p class="alert-banner-text">Por favor revisa los comentarios del analista y sube las versiones corregidas.</p>
+            </div>
+        </div>
+        {% elif solicitud.estado == 'EN_ASIGNACION' %}
+        <div class="alert-banner warning">
+            <div class="alert-banner-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div class="alert-banner-content">
+                <div class="alert-banner-title">En espera de asignacion</div>
+                <p class="alert-banner-text">Tu solicitud sera asignada a un analista en breve. Te notificaremos por correo.</p>
+            </div>
+        </div>
+        {% elif solicitud.estado == 'EN_ANALISIS' %}
+        <div class="alert-banner success">
+            <div class="alert-banner-icon"><i class="bi bi-person-workspace"></i></div>
+            <div class="alert-banner-content">
+                <div class="alert-banner-title">Un analista esta revisando tu solicitud</div>
+                <p class="alert-banner-text">Esto puede tomar entre 1-3 dias habiles. Te notificaremos cuando haya novedades.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Columna Principal -->
+            <div class="col-lg-8">
+                <!-- Sección de Documentos -->
+                <div class="portal-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="bi bi-folder2-open"></i>
+                            Mis Documentos
+                        </h3>
+                        {% if documentos %}
+                        <span class="badge" style="background: var(--gc-arena); color: var(--gc-azul-medio);">
+                            {{ documentos|length }} archivo{% if documentos|length != 1 %}s{% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="section-body">
+                        {% if documentos %}
+                            {% for doc in documentos %}
+                            <div class="doc-item">
+                                <div class="doc-icon">
+                                    {% if 'pdf' in doc.archivo.name|lower %}
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                    {% elif 'jpg' in doc.archivo.name|lower or 'jpeg' in doc.archivo.name|lower or 'png' in doc.archivo.name|lower %}
+                                    <i class="bi bi-file-earmark-image"></i>
+                                    {% else %}
+                                    <i class="bi bi-file-earmark"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="doc-info">
+                                    <div class="doc-name">{{ doc.get_nombre_documento_display }}</div>
+                                    <div class="doc-meta">Subido {{ doc.fecha_carga|date:"d M, Y" }} a las {{ doc.fecha_carga|date:"H:i" }}</div>
+                                </div>
+                                {% if doc.ok_analista %}
+                                <span class="doc-status ok"><i class="bi bi-check-circle me-1"></i>Aprobado</span>
+                                {% else %}
+                                <span class="doc-status error"><i class="bi bi-exclamation-circle me-1"></i>Corregir</span>
+                                {% endif %}
+                                <div class="doc-actions">
+                                    <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-gc-outline" title="Ver documento">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if not doc.ok_analista %}
+                                    <form method="post" action="{% url 'aspirante_corregir_documento' doc.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-gc-warning" title="Reemplazar">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                    </form>
+                                    {% elif form_documento %}
+                                    <form method="post" action="{% url 'aspirante_eliminar_documento' doc.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-gc-danger" onclick="return confirm('Eliminar este documento?')" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if not doc.ok_analista and doc.observacion_correccion %}
+                            <div class="doc-comment">
+                                <i class="bi bi-chat-left-quote me-2"></i>
+                                <strong>Comentario del analista:</strong> {{ doc.observacion_correccion }}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="bi bi-folder2"></i>
+                                <div class="empty-state-title">No hay documentos</div>
+                                <div class="empty-state-text">Comienza subiendo los documentos requeridos para tu solicitud.</div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Área de carga -->
+                        {% if form_documento %}
+                        <hr class="my-4" style="border-color: var(--gc-gris-claro);">
+                        <form method="post" action="{% url 'aspirante_subir_documento' %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <h6 class="mb-3" style="color: var(--gc-azul-oscuro); font-weight: 600;">
+                                <i class="bi bi-cloud-arrow-up me-2" style="color: var(--gc-dorado);"></i>
+                                Subir nuevo documento
+                            </h6>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-5">
+                                    <label class="form-label small text-muted">Tipo de documento</label>
+                                    {{ form_documento.nombre_documento }}
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label small text-muted">Archivo (PDF, JPG, PNG - Max 5MB)</label>
+                                    {{ form_documento.archivo }}
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-gc-primary w-100">
+                                        <i class="bi bi-upload me-1"></i> Subir
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <!-- Botón de enviar -->
+                    {% if form_documento %}
+                    <div style="padding: 1.5rem; background: var(--gc-arena); border-top: 1px solid var(--gc-gris-claro);">
+                        {% if documentos_completos and not necesita_correccion %}
+                        <form method="post" action="{% url 'aspirante_enviar_documentos' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="cta-button primary">
+                                <i class="bi bi-send"></i>
+                                Enviar documentos para revision
+                            </button>
+                        </form>
+                        {% else %}
+                        <button class="cta-button primary" disabled>
+                            <i class="bi bi-send"></i>
+                            {% if necesita_correccion %}
+                            Corrige los documentos marcados
+                            {% else %}
+                            Completa todos los documentos requeridos
+                            {% endif %}
+                        </button>
+                        <p class="text-center mt-2 mb-0" style="font-size: 0.8rem; color: var(--gc-azul-medio);">
+                            {% if necesita_correccion %}
+                            Debes corregir los documentos marcados antes de enviar.
+                            {% else %}
+                            Documentos pendientes:
+                            {% for tipo in tipos_requeridos %}
+                                {% if tipo not in tipos_cargados %}
+                                    <span class="badge" style="background: rgba(201, 168, 108, 0.2); color: var(--gc-dorado); margin: 0 2px;">{{ tipo|title }}</span>
+                                {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Columna Lateral -->
+            <div class="col-lg-4">
+                <!-- Resumen de la solicitud -->
+                <div class="portal-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="bi bi-receipt"></i>
+                            Datos de la solicitud
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">No. Solicitud</span>
+                            <span class="fw-bold">#{{ solicitud.id }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Cedula</span>
+                            <span>{{ solicitud.cedula }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Ocupacion</span>
+                            <span>{{ solicitud.get_ocupacion_display }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Ingresos</span>
+                            <span>${{ solicitud.ingresos_totales|intcomma }}</span>
+                        </div>
+                        <hr style="border-color: var(--gc-gris-claro);">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Monto solicitado</span>
+                            <span class="fw-bold">${{ solicitud.monto_solicitado|intcomma }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Plazo</span>
+                            <span>{{ solicitud.plazo_solicitado }} meses</span>
+                        </div>
+                        {% if solicitud.monto_aprobado_calculado %}
+                        <hr style="border-color: var(--gc-gris-claro);">
+                        <div class="p-3 rounded-3" style="background: rgba(163, 179, 141, 0.15);">
+                            <div class="d-flex justify-content-between">
+                                <span style="color: var(--gc-verde-salvia); font-weight: 600;">Monto aprobado</span>
+                                <span class="fw-bold" style="color: var(--gc-verde-salvia); font-size: 1.1rem;">${{ solicitud.monto_aprobado_calculado|intcomma }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <span class="text-muted small">Plazo aprobado</span>
+                                <span class="small">{{ solicitud.plazo_oferta }} meses</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Historial -->
+                <div class="portal-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="bi bi-clock-history"></i>
+                            Historial
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        {% if historial %}
+                        <div class="timeline">
+                            {% for h in historial %}
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">{{ h.get_estado_nuevo_display|default:h.estado_nuevo }}</div>
+                                    <div class="timeline-date">{{ h.fecha_cambio|date:"d M, Y - H:i" }}</div>
+                                    {% if h.observaciones %}
+                                    <div class="timeline-desc">{{ h.observaciones|truncatewords:12 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-clock" style="font-size: 2rem; color: var(--gc-gris-claro);"></i>
+                            <p class="text-muted mt-2 mb-0 small">Sin actividad registrada</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Contacto -->
+                <div class="portal-section">
+                    <div class="section-body text-center">
+                        <i class="bi bi-headset" style="font-size: 2rem; color: var(--gc-dorado);"></i>
+                        <h6 class="mt-2 mb-1" style="color: var(--gc-azul-oscuro);">Necesitas ayuda?</h6>
+                        <p class="small text-muted mb-2">Nuestro equipo esta disponible para asistirte</p>
+                        <a href="mailto:info@globalcarefs.com" class="btn btn-gc-outline btn-sm">
+                            <i class="bi bi-envelope me-1"></i> Contactar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

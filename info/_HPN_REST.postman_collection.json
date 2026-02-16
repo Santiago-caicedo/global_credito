@@ -1,0 +1,167 @@
+{
+	"info": {
+		"_postman_id": "8595e669-57f4-49d0-b76b-d0a6c2ef16e8",
+		"name": "_HPN_REST",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29969215"
+	},
+	"item": [
+		{
+			"name": "Generar_TOKEN",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "client_id",
+						"value": "0oap0lmbt8DIofFZ10h7",
+						"type": "text"
+					},
+					{
+						"key": "client_secret",
+						"value": "MyXK_QM0d_2ogXj84NIeOOYh8fBOK8ACkawRCvxj",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"2-901290934@demo.datacredito.com.co\",\r\n    \"password\": \"tIdH83j2W07h\"\r\n}"
+				},
+				"url": {
+					"raw": "https://uat-api.datacredito.com.co/spla/oauth2/v1/token",
+					"protocol": "https",
+					"host": [
+						"uat-api",
+						"datacredito",
+						"com",
+						"co"
+					],
+					"path": [
+						"spla",
+						"oauth2",
+						"v1",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Revocar_TOKEN",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "client_id",
+						"value": "",
+						"type": "text"
+					},
+					{
+						"key": "client_secret",
+						"value": "",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "token",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"2-901290934@demo.datacredito.com.co\",\r\n    \"password\": \"tIdH83j2W07h\"\r\n}"
+				},
+				"url": {
+					"raw": "https://uat-api.datacredito.com.co/spla/oauth2/v1/revokeToken",
+					"protocol": "https",
+					"host": [
+						"uat-api",
+						"datacredito",
+						"com",
+						"co"
+					],
+					"path": [
+						"spla",
+						"oauth2",
+						"v1",
+						"revokeToken"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Servicio",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "serverIpAddress",
+						"value": "127.0.0.1",
+						"type": "text"
+					},
+					{
+						"key": "ProductId",
+						"value": "64",
+						"type": "text"
+					},
+					{
+						"key": "InfoAccountType",
+						"value": "1",
+						"type": "text"
+					},
+					{
+						"key": "client_id",
+						"value": "0oap0lmbt8DIofFZ10h7",
+						"type": "text"
+					},
+					{
+						"key": "client_secret",
+						"value": "MyXK_QM0d_2ogXj84NIeOOYh8fBOK8ACkawRCvxj",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJraWQiOiJ1WkdGMFlXTnlaV1JwZEc4dVkyOXRMbU52SWl3aVJtbHljM1JPWVcxbElqIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIyLTgzMDUxMzIzOC4yQGRlbW8uZGF0YWNyZWRpdG8uY29tLmNvIiwiRW1haWwiOiJjYXJsb3MucnVpekBleHBlcmlhbi5jb20iLCJGaXJzdE5hbWUiOiJVc3VhcmlvIFdzIiwiaXNzIjoiRVhQRVJJQU4iLCJMYXN0TmFtZSI6IkhwbiBjb25leHJlZCBzYXMiLCJleHAiOjE3MDI1MDQ1NjgsImlhdCI6MTcwMjUwMzk2OCwianRpIjoiNjJmZGE5ZmUtNzEwYy00OTgyLTg4NzYtZTk1YzI1MzE5N2M1In0.hpeOLdKNtTpwLgQryvD457zc4WGBjw_ZMUsgQ1Rbl3MQ7dleFXBFd4gn4ZjcYXOBJOEDqtFcMxLszVdfFGw2SKi6N2nbecnEoZwMdn_PFQtJMzm-uXXnim1du9Y26D7IXqHohDbfJI8bFn_Us0InpxFXQdVbjULQTynYUl_XhT9qWduN0EYT3XPI_zoDo7oYNnYY-xOE1Efe8uLE9zML-2MDqDuGeb-PhoMYxZle1SqSDi_5CmA8UAwo2jU3zmB6VDAzc3E7nlXVBCeXsyQydKZfKYC7ccRvL4HufGGoB7_gdudGMa1xjeyfjPAMjt9wlUElZevbadsSN9gDBkE18g",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"user\": \"901529355\",\r\n    \"password\": \"66WKB\",\r\n    \"identifyingTrx\": {\r\n        \"requestUUID\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\r\n        \"dateTime\": \"2022-12-13T16:04:02-05:00\",\r\n        \"originatorChannelName\": \"GCFS-01\",\r\n        \"originatorChannelType\": \"42\"\r\n    },\r\n    \"identifyingUser\": {\r\n        \"person\": {\r\n            \"personId\": {\r\n                \"personIdNumber\": \"1136415184\",\r\n                \"personIdType\": 1\r\n            },\r\n            \"personLastName\": \"RUIZ\"\r\n        }\r\n    }\r\n}"
+				},
+				"url": {
+					"raw": "https://uat-api.datacredito.com.co/cs/credit-history/v1/hdcplus",
+					"protocol": "https",
+					"host": [
+						"uat-api",
+						"datacredito",
+						"com",
+						"co"
+					],
+					"path": [
+						"cs",
+						"credit-history",
+						"v1",
+						"hdcplus"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

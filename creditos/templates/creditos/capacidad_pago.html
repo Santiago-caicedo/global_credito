@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Analisis de Capacidad de Pago - Solicitud #{{ solicitud.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+
+    <!-- 1. Encabezado y Mensajes del Sistema -->
+    <div class="page-header">
+        <div>
+            <a href="{% url 'analista_caso_activo' %}" class="text-decoration-none" style="color: var(--gc-azul-medio);">&larr; Volver al Dashboard Principal</a>
+            <h2 class="mt-2" style="color: var(--gc-azul-oscuro);">Analisis de Capacidad de Pago</h2>
+        </div>
+        <span class="badge {{ solicitud.get_estado_color_class }} fs-6">{{ solicitud.get_estado_display }}</span>
+    </div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-gc-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- 2. Resumen de la Solicitud Inicial -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header" style="background: linear-gradient(135deg, var(--gc-azul-oscuro) 0%, var(--gc-azul-medio) 100%); color: white;">
+            <h5 class="mb-0">Resumen de la Solicitud #{{ solicitud.id }}</h5>
+        </div>
+        <div class="card-body" style="background: var(--gc-arena);">
+            <div class="row">
+                <div class="col-md-4"><p class="mb-2"><strong>Cliente:</strong><br>{{ solicitud.nombre_completo }}</p><p class="mb-0"><strong>Cedula:</strong><br>{{ solicitud.cedula }}</p></div>
+                <div class="col-md-4"><p class="mb-2"><strong>Ocupacion:</strong><br>{{ solicitud.get_ocupacion_display }}</p><p class="mb-0"><strong>Ingresos:</strong><br>${{ solicitud.ingresos_totales|intcomma }}</p></div>
+                <div class="col-md-4"><p class="mb-2"><strong>Monto Solicitado:</strong><br>${{ solicitud.monto_solicitado|intcomma }}</p><p class="mb-0"><strong>Plazo Solicitado:</strong><br>{{ solicitud.plazo_solicitado }} meses</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Formulario Principal de Analisis (para calcular capacidad de pago) -->
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 1: Recopilar Datos y Calcular Capacidad de Pago</h5></div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    {% for field in form_capacidad %}
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" name="submit_capacidad" class="btn btn-gc-primary mt-3 w-100">Guardar y Calcular Capacidad de Pago</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- SECCION DE REFERENCIAS -->
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 1.5: Registrar y Validar Referencias</h5></div>
+        <div class="card-body">
+            <div class="row g-4">
+                <!-- Columna para AÑADIR una nueva referencia -->
+                <div class="col-md-6">
+                    <h6 style="color: var(--gc-azul-medio);">Añadir Nueva Referencia</h6>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form_referencia.as_p }}
+                        <div class="d-grid">
+                            <button type="submit" name="submit_referencia" class="btn btn-gc-primary">Añadir Referencia</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- Columna para VER, OBSERVAR y RECHAZAR -->
+                <div class="col-md-6">
+                    <h6 style="color: var(--gc-azul-medio);">Referencias Registradas</h6>
+                    <ul class="list-group">
+                        {% for ref in solicitud.referencias.all %}
+                            <li class="list-group-item">
+                                <strong>{{ ref.get_tipo_display }}:</strong> {{ ref.nombre_completo }}
+                                <br><small class="text-muted">{{ ref.parentesco }} - {{ ref.numero_contacto }}</small>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">Aun no se han registrado referencias.</li>
+                        {% endfor %}
+                    </ul>
+
+                    <!-- SECCION DE OBSERVACION Y RECHAZO -->
+                    <hr class="my-4">
+                    <h6 style="color: var(--gc-azul-medio);">Observacion General de Referencias</h6>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form_observaciones_ref.as_p }}
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <button type="submit" name="submit_observacion_referencias" class="btn btn-gc-outline">Guardar Observacion</button>
+                            <!-- Boton de Rechazo que reutiliza la vista existente -->
+                            <a href="{% url 'rechazar_solicitud' solicitud.id %}" class="btn btn-gc-danger">Rechazar Solicitud</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 4. Resultados del Calculo de Capacidad de Pago -->
+    {% if resultado_capacidad %}
+    <div class="card mb-4" style="border-color: var(--gc-verde-salvia);">
+        <div class="card-header" style="background: var(--gc-verde-salvia); color: white;"><h5 class="mb-0">Resultados del Calculo</h5></div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for key, value in resultado_capacidad.items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ key }}
+                        {% if 'FINAL' in key %}<span class="badge badge-gc badge-gc-success rounded-pill fs-6">${{ value|intcomma }}</span>
+                        {% else %}<span class="badge bg-light text-dark rounded-pill">${{ value|intcomma }}</span>{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 5. Calculadora de Oferta y Formulario de Decision Final -->
+    {% if solicitud.capacidad_pago_calculada > 0 %}
+    <div class="card mt-4">
+        <div class="card-header"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 2: Simular y Registrar Oferta Definitiva</h5></div>
+        <div class="card-body">
+
+            <!-- Logica Condicional: Muestra el formulario o el panel de confirmacion -->
+            {% if not solicitud.monto_aprobado_calculado %}
+
+                <!-- ESTADO A: Formulario para simular y registrar -->
+                <form method="post" class="d-flex align-items-end p-3 rounded" style="background: var(--gc-arena);">
+                    {% csrf_token %}
+                    <div class="flex-grow-1 me-3">
+                        <label for="{{ form_oferta.plazo_oferta.id_for_label }}" class="form-label fw-bold">Simular con Plazo (meses):</label>
+                        {{ form_oferta.plazo_oferta }}
+                    </div>
+                    <button type="submit" name="submit_simular_oferta" class="btn btn-gc-primary">Calcular Simulacion</button>
+                </form>
+
+                {% if resultado_oferta %}
+                <div class="card mt-4 shadow-sm" style="border-color: var(--gc-dorado);">
+                    <div class="card-header" style="background: var(--gc-dorado); color: white;"><h6 class="mb-0">Resultado de la Simulacion (Sugerencia)</h6></div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for key, value in resultado_oferta.items %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ key }}
+                                    {% if 'Monto' in key %}<span class="badge rounded-pill fs-6" style="background: var(--gc-azul-oscuro); color: white;">${{ value|intcomma }}</span>
+                                    {% else %}<span class="badge bg-secondary rounded-pill">{{ value }}</span>{% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                        <hr class="my-4">
+                        <h5 class="text-center" style="color: var(--gc-verde-salvia);">Registrar Oferta Definitiva</h5>
+                        <p class="text-center text-muted">Use la simulacion como guia e ingrese los valores finales que se ofreceran al cliente.</p>
+                        <form method="post" class="mt-3">
+                            {% csrf_token %}
+                            <div class="row justify-content-center">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">{{ form_oferta_definitiva.monto_aprobado_calculado.label }}</label>
+                                    {{ form_oferta_definitiva.monto_aprobado_calculado }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">{{ form_oferta_definitiva.plazo_oferta.label }}</label>
+                                    {{ form_oferta_definitiva.plazo_oferta }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form_oferta_definitiva.observacion_oferta_final.label }}</label>
+                                {{ form_oferta_definitiva.observacion_oferta_final }}
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" name="submit_oferta_definitiva" class="btn btn-gc-success btn-lg">Guardar Oferta Definitiva</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+            {% else %}
+
+                <!-- ESTADO B: Panel de Confirmacion con la oferta ya guardada -->
+                <div class="alert alert-gc-success text-center" role="alert">
+                    <h4 class="alert-heading">Oferta Registrada</h4>
+                    <p>Se ha guardado una oferta definitiva de <strong>${{ solicitud.monto_aprobado_calculado|intcomma }}</strong> a <strong>{{ solicitud.plazo_oferta }} meses</strong>.</p>
+                    {% if solicitud.observacion_oferta_final %}
+                        <hr>
+                        <p class="mb-0"><strong>Justificacion:</strong> {{ solicitud.observacion_oferta_final }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <a href="{% url 'capacidad_pago' solicitud.id %}?action=corregir" class="btn btn-gc-warning btn-lg">Corregir Oferta</a>
+
+                    <!-- FORMULARIO CORREGIDO PARA EL BOTON "CONTINUAR" -->
+                    <form action="{% url 'enviar_para_documentos_finales' solicitud.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-gc-primary btn-lg">Continuar con Siguiente Fase</button>
+                    </form>
+
+                </div>
+
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

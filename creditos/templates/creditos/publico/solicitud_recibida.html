@@ -1,0 +1,63 @@
+{% extends 'base_publico.html' %}
+
+{% block title %}Solicitud Recibida{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card text-center">
+            <div class="card-body p-5">
+                <div class="mb-4">
+                    <div style="width: 100px; height: 100px; margin: 0 auto; background: linear-gradient(135deg, var(--gc-verde-salvia), var(--gc-azul-medio)); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-check2-circle text-white" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+
+                <h3 style="font-family: 'Cormorant Garamond', serif; color: var(--gc-azul-oscuro); font-size: 1.8rem;">
+                    Hemos recibido tu solicitud
+                </h3>
+
+                <div class="text-start mt-4 mb-4" style="color: var(--gc-azul-oscuro); line-height: 1.8;">
+                    <p>
+                        Gracias por confiar en <strong>Global Care F.S.</strong> para tus necesidades financieras.
+                    </p>
+
+                    <p>
+                        Nuestro equipo esta revisando la informacion que nos proporcionaste.
+                        En los proximos minutos recibiras un correo electronico en
+                        <strong>{{ email }}</strong> con los siguientes pasos.
+                    </p>
+                </div>
+
+                <div class="alert text-start" style="background: var(--gc-arena); border-left: 4px solid var(--gc-dorado);">
+                    <strong style="color: var(--gc-dorado);"><i class="bi bi-envelope-check me-2"></i>Revisa tu correo</strong>
+                    <p class="mb-0 mt-2 small" style="color: var(--gc-azul-medio);">
+                        Te enviaremos un mensaje a <strong>{{ email }}</strong> con instrucciones.
+                        No olvides revisar tu carpeta de spam.
+                    </p>
+                </div>
+
+                <hr class="my-4" style="border-color: var(--gc-gris-claro);">
+
+                <div class="mt-4">
+                    <p class="small text-muted mb-2">
+                        Si tienes alguna duda, estamos a tu disposicion.
+                    </p>
+                    <small style="color: var(--gc-azul-medio);">
+                        <i class="bi bi-envelope me-1"></i> info@globalcarefs.com
+                    </small>
+                </div>
+
+                <div class="mt-4 pt-3" style="border-top: 1px solid var(--gc-gris-claro);">
+                    <p class="mb-1" style="color: var(--gc-verde-salvia); font-style: italic;">
+                        Gracias por elegirnos,
+                    </p>
+                    <p class="mb-0" style="color: var(--gc-azul-oscuro); font-weight: 500;">
+                        Equipo Global Care F.S.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

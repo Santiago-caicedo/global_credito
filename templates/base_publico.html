@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Solicitud de Credito{% endblock %} | Global Care F.S.</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gc-azul-oscuro: #4d5572;
+            --gc-azul-medio: #7a87a5;
+            --gc-verde-salvia: #a3b38d;
+            --gc-gris-claro: #e2dfdd;
+            --gc-arena: #f0efef;
+            --gc-dorado: #c9a86c;
+        }
+
+        * {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--gc-azul-oscuro) 0%, var(--gc-azul-medio) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ========== PARTICULAS MAGICAS ========== */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--gc-dorado);
+            border-radius: 50%;
+            opacity: 0;
+            animation: floatUp 8s infinite;
+        }
+
+        .particle::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            border-radius: inherit;
+            filter: blur(3px);
+            transform: scale(2);
+        }
+
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 8s; }
+        .particle:nth-child(2) { left: 20%; animation-delay: 1s; animation-duration: 10s; }
+        .particle:nth-child(3) { left: 30%; animation-delay: 2s; animation-duration: 7s; }
+        .particle:nth-child(4) { left: 40%; animation-delay: 3s; animation-duration: 9s; }
+        .particle:nth-child(5) { left: 50%; animation-delay: 4s; animation-duration: 11s; }
+        .particle:nth-child(6) { left: 60%; animation-delay: 5s; animation-duration: 8s; }
+        .particle:nth-child(7) { left: 70%; animation-delay: 6s; animation-duration: 10s; }
+        .particle:nth-child(8) { left: 80%; animation-delay: 7s; animation-duration: 9s; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 8s; animation-duration: 7s; }
+        .particle:nth-child(10) { left: 15%; animation-delay: 2.5s; animation-duration: 12s; }
+        .particle:nth-child(11) { left: 35%; animation-delay: 4.5s; animation-duration: 8s; }
+        .particle:nth-child(12) { left: 55%; animation-delay: 1.5s; animation-duration: 10s; }
+        .particle:nth-child(13) { left: 75%; animation-delay: 3.5s; animation-duration: 9s; }
+        .particle:nth-child(14) { left: 85%; animation-delay: 5.5s; animation-duration: 11s; }
+        .particle:nth-child(15) { left: 25%; animation-delay: 6.5s; animation-duration: 7s; }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ========== ESTRELLAS BRILLANTES ========== */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: twinkle 3s infinite;
+        }
+
+        .star:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
+        .star:nth-child(2) { top: 20%; left: 85%; animation-delay: 0.5s; }
+        .star:nth-child(3) { top: 40%; left: 5%; animation-delay: 1s; }
+        .star:nth-child(4) { top: 60%; left: 92%; animation-delay: 1.5s; }
+        .star:nth-child(5) { top: 80%; left: 10%; animation-delay: 2s; }
+        .star:nth-child(6) { top: 15%; left: 50%; animation-delay: 2.5s; }
+        .star:nth-child(7) { top: 70%; left: 88%; animation-delay: 0.3s; }
+        .star:nth-child(8) { top: 35%; left: 95%; animation-delay: 1.8s; }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+
+        /* ========== CONTENEDOR PRINCIPAL ========== */
+        .main-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1, h2, h3, h4, h5, .brand-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* ========== LOGO Y MARCA ========== */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .logo-container img {
+            max-width: 180px;
+            height: auto;
+            animation: float 6s ease-in-out infinite;
+            filter: drop-shadow(0 10px 30px rgba(201, 168, 108, 0.3));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .brand-title {
+            color: white;
+            font-size: 1.8rem;
+            margin-top: 0.5rem;
+            letter-spacing: 3px;
+            animation: fadeInUp 1s ease-out 0.3s both;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+        }
+
+        .brand-tagline {
+            color: var(--gc-verde-salvia);
+            font-style: italic;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        /* ========== TARJETA PRINCIPAL ========== */
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+            backdrop-filter: blur(10px);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .card-header-gc {
+            background: linear-gradient(135deg, var(--gc-azul-oscuro) 0%, var(--gc-azul-medio) 50%);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 3px solid var(--gc-dorado);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header-gc::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+            animation: headerShine 4s infinite;
+        }
+
+        @keyframes headerShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .card-header-gc h5 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            margin-bottom: 0.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-body {
+            background: white;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* ========== FORMULARIO ========== */
+        .form-label {
+            color: var(--gc-azul-oscuro);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid var(--gc-gris-claro);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--gc-dorado);
+            box-shadow: 0 0 0 4px rgba(201, 168, 108, 0.2), 0 5px 20px rgba(201, 168, 108, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .form-control:hover, .form-select:hover {
+            border-color: var(--gc-azul-medio);
+        }
+
+        .input-group-text {
+            background: var(--gc-arena);
+            border: 2px solid var(--gc-gris-claro);
+            border-right: none;
+            color: var(--gc-azul-oscuro);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: var(--gc-dorado);
+            background: linear-gradient(135deg, var(--gc-arena), white);
+        }
+
+        .input-group .form-control {
+            border-left: none;
+        }
+
+        /* ========== BOTONES MAGICOS ========== */
+        .btn-gc-primary {
+            background: linear-gradient(135deg, var(--gc-azul-oscuro) 0%, var(--gc-azul-medio) 100%);
+            border: none;
+            color: white;
+            padding: 0.875rem 2rem;
+            border-radius: 10px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-gc-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-gc-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-gc-primary:hover {
+            background: linear-gradient(135deg, #3d4562 0%, #6a7795 100%);
+            color: white;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(77, 85, 114, 0.4);
+        }
+
+        .btn-gc-primary:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .btn-gc-success {
+            background: linear-gradient(135deg, var(--gc-verde-salvia) 0%, #8fa07a 100%);
+            border: none;
+            color: white;
+            padding: 0.875rem 2rem;
+            border-radius: 10px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-gc-success::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-gc-success:hover::before {
+            left: 100%;
+        }
+
+        .btn-gc-success:hover {
+            background: linear-gradient(135deg, #93a37d 0%, #7f906a 100%);
+            color: white;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(163, 179, 141, 0.4);
+        }
+
+        .btn-gc-outline {
+            background: transparent;
+            border: 2px solid var(--gc-azul-medio);
+            color: var(--gc-azul-oscuro);
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-gc-outline:hover {
+            background: var(--gc-azul-medio);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(122, 135, 165, 0.3);
+        }
+
+        /* ========== SECCIONES ========== */
+        .section-divider {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gc-dorado), transparent);
+            margin: 2rem 0;
+            animation: expandLine 0.8s ease-out;
+        }
+
+        @keyframes expandLine {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+
+        .section-title {
+            color: var(--gc-azul-oscuro);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            opacity: 0;
+            animation: fadeInLeft 0.6s ease-out forwards;
+        }
+
+        .section-title i {
+            color: var(--gc-dorado);
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* ========== ALERTAS ========== */
+        .alert-gc-info {
+            background: linear-gradient(135deg, var(--gc-arena) 0%, white 100%);
+            border: 1px solid var(--gc-azul-medio);
+            border-left: 4px solid var(--gc-azul-medio);
+            color: var(--gc-azul-oscuro);
+            border-radius: 10px;
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .alert-gc-warning {
+            background: linear-gradient(135deg, #fff9e6 0%, white 100%);
+            border: 1px solid var(--gc-dorado);
+            border-left: 4px solid var(--gc-dorado);
+            color: var(--gc-azul-oscuro);
+            border-radius: 10px;
+            animation: slideInRight 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-gc-warning::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(201, 168, 108, 0.1) 0%, transparent 70%);
+            animation: warningGlow 3s infinite;
+        }
+
+        @keyframes warningGlow {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10%, 10%); }
+        }
+
+        .text-gc-muted {
+            color: var(--gc-azul-medio);
+        }
+
+        /* ========== FOOTER ========== */
+        .footer-text {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            animation: fadeInUp 1s ease-out 0.8s both;
+        }
+
+        .footer-text i {
+            color: var(--gc-verde-salvia);
+        }
+
+        .link-gc {
+            color: var(--gc-verde-salvia);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .link-gc::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gc-dorado);
+            transition: width 0.3s ease;
+        }
+
+        .link-gc:hover {
+            color: white;
+        }
+
+        .link-gc:hover::after {
+            width: 100%;
+        }
+
+        /* ========== TABLA DE CONFIRMACION ========== */
+        .table-gc {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table-gc th {
+            background: var(--gc-arena);
+            color: var(--gc-azul-oscuro);
+            font-weight: 500;
+            border: none;
+        }
+
+        .table-gc td {
+            color: var(--gc-azul-oscuro);
+            border-color: var(--gc-gris-claro);
+        }
+
+        .table-gc tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .table-gc tbody tr:hover {
+            background: rgba(201, 168, 108, 0.05);
+            transform: scale(1.01);
+        }
+
+        /* ========== ANIMACIONES DE ENTRADA ========== */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ========== CAMPOS CON ANIMACION ESCALONADA ========== */
+        .form-group-animated {
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .form-group-animated:nth-child(1) { animation-delay: 0.1s; }
+        .form-group-animated:nth-child(2) { animation-delay: 0.2s; }
+        .form-group-animated:nth-child(3) { animation-delay: 0.3s; }
+        .form-group-animated:nth-child(4) { animation-delay: 0.4s; }
+        .form-group-animated:nth-child(5) { animation-delay: 0.5s; }
+        .form-group-animated:nth-child(6) { animation-delay: 0.6s; }
+
+        /* ========== ICONO DORADO ANIMADO ========== */
+        .icon-animated {
+            display: inline-block;
+            animation: iconBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-3px) rotate(-5deg); }
+            75% { transform: translateY(-3px) rotate(5deg); }
+        }
+
+        /* ========== EFECTO GLOW EN INPUTS ========== */
+        .input-glow:focus {
+            animation: inputGlow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes inputGlow {
+            from { box-shadow: 0 0 5px rgba(201, 168, 108, 0.3), 0 0 10px rgba(201, 168, 108, 0.2); }
+            to { box-shadow: 0 0 10px rgba(201, 168, 108, 0.5), 0 0 20px rgba(201, 168, 108, 0.3); }
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .brand-title {
+                font-size: 1.4rem;
+            }
+            .card-body {
+                padding: 1.5rem;
+            }
+            .particle {
+                width: 4px;
+                height: 4px;
+            }
+        }
+
+        /* ========== LOADING STATE ========== */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particulas magicas -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Estrellas brillantes -->
+    <div class="stars">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+
+    <div class="container py-5 main-container">
+        <div class="logo-container">
+            <a href="{% url 'aplicar_credito' %}" class="text-decoration-none">
+                <img src="/static/img/logo-globalcare.png" alt="Global Care F.S." onerror="this.style.display='none'">
+                <h1 class="brand-title">GLOBAL CARE F.S.</h1>
+                <p class="brand-tagline">Alianzas de Bienestar</p>
+            </a>
+        </div>
+
+        {% if messages %}
+            <div class="row justify-content-center mb-3">
+                <div class="col-lg-8">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="animation: slideInRight 0.5s ease-out;">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+
+        <div class="text-center mt-4">
+            <p class="footer-text">
+                <i class="bi bi-shield-lock me-1"></i>
+                Sus datos estan protegidos y son confidenciales
+            </p>
+            <p class="footer-text" style="font-size: 0.75rem; opacity: 0.6;">
+                Global Care Financial Services - Alianzas de Bienestar
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Agregar clase de animacion a los campos del formulario
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animacion escalonada para los campos
+            const formGroups = document.querySelectorAll('.mb-3');
+            formGroups.forEach((group, index) => {
+                group.style.opacity = '0';
+                group.style.animation = `fadeInUp 0.5s ease-out ${0.1 + index * 0.05}s forwards`;
+            });
+
+            // Efecto de focus mejorado
+            const inputs = document.querySelectorAll('.form-control, .form-select');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                    this.parentElement.style.transition = 'transform 0.3s ease';
+                });
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+
+            // Efecto de loading en el boton de submit
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const clickedBtn = document.activeElement;
+                    // Si el boton tiene name="action", agregar un input hidden con su valor
+                    if (clickedBtn && clickedBtn.name === 'action' && clickedBtn.value) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'action';
+                        hiddenInput.value = clickedBtn.value;
+                        this.appendChild(hiddenInput);
+                    }
+                    // Agregar efecto de loading
+                    if (clickedBtn && clickedBtn.type === 'submit' && !clickedBtn.classList.contains('btn-gc-outline')) {
+                        clickedBtn.classList.add('btn-loading');
+                    }
+                });
+            });
+
+            // Crear mas particulas dinamicamente
+            const particlesContainer = document.querySelector('.particles');
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (7 + Math.random() * 5) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        });
+
+        // Efecto parallax suave en el scroll
+        window.addEventListener('scroll', function() {
+            const scrolled = window.pageYOffset;
+            const particles = document.querySelector('.particles');
+            const stars = document.querySelector('.stars');
+            if (particles) particles.style.transform = `translateY(${scrolled * 0.3}px)`;
+            if (stars) stars.style.transform = `translateY(${scrolled * 0.2}px)`;
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

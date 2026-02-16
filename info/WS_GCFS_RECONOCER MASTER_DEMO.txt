@@ -1,0 +1,29 @@
+﻿
+===============================================
+-------CREDENCIAL ACCESO REST------------------
+===============================================
+CLIENTE: 		GLOBAL CARE FINANCIAL SERVICES SAS
+NIT: 			901290934
+
+================================================
+------------CREDENCIAL OKTA---------------------
+================================================
+USUAIO OKTA: 	2-901290934.1@demo.datacredito.com.co
+CONTRASEÑA: 	3y549oOkqHYS		
+
+=================================================
+-----------PARAMETROS GENERALES -----------------
+=================================================
+
+Client Id: 			0oa2bv3uy1zgbsA600h8
+Client Secret: 		ZkuOBIDrhALdA46Fu1zNaYLLhIQ4dECBd70o3Mt2wkFmvhBcilfzOI4hHWzKqg3L
+Authorization: 		Basic MG9hMmJ2M3V5MXpnYnNBNjAwaDg6Wmt1T0JJRHJoQUxkQTQ2RnUxek5hWUxMaElRNGRFQ0JkNzBvM010MndrRm12aEJjaWxmek9JNGhIV3pLcWczTA==
+scope:				expco_reconocer_master
+
+==================================================
+----------------URL CONSUMO ----------------------
+==================================================
+
+URL TOKEN:https://experian-latamb.okta.com/oauth2/aus8jhfmnuDjZO8Q11t7/v1/token
+URL SERVICIO: https://servicesesb.datacredito.com.co:444/cs/reconocer/v1/location-info
+

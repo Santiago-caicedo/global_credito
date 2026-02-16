@@ -1,0 +1,36 @@
+===============================================
+-------CREDENCIAL ACCESO REST------------------
+===============================================
+
+PROYECTO: 				IMPL-110607
+ENTIDAD:				GLOBAL CARE FINANCIAL SERVICES SAS
+AMBIENTE: 				PROD
+PRODUCTO:				65 - Historia de Crédito + en Línea 
+						Z0 - Advance Score
+						O4 - QUANTO
+MEDIO:					WEB SERVICE REST
+
+
+==================================================
+----------------URL CONSUMO ----------------------
+==================================================
+
+GENERACION DE TOKEN:	https://uat-api.datacredito.com.co/spla/oauth2/v1/token
+REVOCAR EL TOKEN:		https://uat-api.datacredito.com.co/spla/oauth2/v1/revokeToken
+API SERVICIO:			https://uat-api.datacredito.com.co/cs/credit-history/v1/hdcplus
+
+
+
+USUARIO 				901290934
+CLAVE:					66WKB
+
+Client ID				0oap0lmbt8DIofFZ10h7
+Client Secret			MyXK_QM0d_2ogXj84NIeOOYh8fBOK8ACkawRCvxj
+
+=========================================================
+------------------USUARIO OKTA---------------------------
+=========================================================
+
+username: 	2-901290934@demo.datacredito.com.co
+password: 	tIdH83j2W07h
+IP:			181.234.87.83
