@@ -90,7 +90,7 @@ class DataCreditoHPNClient:
 
             data = response.json()
             self._token = data.get('access_token')
-            expires_in = data.get('expires_in', 3600)
+            expires_in = int(data.get('expires_in', 3600))
             self._token_expiry = timezone.now() + timezone.timedelta(seconds=expires_in - 60)
 
             return self._token
@@ -351,7 +351,7 @@ class DataCreditoReconocerClient:
 
             token_data = response.json()
             self._token = token_data.get('access_token')
-            expires_in = token_data.get('expires_in', 3600)
+            expires_in = int(token_data.get('expires_in', 3600))
             self._token_expiry = timezone.now() + timezone.timedelta(seconds=expires_in - 60)
 
             return self._token

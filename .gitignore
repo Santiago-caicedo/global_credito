@@ -140,6 +140,7 @@ ENV/
 env.bak/
 venv.bak/
 core_credito_env/
+env_prod.md
 
 # Spyder project settings
 .spyderproject
