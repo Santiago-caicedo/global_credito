@@ -11,7 +11,7 @@
 
     <!-- Resumen de la Solicitud y Oferta -->
     <div class="card mb-4 shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--gc-verde-salvia) 0%, #8fa07a 100%); color: white;">
+        <div class="card-header d-flex justify-content-between align-items-center" style="background: var(--gc-verde-salvia); border-bottom-color: var(--gc-verde-salvia);">
             <h5 class="mb-0">Resumen del Credito Aprobado para {{ solicitud.nombre_completo }}</h5>
             <span class="badge {{ solicitud.get_estado_color_class }} fs-6">{{ solicitud.get_estado_display }}</span>
         </div>
@@ -43,7 +43,7 @@
                             <form action="{% url 'validar_documento' doc.id %}" method="post" class="d-inline-block me-1">{% csrf_token %}<button type="submit" name="aprobar" class="btn btn-gc-success btn-sm">✔</button></form>
                             <button type="button" class="btn btn-gc-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalRechazo{{ doc.id }}">✖</button>
                             <div class="modal fade" id="modalRechazo{{ doc.id }}"><div class="modal-dialog"><div class="modal-content">
-                                <form action="{% url 'validar_documento' doc.id %}" method="post">{% csrf_token %}<div class="modal-header" style="background: var(--gc-azul-oscuro); color: white;"><h5 class="modal-title">Motivo de Correccion</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-start">{{ doc.rechazo_form.as_p }}</div><div class="modal-footer"><button type="button" class="btn btn-gc-outline" data-bs-dismiss="modal">Cancelar</button><button type="submit" name="rechazar" class="btn btn-gc-danger">Marcar</button></div></form>
+                                <form action="{% url 'validar_documento' doc.id %}" method="post">{% csrf_token %}<div class="modal-header" style="background: var(--gc-azul-oscuro); color: white; border-bottom: none;"><h5 class="modal-title">Motivo de Correccion</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-start">{{ doc.rechazo_form.as_p }}</div><div class="modal-footer"><button type="button" class="btn btn-gc-outline" data-bs-dismiss="modal">Cancelar</button><button type="submit" name="rechazar" class="btn btn-gc-danger">Marcar</button></div></form>
                             </div></div></div>
                         </td>
                     </tr>

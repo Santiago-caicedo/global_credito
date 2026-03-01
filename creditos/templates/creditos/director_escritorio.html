@@ -7,28 +7,24 @@
 <style>
     .action-link {
         display: block;
-        padding: 1.25rem;
+        padding: 1rem;
         text-decoration: none;
         color: var(--gc-azul-oscuro);
         background-color: #fff;
-        border: 2px solid var(--gc-gris-claro);
-        border-radius: 12px;
-        transition: all 0.3s ease;
+        border: 1px solid var(--gc-borde);
+        border-radius: 6px;
+        transition: border-color 0.15s ease;
         height: 100%;
     }
     .action-link:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(77, 85, 114, 0.15);
         border-color: var(--gc-dorado);
         color: var(--gc-azul-oscuro);
     }
     .action-link i {
         color: var(--gc-azul-medio);
-        transition: all 0.3s ease;
     }
     .action-link:hover i {
         color: var(--gc-dorado);
-        transform: scale(1.1);
     }
 </style>
 {% endblock %}
@@ -211,12 +207,12 @@
                     datasets: [{
                         label: 'Solicitudes Creadas',
                         data: {{ data_line_chart|safe }},
-                        borderColor: '#4d5572',
-                        backgroundColor: 'rgba(77, 85, 114, 0.1)',
+                        borderColor: '#2d3348',
+                        backgroundColor: 'rgba(45, 51, 72, 0.06)',
                         fill: true,
                         tension: 0.4,
-                        pointBackgroundColor: '#c9a86c',
-                        pointBorderColor: '#c9a86c'
+                        pointBackgroundColor: '#b89958',
+                        pointBorderColor: '#b89958'
                     }]
                 },
                 options: {
@@ -240,10 +236,10 @@
                         label: 'Distribucion',
                         data: {{ data_donut_chart|safe }},
                         backgroundColor: [
-                            '#a3b38d',  // verde salvia - aprobados
-                            '#c0392b',  // rojo - rechazados
-                            '#c9a86c',  // dorado - pendientes
-                            '#7a87a5'   // azul medio - otros
+                            '#7a8c6b',  // verde salvia - aprobados
+                            '#b03a2e',  // rojo - rechazados
+                            '#b89958',  // dorado - pendientes
+                            '#5c6680'   // azul medio - otros
                         ],
                         hoverOffset: 4
                     }]

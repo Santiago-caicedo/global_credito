@@ -53,7 +53,7 @@
 
     <!-- Tarjeta de Resumen con Diseno Profesional -->
     <div class="card mb-4 shadow-sm overflow-hidden">
-        <div class="card-header p-4" style="background: linear-gradient(135deg, var(--gc-azul-oscuro) 0%, var(--gc-azul-medio) 100%); color: white;">
+        <div class="card-header p-4">
             <div class="d-flex align-items-center">
                 <div class="me-3"><i class="bi bi-person-circle" style="font-size: 3.5rem;"></i></div>
                 <div><h4 class="mb-0">{{ solicitud.nombre_completo }}</h4><p class="mb-0 opacity-75">Cedula: {{ solicitud.cedula }}</p></div>
@@ -85,7 +85,7 @@
         <!-- Columna de Navegacion Izquierda -->
         <div class="col-md-4">
             <div class="card shadow-sm sticky-top">
-                <div class="card-header" style="background: var(--gc-azul-oscuro); color: white;"><h5 class="mb-0">Pasos del Analisis</h5></div>
+                <div class="card-header"><h5 class="mb-0">Pasos del Analisis</h5></div>
                 <div class="list-group list-group-flush step-nav">
                     <a href="#paso1" class="list-group-item list-group-item-action {% if active_step == 1 %}active{% endif %} {% if active_step > 1 %}completed{% endif %}">{% if active_step > 1 %}<i class="bi bi-check-circle-fill"></i>{% endif %}Paso 1: Validacion y Documentacion</a>
                     <a href="#paso2" class="list-group-item list-group-item-action {% if active_step == 2 %}active{% endif %} {% if active_step > 2 %}completed{% endif %} {% if not documentos_obligatorios_ok or necesita_correccion %}disabled{% endif %}">{% if active_step > 2 %}<i class="bi bi-check-circle-fill"></i>{% endif %}Paso 2: Analisis de Riesgo</a>
@@ -98,7 +98,7 @@
         <div class="col-md-8">
             <!-- Paso 1: Validacion de Documentos -->
             <div class="card mb-4" id="paso1">
-                <div class="card-header" style="background: var(--gc-arena);"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 1: Validacion y Documentacion</h5></div>
+                <div class="card-header" style="background: var(--gc-arena); border-bottom-color: var(--gc-borde);"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 1: Validacion y Documentacion</h5></div>
                 <div class="card-body p-4">
                     <h6 style="color: var(--gc-azul-medio);">1.1 Validar Documentos del Aspirante</h6>
                     <p class="text-muted small">Revise cada documento. Si alguno es incorrecto, marquelo y devuelva el caso.</p>
@@ -122,7 +122,7 @@
             </div>
             <!-- Paso 2: Analisis de Riesgo -->
             <div class="card mb-4" id="paso2">
-                <div class="card-header" style="background: var(--gc-arena);"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 2: Analisis de Riesgo</h5></div>
+                <div class="card-header" style="background: var(--gc-arena); border-bottom-color: var(--gc-borde);"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 2: Analisis de Riesgo</h5></div>
                 <div class="card-body p-4">
                     {% if not documentos_obligatorios_ok or necesita_correccion %}
                         <div class="alert alert-gc-warning">Debe completar el Paso 1 para habilitar esta seccion.</div>
@@ -134,7 +134,7 @@
             </div>
             <!-- Paso 3: Decision Final -->
             <div class="card mb-4" id="paso3">
-                <div class="card-header" style="background: var(--gc-arena);"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 3: Decision Final de Pre-Aprobacion</h5></div>
+                <div class="card-header" style="background: var(--gc-arena); border-bottom-color: var(--gc-borde);"><h5 class="mb-0" style="color: var(--gc-azul-oscuro);">Paso 3: Decision Final de Pre-Aprobacion</h5></div>
                 <div class="card-body p-4 text-center">
                     {% if not solicitud.recomendacion_sistema_texto %}
                         <div class="alert alert-gc-warning">Debe generar una recomendacion en el Paso 2 para habilitar esta seccion.</div>
