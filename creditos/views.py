@@ -14,7 +14,7 @@ from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth
 from .decorators import analista_required, director_required
 import json
-from .models import ParametrosGlobales, SolicitudCredito, Documento, HistorialEstado, NotificacionEmail
+from .models import ParametrosGlobales, SolicitudCredito, Documento, HistorialEstado, NotificacionEmail, ConsultaDataCredito
 from .forms import (
     AnalistaHistorialFiltroForm, CrearUsuarioForm, DocumentoFinalForm, HistorialFiltroForm,
     ObservacionAnalisisForm, ObservacionReferenciasForm, ParametrosGlobalesForm,
@@ -75,6 +75,9 @@ def analista_caso_activo_view(request):
     active_step = 1
     if documentos_obligatorios_ok and not necesita_correccion: active_step = 2
     if solicitud_asignada.recomendacion_sistema_texto: active_step = 3
+    consulta_hpn = solicitud_asignada.consultas_datacredito.filter(tipo_consulta='HPN').order_by('-fecha_consulta').first()
+    consulta_reconocer = solicitud_asignada.consultas_datacredito.filter(tipo_consulta='RECONOCER').order_by('-fecha_consulta').first()
+
     contexto = {
         'solicitud': solicitud_asignada, 'form_documento': DocumentoAnalisisForm(),
         'form_observacion': ObservacionAnalisisForm(instance=solicitud_asignada),
@@ -82,6 +85,8 @@ def analista_caso_activo_view(request):
         'documentos_del_aspirante': documentos_del_aspirante, 'documentos_del_analista': documentos_del_analista,
         'documentos_obligatorios_ok': documentos_obligatorios_ok, 'necesita_correccion': necesita_correccion,
         'active_step': active_step,
+        'consulta_hpn': consulta_hpn,
+        'consulta_reconocer': consulta_reconocer,
     }
     return render(request, 'creditos/analista_caso_activo.html', contexto)
 
@@ -751,7 +756,11 @@ def director_detalle_solicitud_view(request, solicitud_id):
     # 3. Calculamos el desglose de capacidad de pago
     resultado_capacidad = calcular_capacidad_pago_service(solicitud) if solicitud.capacidad_pago_calculada is not None else None
 
-    # 4. Preparamos el contexto con las listas separadas
+    # 4. Consultas DataCredito
+    consulta_hpn = solicitud.consultas_datacredito.filter(tipo_consulta='HPN').order_by('-fecha_consulta').first()
+    consulta_reconocer = solicitud.consultas_datacredito.filter(tipo_consulta='RECONOCER').order_by('-fecha_consulta').first()
+
+    # 5. Preparamos el contexto con las listas separadas
     contexto = {
         'solicitud': solicitud,
         'documentos_iniciales_aspirante': documentos_iniciales_aspirante,
@@ -760,6 +769,8 @@ def director_detalle_solicitud_view(request, solicitud_id):
         'historial': solicitud.historial.all(),
         'referencias': solicitud.referencias.all(),
         'resultado_capacidad': resultado_capacidad,
+        'consulta_hpn': consulta_hpn,
+        'consulta_reconocer': consulta_reconocer,
     }
     return render(request, 'creditos/director_detalle_solicitud.html', contexto)
 

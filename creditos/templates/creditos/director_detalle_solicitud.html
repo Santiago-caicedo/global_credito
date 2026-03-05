@@ -33,6 +33,101 @@
         </div>
     </div>
 
+    <!-- Consulta en Centrales de Riesgo -->
+    {% if consulta_hpn or consulta_reconocer %}
+    <div class="card mb-4" style="border: 1px solid var(--gc-gris-claro); border-radius: 6px;">
+        <div class="card-header" style="background: var(--gc-arena); border-bottom: 1px solid var(--gc-gris-claro);">
+            <h5 class="mb-0" style="color: var(--gc-azul-oscuro);"><i class="bi bi-shield-check me-2"></i>Consulta en Centrales de Riesgo</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                {% if consulta_hpn %}
+                <div class="col-lg-7">
+                    <h6 style="color: var(--gc-azul-medio);"><i class="bi bi-graph-up me-1"></i>Historia de Credito (HPN)</h6>
+                    {% if consulta_hpn.estado_consulta == 'EXITO' %}
+                    {% if not consulta_hpn.advance_score %}
+                    <div class="alert alert-warning d-flex align-items-center mb-3 py-2" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <small><strong>Datos incompletos:</strong> La central respondio exitosamente pero no devolvio informacion crediticia para esta cedula. Verifique manualmente.</small>
+                    </div>
+                    {% endif %}
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <div class="border rounded p-3 text-center mb-3" style="background: var(--gc-arena);">
+                                <small class="text-muted d-block">Advance Score</small>
+                                {% if consulta_hpn.advance_score %}<span class="fs-3 fw-bold {% if consulta_hpn.advance_score >= 600 %}text-success{% elif consulta_hpn.advance_score >= 300 %}text-warning{% else %}text-danger{% endif %}">{{ consulta_hpn.advance_score }}</span>{% else %}<span class="fs-3 fw-bold text-muted">--</span>{% endif %}
+                                {% if consulta_hpn.score_descripcion %}<small class="d-block text-muted">{{ consulta_hpn.score_descripcion }}</small>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="border rounded p-3 text-center mb-3" style="background: var(--gc-arena);">
+                                <small class="text-muted d-block">Quanto (Patrimonio Est.)</small>
+                                <span class="fs-5 fw-bold" style="color: var(--gc-azul-oscuro);">{% if consulta_hpn.quanto_valor %}${{ consulta_hpn.quanto_valor|intcomma }}{% else %}N/A{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table table-sm table-bordered mb-3">
+                        <tbody>
+                            <tr><td class="text-muted" style="width: 60%;">Total Obligaciones</td><td class="fw-bold text-end">{{ consulta_hpn.total_obligaciones|default:"0" }}</td></tr>
+                            <tr><td class="text-muted">Obligaciones al Dia</td><td class="fw-bold text-end">{{ consulta_hpn.obligaciones_al_dia|default:"0" }}</td></tr>
+                            <tr><td class="text-muted">Obligaciones en Mora</td><td class="fw-bold text-end {% if consulta_hpn.obligaciones_mora > 0 %}text-danger{% endif %}">{{ consulta_hpn.obligaciones_mora|default:"0" }}</td></tr>
+                            <tr><td class="text-muted">Saldo Total</td><td class="fw-bold text-end">${{ consulta_hpn.saldo_total|default:"0"|intcomma }}</td></tr>
+                            <tr><td class="text-muted">Saldo en Mora</td><td class="fw-bold text-end {% if consulta_hpn.saldo_mora > 0 %}text-danger{% endif %}">${{ consulta_hpn.saldo_mora|default:"0"|intcomma }}</td></tr>
+                            <tr><td class="text-muted">Cuota Mensual Total</td><td class="fw-bold text-end">${{ consulta_hpn.cuota_mensual_total|default:"0"|intcomma }}</td></tr>
+                        </tbody>
+                    </table>
+                    <h6 class="small" style="color: var(--gc-azul-medio);">Moras por Sector</h6>
+                    <table class="table table-sm table-bordered mb-3">
+                        <tbody>
+                            <tr><td class="text-muted" style="width: 60%;">Mora Telecomunicaciones</td><td class="fw-bold text-end {% if consulta_hpn.mora_telco > 0 %}text-danger{% endif %}">${{ consulta_hpn.mora_telco|default:"0"|intcomma }}</td></tr>
+                            <tr><td class="text-muted">Mora Sector Real</td><td class="fw-bold text-end {% if consulta_hpn.mora_sector_real > 0 %}text-danger{% endif %}">${{ consulta_hpn.mora_sector_real|default:"0"|intcomma }}</td></tr>
+                            <tr><td class="text-muted">Mora Sector Financiero</td><td class="fw-bold text-end {% if consulta_hpn.mora_sector_financiero > 0 %}text-danger{% endif %}">${{ consulta_hpn.mora_sector_financiero|default:"0"|intcomma }}</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small">Huellas ultimos 6 meses: <strong class="{% if consulta_hpn.huellas_ultimos_6_meses > 3 %}text-danger{% endif %}">{{ consulta_hpn.huellas_ultimos_6_meses|default:"0" }}</strong></span>
+                        <span class="text-muted small">Consultado: {{ consulta_hpn.fecha_consulta|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-gc-warning mb-0"><small>Consulta HPN: {{ consulta_hpn.get_estado_consulta_display }} {% if consulta_hpn.mensaje_respuesta %}- {{ consulta_hpn.mensaje_respuesta }}{% endif %}</small></div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if consulta_reconocer %}
+                <div class="col-lg-5">
+                    <h6 style="color: var(--gc-azul-medio);"><i class="bi bi-geo-alt me-1"></i>Ubicacion y Contacto (Reconocer)</h6>
+                    {% if consulta_reconocer.estado_consulta == 'EXITO' %}
+                    {% if not consulta_reconocer.reconocer_ciudad and not consulta_reconocer.reconocer_celular %}
+                    <div class="alert alert-warning d-flex align-items-center mb-3 py-2" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <small><strong>Datos incompletos:</strong> La central no devolvio datos de ubicacion ni contacto para esta cedula.</small>
+                    </div>
+                    {% endif %}
+                    <table class="table table-sm table-bordered mb-3">
+                        <tbody>
+                            <tr><td class="text-muted" style="width: 40%;">Ciudad</td><td class="fw-bold">{{ consulta_reconocer.reconocer_ciudad|default:"N/A" }}</td></tr>
+                            <tr><td class="text-muted">Departamento</td><td class="fw-bold">{{ consulta_reconocer.reconocer_departamento|default:"N/A" }}</td></tr>
+                            <tr><td class="text-muted">Direccion</td><td class="fw-bold">{{ consulta_reconocer.reconocer_direccion|default:"N/A" }}</td></tr>
+                            <tr><td class="text-muted">Estrato</td><td class="fw-bold">{{ consulta_reconocer.reconocer_estrato|default:"N/A" }}</td></tr>
+                            <tr><td class="text-muted">Telefono</td><td class="fw-bold">{{ consulta_reconocer.reconocer_telefono|default:"N/A" }}</td></tr>
+                            <tr><td class="text-muted">Celular</td><td class="fw-bold">{{ consulta_reconocer.reconocer_celular|default:"N/A" }}</td></tr>
+                            <tr><td class="text-muted">Email</td><td class="fw-bold">{{ consulta_reconocer.reconocer_email|default:"N/A" }}</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="text-end">
+                        <span class="text-muted small">Consultado: {{ consulta_reconocer.fecha_consulta|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-gc-warning mb-0"><small>Consulta Reconocer: {{ consulta_reconocer.get_estado_consulta_display }} {% if consulta_reconocer.mensaje_respuesta %}- {{ consulta_reconocer.mensaje_respuesta }}{% endif %}</small></div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row g-4">
         <!-- Columna Izquierda: Informacion del Cliente y Financiera -->
         <div class="col-lg-7">
