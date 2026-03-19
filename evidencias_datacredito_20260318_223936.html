@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidencias de Conexión DataCrédito - Global Care Financial Services S.A.S.</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .doc-header {
+            background: linear-gradient(135deg, #4d5572 0%, #7a87a5 100%);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+        }
+        .doc-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .doc-header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .doc-header .empresa {
+            margin-top: 15px;
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        /* Info box */
+        .info-box {
+            background: white;
+            padding: 20px 40px;
+            border: 1px solid #ddd;
+            border-top: none;
+            margin-bottom: 20px;
+            border-radius: 0 0 8px 8px;
+        }
+        .info-box table {
+            width: 100%;
+        }
+        .info-box td {
+            padding: 4px 10px;
+            vertical-align: top;
+        }
+        .info-box td:first-child {
+            font-weight: 600;
+            color: #4d5572;
+            width: 220px;
+        }
+
+        /* API sections */
+        .api-section {
+            margin-bottom: 30px;
+        }
+        .api-section h2 {
+            background: #4d5572;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px 6px 0 0;
+            font-size: 18px;
+        }
+
+        /* Evidence blocks */
+        .evidence-block {
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            padding: 20px;
+            margin-bottom: 0;
+        }
+        .evidence-block:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+        .evidence-block h3 {
+            color: #4d5572;
+            font-size: 16px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #a3b38d;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        /* Sections */
+        .section {
+            margin: 15px 0;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        .section h4 {
+            color: #4d5572;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .section h5 {
+            color: #666;
+            font-size: 13px;
+            margin: 10px 0 5px;
+        }
+
+        /* Method + URL */
+        .method-url {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            word-break: break-all;
+        }
+        .method {
+            background: #a3b38d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* Headers table */
+        .headers-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        .headers-table td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        .header-key {
+            color: #4d5572;
+            font-weight: 600;
+            width: 250px;
+            white-space: nowrap;
+        }
+        .header-val {
+            color: #555;
+            word-break: break-all;
+        }
+
+        /* JSON block */
+        .json-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        /* Status */
+        .status-line {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .status-ok {
+            background: #a3b38d;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .status-error {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        /* Error box */
+        .error-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
+
+        /* Footer */
+        .doc-footer {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        /* Print styles */
+        @media print {
+            body { background: white; }
+            .container { max-width: 100%; padding: 0; }
+            .json-block { max-height: none; }
+            .evidence-block, .api-section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="doc-header">
+            <h1>Evidencias de Conexión - Web Services DataCrédito</h1>
+            <div class="subtitle">Request y Response - Ambiente de Pruebas (UAT/Demo)</div>
+            <div class="empresa">Global Care Financial Services S.A.S. | NIT: 901290934</div>
+        </div>
+
+        <div class="info-box">
+            <table>
+                <tr>
+                    <td>Fecha de generación:</td>
+                    <td>2026-03-18 22:39:36</td>
+                </tr>
+                <tr>
+                    <td>Ambiente:</td>
+                    <td>Demo / UAT (pruebas)</td>
+                </tr>
+                <tr>
+                    <td>Empresa suscriptora:</td>
+                    <td>Global Care Financial Services S.A.S.</td>
+                </tr>
+                <tr>
+                    <td>NIT:</td>
+                    <td>901290934</td>
+                </tr>
+                <tr>
+                    <td>Cédula consultada:</td>
+                    <td>1119623677</td>
+                </tr>
+                <tr>
+                    <td>Apellido consultado:</td>
+                    <td>BOGOTA</td>
+                </tr>
+                <tr>
+                    <td>IP del servidor:</td>
+                    <td>34.237.16.176</td>
+                </tr>
+            </table>
+        </div>
+
+        
+        <div class="api-section">
+            <h2>API HPN REST — Historia de Crédito + Advance Score (Z0) + Quanto (O4)</h2>
+            
+        <div class="evidence-block">
+            <h3>Paso 1: Autenticación (OAuth2 Token)</h3>
+            <p class="timestamp">Fecha/hora de ejecución: <strong>2026-03-18 22:39:33</strong></p>
+
+            <div class="section">
+                <h4>REQUEST</h4>
+                <div class="method-url">
+                    <span class="method">POST</span>
+                    <span class="url">https://uat-api.datacredito.com.co/spla/oauth2/v1/token</span>
+                </div>
+
+                <h5>Headers</h5>
+                <table class="headers-table"><tbody><tr><td class="header-key">client_id</td><td class="header-val">0oap0lmbt8DIofFZ10h7</td></tr>
+<tr><td class="header-key">client_secret</td><td class="header-val">MyXK_QM0d_2ogXj84NIe********************</td></tr>
+<tr><td class="header-key">Content-Type</td><td class="header-val">application/json</td></tr>
+</tbody></table>
+
+                <h5>Body</h5>
+                <pre class="json-block">{
+  "username": "2-901290934@demo.datacredito.com.co",
+  "password": "tIdH********"
+}</pre>
+            </div>
+
+            <div class="section">
+                <h4>RESPONSE</h4>
+                <div class="status-line">
+                    HTTP Status: <span class="status-ok">200</span>
+                </div>
+
+                <h5>Headers</h5>
+                <table class="headers-table"><tbody><tr><td class="header-key">Date</td><td class="header-val">Thu, 19 Mar 2026 03:39:34 GMT</td></tr>
+<tr><td class="header-key">Content-Type</td><td class="header-val">application/json</td></tr>
+<tr><td class="header-key">Content-Length</td><td class="header-val">916</td></tr>
+<tr><td class="header-key">Connection</td><td class="header-val">close</td></tr>
+<tr><td class="header-key">X-Content-Type-Options</td><td class="header-val">nosniff</td></tr>
+<tr><td class="header-key">X-Frame-Options</td><td class="header-val">SAMEORIGIN</td></tr>
+<tr><td class="header-key">X-XSS-Protection</td><td class="header-val">1; mode=block</td></tr>
+<tr><td class="header-key">Strict-Transport-Security</td><td class="header-val">max-age=86400</td></tr>
+<tr><td class="header-key">Content-Security-Policy</td><td class="header-val">default-src 'self'</td></tr>
+<tr><td class="header-key">Cache-Control</td><td class="header-val">no-cache, no-store</td></tr>
+<tr><td class="header-key">Access-Control-Allow-Origin</td><td class="header-val">*</td></tr>
+<tr><td class="header-key">Access-Control-Allow-Headers</td><td class="header-val">origin, x-requested-with, accept, content-type</td></tr>
+<tr><td class="header-key">Access-Control-Max-Age</td><td class="header-val">3628800</td></tr>
+<tr><td class="header-key">Access-Control-Allow-Methods</td><td class="header-val">GET, POST</td></tr>
+<tr><td class="header-key">Set-Cookie</td><td class="header-val">visid_incap_2476842=IWuxTE5dTUOXEVI+GfHEdvVvu2kAAAAAQUIPAAAAAAAf0d2EFXxIqOz3W1+u018h; expires=Thu, 18 Mar 2027 06:25:20 GMT; HttpOnly; path=/; Domain=.datacredito.com.co</td></tr>
+<tr><td class="header-key">X-CDN</td><td class="header-val">Imperva</td></tr>
+<tr><td class="header-key">X-Iinfo</td><td class="header-val">12-48985921-48985925 NNNN CT(7 17 0) RT(1773891573923 12) q(0 0 0 1) r(3 3) U6</td></tr>
+</tbody></table>
+
+                <h5>Body</h5>
+                <pre class="json-block">{
+  "issued_at": "1773891573967",
+  "expires_in": "600",
+  "token_type": "Bearer",
+  "access_token": "eyJraWQiOiJ1WkdGMFlXTnlaV1JwZEc4dVkyOXRMbU52SWl3aVJtbHljM1JPWVcxbElqIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiIyLTkwMTI5MDkzNEBkZW1vLmRhdGFjcmVkaXRvLmNvbS5jbyIsIkVtYWlsIjoibW9uaWNhLnJvZHJpZ3VlekBnY2ZzLmNvbSIsIkZpcnN0TmFtZSI6IldzIiwiaXNzIjoiRVhQRVJJQU4iLCJMYXN0TmFtZSI6IkhwIHowIG80IiwiZXhwIjoxNzczODkyMTc0LCJpYXQiOjE3NzM4OTE1NzQsImp0aSI6IjQ0Njk0YWQzLTczMmUtNDFjYS05MTZhLTlhMmM4MDcxM2NiOSJ9.XAGUfxB9k56chg90NiOEM5ZEn7S6mTY6rcUCbCQbr4mWqsbNGN4xfhxdNBrCtdtvw-sOzZi50c0797nvMYgoSi490gJKIIR_QetCiiUw9F2YETuZ-8fscuEeAb-xV-FnZyFDOTYVWeOz3_5nFeT9gXkiKYDoGciWlgboi529O0kjB2QMPpbIpQHx2QQIvqACpIWZCRk7JVhIwSsXwXYGiGoDjKExv2hWnWtzn1UdCKqIZJtlsWjBEIskG2dRpQZzhxyYplSlJoGFm1BnwoqX6Lg6k2ZLntbRvA_CH9iJ9gD_a7wPl02GhkU5f20gLF7Kk8FEb5GNyXpYt8iqCj-7MA",
+  "refresh_token": "GO8tRQTmDAz5YURPOprGNCdzpbhqti8r"
+}</pre>
+            </div>
+        </div>
+            
+        <div class="evidence-block">
+            <h3>Paso 2: Consumo del Servicio</h3>
+            <p class="timestamp">Fecha/hora de ejecución: <strong>2026-03-18 22:39:34</strong></p>
+
+            <div class="section">
+                <h4>REQUEST</h4>
+                <div class="method-url">
+                    <span class="method">POST</span>
+                    <span class="url">https://uat-api.datacredito.com.co/cs/credit-history/v1/hdcplus</span>
+                </div>
+
+                <h5>Headers</h5>
+                <table class="headers-table"><tbody><tr><td class="header-key">Content-Type</td><td class="header-val">application/json</td></tr>
+<tr><td class="header-key">serverIpAddress</td><td class="header-val">34.237.16.176</td></tr>
+<tr><td class="header-key">ProductId</td><td class="header-val">65</td></tr>
+<tr><td class="header-key">InfoAccountType</td><td class="header-val">1</td></tr>
+<tr><td class="header-key">client_id</td><td class="header-val">0oap0lmbt8DIofFZ10h7</td></tr>
+<tr><td class="header-key">client_secret</td><td class="header-val">MyXK_QM0d_2ogXj84NIe********************</td></tr>
+<tr><td class="header-key">Authorization</td><td class="header-val">Bearer eyJraWQiOiJ1W*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************</td></tr>
+</tbody></table>
+
+                <h5>Body</h5>
+                <pre class="json-block">{
+  "user": "901290934",
+  "password": "66WK*",
+  "identifyingTrx": {
+    "requestUUID": "967bff83-2be0-495e-9e5e-dfc904e2df5f",
+    "dateTime": "2026-03-18T22:39:34-05:00",
+    "originatorChannelName": "GCFS-WEBSERVICE",
+    "originatorChannelType": "42"
+  },
+  "identifyingUser": {
+    "person": {
+      "personId": {
+        "personIdNumber": "1119623677",
+        "personIdType": 1
+      },
+      "personLastName": "BOGOTA"
+    }
+  }
+}</pre>
+            </div>
+
+            <div class="section">
+                <h4>RESPONSE</h4>
+                <div class="status-line">
+                    HTTP Status: <span class="status-ok">200</span>
+                </div>
+
+                <h5>Headers</h5>
+                <table class="headers-table"><tbody><tr><td class="header-key">Date</td><td class="header-val">Thu, 19 Mar 2026 03:39:35 GMT</td></tr>
+<tr><td class="header-key">Content-Type</td><td class="header-val">application/json</td></tr>
+<tr><td class="header-key">Content-Length</td><td class="header-val">500</td></tr>
+<tr><td class="header-key">Connection</td><td class="header-val">close</td></tr>
+<tr><td class="header-key">X-Content-Type-Options</td><td class="header-val">nosniff</td></tr>
+<tr><td class="header-key">X-Frame-Options</td><td class="header-val">SAMEORIGIN</td></tr>
+<tr><td class="header-key">X-XSS-Protection</td><td class="header-val">1; mode=block</td></tr>
+<tr><td class="header-key">Strict-Transport-Security</td><td class="header-val">max-age=86400</td></tr>
+<tr><td class="header-key">Content-Security-Policy</td><td class="header-val">default-src 'self'</td></tr>
+<tr><td class="header-key">Cache-Control</td><td class="header-val">no-cache, no-store</td></tr>
+<tr><td class="header-key">Access-Control-Allow-Origin</td><td class="header-val">*</td></tr>
+<tr><td class="header-key">Access-Control-Allow-Headers</td><td class="header-val">origin, x-requested-with, accept, content-type</td></tr>
+<tr><td class="header-key">Access-Control-Max-Age</td><td class="header-val">3628800</td></tr>
+<tr><td class="header-key">Access-Control-Allow-Methods</td><td class="header-val">GET, POST</td></tr>
+<tr><td class="header-key">Set-Cookie</td><td class="header-val">visid_incap_2476842=Di2bFnTSQDGk1WCy0BFZnvVvu2kAAAAAQUIPAAAAAAAmj320PfdwQ33hSng/ph1W; expires=Thu, 18 Mar 2027 06:55:08 GMT; HttpOnly; path=/; Domain=.datacredito.com.co</td></tr>
+<tr><td class="header-key">X-CDN</td><td class="header-val">Imperva</td></tr>
+<tr><td class="header-key">X-Iinfo</td><td class="header-val">14-66463467-66463468 NNNN CT(6 16 0) RT(1773891574234 12) q(0 0 0 0) r(11 11) U6</td></tr>
+</tbody></table>
+
+                <h5>Body</h5>
+                <pre class="json-block">{
+  "ReportHDCplus": {
+    "productResult": {
+      "securityCode": "0O815A9",
+      "consultDate": "2026-03-18T22:39:35",
+      "responseCode": "09",
+      "responseDesc": "El número de identificación enviado no existe en los archivos de validación de la base de datos"
+    },
+    "identifyingAttributes": {
+      "personId": {
+        "personIdNumber": 1119623677,
+        "personIdType": 1
+      },
+      "personLastName": "BOGOTA"
+    },
+    "basicInformation": {
+      "personId": {
+        "personIdNumber": 1119623677,
+        "personIdType": 1
+      },
+      "identification": {
+        "personId": {
+          "personIdNumber": 1119623677,
+          "personIdType": 1
+        }
+      }
+    }
+  }
+}</pre>
+            </div>
+        </div>
+        </div>
+        
+        <div class="api-section">
+            <h2>API Reconocer Master — Ubicación + Contacto + Identidad</h2>
+            
+        <div class="evidence-block">
+            <h3>Paso 1: Autenticación (OAuth2 Token)</h3>
+            <p class="timestamp">Fecha/hora de ejecución: <strong>2026-03-18 22:39:35</strong></p>
+
+            <div class="section">
+                <h4>REQUEST</h4>
+                <div class="method-url">
+                    <span class="method">POST</span>
+                    <span class="url">https://experian-latamb.oktapreview.com/oauth2/ausdbwi7pes71n0hU0h7/v1/token</span>
+                </div>
+
+                <h5>Headers</h5>
+                <table class="headers-table"><tbody><tr><td class="header-key">Authorization</td><td class="header-val">Basic MG9hMmJ2M3V5MX******************************************************************************************************</td></tr>
+<tr><td class="header-key">accept</td><td class="header-val">application/json</td></tr>
+<tr><td class="header-key">Content-Type</td><td class="header-val">application/x-www-form-urlencoded</td></tr>
+</tbody></table>
+
+                <h5>Body</h5>
+                <pre class="json-block">grant_type=password&username=2-901290934.1%40demo.datacredito.com.co&password=3y549oOkqHYS&scope=expco_reconocer_master</pre>
+            </div>
+
+            <div class="section">
+                <h4>RESPONSE</h4>
+                <div class="status-line">
+                    HTTP Status: <span class="status-ok">200</span>
+                </div>
+
+                <h5>Headers</h5>
+                <table class="headers-table"><tbody><tr><td class="header-key">Date</td><td class="header-val">Thu, 19 Mar 2026 03:39:35 GMT</td></tr>
+<tr><td class="header-key">Content-Type</td><td class="header-val">application/json</td></tr>
+<tr><td class="header-key">Transfer-Encoding</td><td class="header-val">chunked</td></tr>
+<tr><td class="header-key">Connection</td><td class="header-val">close</td></tr>
+<tr><td class="header-key">Server</td><td class="header-val">nginx</td></tr>
+<tr><td class="header-key">x-okta-request-id</td><td class="header-val">0165046c4505b90dbfec17fbc57d9c33</td></tr>
+<tr><td class="header-key">accept-ch</td><td class="header-val">Sec-CH-UA-Platform-Version</td></tr>
+<tr><td class="header-key">x-xss-protection</td><td class="header-val">0</td></tr>
+<tr><td class="header-key">p3p</td><td class="header-val">CP="HONK"</td></tr>
+<tr><td class="header-key">set-cookie</td><td class="header-val">sid="";Version=1;Path=/;Max-Age=0</td></tr>
+<tr><td class="header-key">content-security-policy-report-only</td><td class="header-val">default-src 'self' experian-latamb.oktapreview.com *.oktacdn.com; connect-src 'self' experian-latamb.oktapreview.com experian-latamb-admin.oktapreview.com *.oktacdn.com *.mixpanel.com *.mapbox.com experian-latamb.kerberos.oktapreview.com experian-latamb.mtls.oktapreview.com https://oinmanager.okta.com data: dev-login.datacredito.com.co login-demo-ii.experian.cl *.ingest.sentry.io; script-src 'unsafe-inline' 'self' 'report-sample' experian-latamb.oktapreview.com *.oktacdn.com; style-src 'unsafe-inline' 'self' 'report-sample' experian-latamb.oktapreview.com *.oktacdn.com; frame-src 'self' experian-latamb.oktapreview.com experian-latamb-admin.oktapreview.com login.okta.com *.vidyard.com; img-src 'self' experian-latamb.oktapreview.com *.oktacdn.com *.tiles.mapbox.com *.mapbox.com *.vidyard.com data: blob:; font-src 'self' experian-latamb.oktapreview.com data: *.oktacdn.com fonts.gstatic.com; frame-ancestors 'self'</td></tr>
+<tr><td class="header-key">content-security-policy</td><td class="header-val">default-src 'self' experian-latamb.oktapreview.com *.oktacdn.com; connect-src 'self' experian-latamb.oktapreview.com experian-latamb-admin.oktapreview.com *.oktacdn.com *.mixpanel.com *.mapbox.com experian-latamb.kerberos.oktapreview.com experian-latamb.mtls.oktapreview.com https://oinmanager.okta.com data: dev-login.datacredito.com.co login-demo-ii.experian.cl *.ingest.sentry.io; script-src 'unsafe-inline' 'self' 'report-sample' experian-latamb.oktapreview.com *.oktacdn.com; style-src 'unsafe-inline' 'self' 'report-sample' experian-latamb.oktapreview.com *.oktacdn.com; frame-src 'self' experian-latamb.oktapreview.com experian-latamb-admin.oktapreview.com login.okta.com *.vidyard.com; img-src 'self' experian-latamb.oktapreview.com *.oktacdn.com *.tiles.mapbox.com *.mapbox.com *.vidyard.com data: blob:; font-src 'self' experian-latamb.oktapreview.com data: *.oktacdn.com fonts.gstatic.com</td></tr>
+<tr><td class="header-key">x-rate-limit-limit</td><td class="header-val">1000</td></tr>
+<tr><td class="header-key">x-rate-limit-remaining</td><td class="header-val">999</td></tr>
+<tr><td class="header-key">x-rate-limit-reset</td><td class="header-val">1773891616</td></tr>
+<tr><td class="header-key">cache-control</td><td class="header-val">no-cache, no-store</td></tr>
+<tr><td class="header-key">pragma</td><td class="header-val">no-cache</td></tr>
+<tr><td class="header-key">expires</td><td class="header-val">0</td></tr>
+<tr><td class="header-key">referrer-policy</td><td class="header-val">strict-origin-when-cross-origin</td></tr>
+<tr><td class="header-key">x-content-type-options</td><td class="header-val">nosniff</td></tr>
+<tr><td class="header-key">Strict-Transport-Security</td><td class="header-val">max-age=315360000; includeSubDomains</td></tr>
+<tr><td class="header-key">X-Robots-Tag</td><td class="header-val">noindex,nofollow</td></tr>
+</tbody></table>
+
+                <h5>Body</h5>
+                <pre class="json-block">{
+  "token_type": "Bearer",
+  "expires_in": 14400,
+  "access_token": "eyJraWQiOiJVS1BvY3hTZUM4ZFJoRmdMelhab1VlUzZqemdkVUkwclBreVpIc3AycUNrIiwiYWxnIjoiUlMyNTYifQ.eyJ2ZXIiOjEsImp0aSI6IkFULlZPWm5oY1BTX09QOWlHRWxlWGRJTHdMMlhQMG4xRWlMRnJMYU1sR0FQaWciLCJpc3MiOiJodHRwczovL2V4cGVyaWFuLWxhdGFtYi5va3RhcHJldmlldy5jb20vb2F1dGgyL2F1c2Rid2k3cGVzNzFuMGhVMGg3IiwiYXVkIjoiaHR0cHM6Ly93d3cuZGF0YWNyZWRpdG8uY29tLmNvL2NsaWVudHMiLCJpYXQiOjE3NzM4OTE1NzUsImV4cCI6MTc3MzkwNTk3NSwiY2lkIjoiMG9hMmJ2M3V5MXpnYnNBNjAwaDgiLCJ1aWQiOiIwMHUyazl5OWk0NGZ4aGhYdTBoOCIsInNjcCI6WyJleHBjb19yZWNvbm9jZXJfbWFzdGVyIl0sImF1dGhfdGltZSI6MTc3Mzg5MTU3NSwic3ViIjoiMi05MDEyOTA5MzQuMUBkZW1vLmRhdGFjcmVkaXRvLmNvbS5jbyIsImV4cGNvX2Jhc2VfZW1haWwiOiJtb25pY2Eucm9kcmlndWV6QGdjZnMuY29tLmNvIiwiZXhwY29fYmFzZV9sYXN0TmFtZSI6IkFxIiwiZXhwY29fYmFzZV9pZFR5cGUiOiIyIiwiZXhwY29fYmFzZV9maXJzdE5hbWUiOiJXcyBSZWMiLCJleHBjb19iYXNlX2xvZ2luIjoiMi05MDEyOTA5MzQuMUBkZW1vLmRhdGFjcmVkaXRvLmNvbS5jbyIsImV4cGNvX2Jhc2VfYXBpVXNlciI6dHJ1ZSwiZXhwY29fYXV0aHpfcmVjb25vY2VyX21hc3Rlcl9zZXJ2aWNlIjoie1wiaWRcIjpcIjI0MlwiLFwibmFtZVwiOlwiUmVjTGluZWFXU1wiLFwiY3VzdG9tZXJzXCI6W3tcImlkVHlwZVwiOlwiMlwiLFwiaWRcIjpcIjkwMTI5MDkzNFwiLFwibGVnYWxOYW1lXCI6XCJHTE9CQUwgQ0FSRSBGSU5BTkNJQUwgU0VSVklDRVMgU0FTXCIsXCJ1c2VyTWFpbFwiOlwibW9uaWNhLnJvZHJpZ3VlekBnY2ZzLmNvbS5jb1wiLFwidXNlckNpdHlcIjpcIi0tLS0tLVwiLFwidXNlck9mZmljZVwiOlwiUFJJTkNJUEFMXCIsXCJwcm9maWxlc1wiOlt7XCJpZFwiOlwiNzY0MVwiLFwibmFtZVwiOlwiV1MgR0xPQkFMIEFRXCIsXCJpZFBlcmZpbEFwcFwiOlwiMTM2MTJcIixcImNvbmZpZ3VyYXRpb25cIjp7XCJGTEFHIFNJU1RFTUFcIjpbXCIxXCJdLFwiU1VCUFJJVklMRUdJT1wiOltcIiBcIl0sXCJQUk9EVUNUTyBCQVNFXCI6W1wiLTFcIl0sXCJyb2xlc1wiOltcIlJFQ0xJTkVBX0VTQ0VOQ0lBTDpBUVwiXSxcImNlbnRyb2Nvc3Rvc1wiOltcIjAwMDAwMVwiXSxcImJpbGxhYmxlXCI6W1wiZmFsc2VcIl0sXCJsYXN0TmFtZVZhbGlkYXRpb25cIjpbXCJmYWxzZVwiXSxcIkVTVEFETyBJTklDSUFMXCI6W1wiQ1wiXSxcImxlZ2FjeVByb2ZpbGVzXCI6W3tcImlkXCI6XCJORE5DUmxBPVwiLFwiZXhwaXJhdGlvblwiOlwiMjA3OTc1MjQwMDAwMFwiLFwicHJvZHVjdElkXCI6XCIwMVwifV0sXCJpbnF1aXJ5Rm9vdHByaW50XCI6W1wic29mdFwiXSxcIldBUC1TVVBFUlZJU09SXCI6W1wiMFwiXSxcIkNPRElHTyBTVVNDUklQVE9SXCI6W1wiNDQwNzMxXCJdLFwiUFJJVklMRUdJT1wiOltcIjBcIl0sXCJWSUdFTkNJQVwiOltcIjI3LzExLzIwMzVcIl0sXCJSRUNPTk9DRVIgLSBCRFUgUkVDT05PQ0VSXCI6W1wiLTFcIl0sXCJGTEFHIENPT0tJRVwiOltcIkRcIl0sXCJBU0lHTkFcIjpbXCItMVwiXSxcImNhdG9yY2VcIjpbXCIxXCJdfX1dfV19IiwiZXhwY29fYmFzZV9pZE51bWJlciI6IjkwMTI5MDkzNC4xIn0.hZkTelGUQRY5tAoEjV_5mUYQp6iEKvxEEurIPSsL-qliNXY9g8ILQLLY_5PTvD6fYsYALNCbg-QOQjiXRxVH4DzZWN_JMtJskrDB0aJZdRMfg0bItPvVcr7dI7-6KyYEA_CHb2nUE9DPLzARWSXVH9txMTMU-YYVP-F-ELnJBdAAg1ChD3pNz6zpuiYYP-zC-9AzFc-VEqZnssML2SSasdp9Wemvef5gAEQx20oCFhZo5Jyn5xGs_dgnuOzoqnab_obSnYXeT-M-53C6lehTbacvyYFqbJhfK_iNbEiwkoNWLFZenIT99Rw1nA-Rxk79mHZPJuhbBTG8L0Kq-LOGRA",
+  "scope": "expco_reconocer_master"
+}</pre>
+            </div>
+        </div>
+            
+        <div class="evidence-block">
+            <h3>Paso 2: Consumo del Servicio</h3>
+            <p class="timestamp">Fecha/hora de ejecución: <strong>2026-03-18 22:39:35</strong></p>
+
+            <div class="section">
+                <h4>REQUEST</h4>
+                <div class="method-url">
+                    <span class="method">GET</span>
+                    <span class="url">https://demo-servicesesb.datacredito.com.co:444/cs/reconocer/v1/location-info?tipoId=2&numeroId=901290934&nit=901290934&tipoIdBuscar=1&numeroIdBuscar=1119623677&primerApellidoBuscar=bogota&validarNombre=false</span>
+                </div>
+
+                <h5>Headers</h5>
+                <table class="headers-table"><tbody><tr><td class="header-key">access_token</td><td class="header-val">eyJraWQiOiJVS1BvY3hT*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************</td></tr>
+<tr><td class="header-key">client_id</td><td class="header-val">0oa2bv3uy1zgbsA600h8</td></tr>
+<tr><td class="header-key">client_secret</td><td class="header-val">ZkuOBIDrhALdA46Fu1zN********************************************</td></tr>
+<tr><td class="header-key">accept</td><td class="header-val">application/json</td></tr>
+</tbody></table>
+
+                <h5>Body</h5>
+                <em>Sin body</em>
+            </div>
+
+            <div class="section">
+                <h4>RESPONSE</h4>
+                <div class="status-line">
+                    HTTP Status: <span class="status-ok">200</span>
+                </div>
+
+                <h5>Headers</h5>
+                <table class="headers-table"><tbody><tr><td class="header-key">X-Backside-Transport</td><td class="header-val">OK OK,OK OK</td></tr>
+<tr><td class="header-key">Connection</td><td class="header-val">close</td></tr>
+<tr><td class="header-key">Transfer-Encoding</td><td class="header-val">chunked</td></tr>
+<tr><td class="header-key">Accept</td><td class="header-val">text/xml, text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2</td></tr>
+<tr><td class="header-key">Content-Type</td><td class="header-val">application/json;charset=UTF-8</td></tr>
+<tr><td class="header-key">Date</td><td class="header-val">Thu, 19 Mar 2026 03:39:35 GMT</td></tr>
+<tr><td class="header-key">Soapaction</td><td class="header-val">""</td></tr>
+<tr><td class="header-key">X-Global-Transaction-ID</td><td class="header-val">4c1d1ece69bb6ff71abb45c1</td></tr>
+<tr><td class="header-key">SLA-Final-Route</td><td class="header-val">http://loopback.dp.experian.com:4031/</td></tr>
+<tr><td class="header-key">Cache-Control</td><td class="header-val">no-store</td></tr>
+</tbody></table>
+
+                <h5>Body</h5>
+                <pre class="json-block">{
+  "reporte": {
+    "tipoIdBuscado": "1",
+    "respuesta": "09",
+    "fechaConsulta": "2026-03-18T22:39:35-0500",
+    "informacionBasica": {
+      "actividadEconomica": "",
+      "codigoCIIU": "",
+      "estadoDocumento": "",
+      "fechaExpedicion": "",
+      "genero": "",
+      "municipioExpedicion": "",
+      "departamentoExpedicion": "",
+      "nombreCompleto": "",
+      "primerApellido": "",
+      "segundoApellido": "",
+      "primerNombre": "",
+      "segundoNombre": "",
+      "numeroIdentificacion": "",
+      "paginaWeb": "",
+      "razonSocial": "",
+      "tipoIdentificacion": "",
+      "rangoEdad": {
+        "min": "",
+        "max": ""
+      },
+      "rut": "",
+      "historicosCIIU": []
+    },
+    "direcciones": [],
+    "vectorDirecciones": {},
+    "indicadoresMovilidad": {},
+    "mosaic": {},
+    "telefonos": [],
+    "celulares": [],
+    "emails": []
+  }
+}</pre>
+            </div>
+        </div>
+        </div>
+        
+
+        <div class="doc-footer">
+            Documento generado automáticamente como evidencia de consumo exitoso de servicios web.<br>
+            Global Care Financial Services S.A.S. — 2026-03-18 22:39:36
+        </div>
+    </div>
+</body>
+</html>
