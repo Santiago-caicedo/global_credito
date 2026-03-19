@@ -28,6 +28,7 @@ class SolicitudCredito(models.Model):
     ESTADO_PEND_APROB_DIRECTOR = 'PEND_APROB_DIRECTOR'
     ESTADO_APROBADO = 'APROBADO'
     ESTADO_RECHAZADO_DIRECTOR = 'RECHAZADO_DIRECTOR'
+    ESTADO_DESEMBOLSADO = 'DESEMBOLSADO'
 
     ESTADOS_CHOICES = [
         (ESTADO_NUEVO, 'Nuevo'),
@@ -44,6 +45,7 @@ class SolicitudCredito(models.Model):
         (ESTADO_PEND_APROB_DIRECTOR, 'Pendiente Aprobación Director'),
         (ESTADO_APROBADO, 'Aprobado Final'),
         (ESTADO_RECHAZADO_DIRECTOR, 'Rechazado por Director'),
+        (ESTADO_DESEMBOLSADO, 'Desembolsado'),
     ]
 
     # --- Choices para campos de formulario ---
@@ -79,6 +81,13 @@ class SolicitudCredito(models.Model):
     plazo_solicitado = models.PositiveSmallIntegerField(
         "Plazo Solicitado (meses)",
         validators=[MinValueValidator(6, "El plazo minimo es de 6 meses.")]
+    )
+    convenio = models.CharField(
+        "Convenio",
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Convenio o alianza comercial asociada a esta solicitud"
     )
 
     # ---- 3. CAMPOS DE ANÁLISIS DEL ANALISTA (OPCIONALES a nivel de BD, obligatorios en su propio formulario) ----
@@ -152,6 +161,7 @@ class SolicitudCredito(models.Model):
         return today.year - self.fecha_nacimiento.year - ((today.month, today.day) < (self.fecha_nacimiento.month, self.fecha_nacimiento.day))
 
     def get_estado_color_class(self):
+        if self.estado == self.ESTADO_DESEMBOLSADO: return 'bg-success'
         if 'RECHAZADO' in self.estado: return 'bg-danger'
         if self.estado == self.ESTADO_PEND_DOCUMENTOS or 'APROBADO' in self.estado: return 'bg-success'
         if self.estado == self.ESTADO_EN_ASIGNACION: return 'bg-info text-dark'
@@ -361,7 +371,7 @@ class ConsultaDataCredito(models.Model):
         choices=ESTADOS_CHOICES,
         default=ESTADO_EXITO
     )
-    codigo_respuesta = models.CharField("Código de Respuesta", max_length=10, blank=True, null=True)
+    codigo_respuesta = models.CharField("Código de Respuesta", max_length=30, blank=True, null=True)
     mensaje_respuesta = models.TextField("Mensaje de Respuesta", blank=True, null=True)
 
     # --- Datos HPN (Historia de Crédito) ---

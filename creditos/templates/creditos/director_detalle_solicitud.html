@@ -220,5 +220,22 @@
     </div>
     {% endif %}
 
+    {% if solicitud.estado == solicitud.ESTADO_APROBADO %}
+    <div class="card mt-4" style="border-color: var(--gc-verde-salvia);">
+        <div class="card-header" style="background: var(--gc-verde-salvia); border-bottom-color: var(--gc-verde-salvia);">
+            <h5 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Registrar Desembolso</h5>
+        </div>
+        <div class="card-body text-center">
+            <p>Este credito esta aprobado. Una vez realizado el desembolso, registrelo aqui.</p>
+            <form action="{% url 'desembolsar_credito' solicitud.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-gc-success btn-lg">
+                    <i class="bi bi-check2-all me-2"></i>Marcar como Desembolsado
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}

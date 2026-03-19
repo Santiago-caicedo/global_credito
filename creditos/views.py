@@ -10,7 +10,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from usuarios.models import PerfilUsuario
 from django.core.paginator import Paginator
 from decimal import Decimal
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django.db.models.functions import TruncMonth
 from .decorators import analista_required, director_required
 import json
@@ -435,6 +435,7 @@ def analista_escritorio_view(request):
     estados_finalizados = [
         SolicitudCredito.ESTADO_RECHAZADO_ANALISTA,
         SolicitudCredito.ESTADO_APROBADO,
+        SolicitudCredito.ESTADO_DESEMBOLSADO,
         SolicitudCredito.ESTADO_RECHAZADO_DIRECTOR,
     ]
     
@@ -647,41 +648,133 @@ def eliminar_documento_analista_view(request, documento_id):
 @director_required
 def director_escritorio_view(request):
     """
-    El nuevo dashboard del Director, con estadísticas, gráficos y
-    una visión general del rendimiento del negocio.
+    Dashboard del Director con indicadores de entrada, tasas,
+    tiempos de respuesta y distribución por convenio.
     """
-    # --- 1. Tarjetas de Estadísticas (KPIs) ---
-    solicitudes_pendientes_count = SolicitudCredito.objects.filter(estado=SolicitudCredito.ESTADO_PEND_APROB_DIRECTOR).count()
-    solicitudes_aprobadas_count = SolicitudCredito.objects.filter(estado=SolicitudCredito.ESTADO_APROBADO).count()
-    total_desembolsado = SolicitudCredito.objects.filter(estado=SolicitudCredito.ESTADO_APROBADO).aggregate(Sum('monto_aprobado_calculado'))['monto_aprobado_calculado__sum'] or 0
-    
-    # --- 2. Datos para el Gráfico de Líneas (Solicitudes por Mes) ---
-    solicitudes_por_mes = SolicitudCredito.objects.annotate(month=TruncMonth('fecha_creacion')).values('month').annotate(count=Count('id')).order_by('month')
-    
-    # Formateamos los datos para Chart.js
+    S = SolicitudCredito  # alias
+
+    # ===== 1. TOTAL SOLICITUDES RECIBIDAS =====
+    total_solicitudes = S.objects.count()
+    total_monto_solicitado = S.objects.aggregate(
+        total=Sum('monto_solicitado')
+    )['total'] or 0
+
+    # ===== 2. SOLICITUDES POR CONVENIO =====
+    solicitudes_por_convenio = list(
+        S.objects.exclude(convenio__isnull=True).exclude(convenio='')
+        .values('convenio')
+        .annotate(count=Count('id'), monto_total=Sum('monto_solicitado'))
+        .order_by('-count')
+    )
+    sin_convenio_count = S.objects.filter(
+        Q(convenio__isnull=True) | Q(convenio='')
+    ).count()
+
+    # ===== 3. APROBADOS (incluye desembolsados) =====
+    estados_aprobados = [S.ESTADO_APROBADO, S.ESTADO_DESEMBOLSADO]
+    aprobados_count = S.objects.filter(estado__in=estados_aprobados).count()
+    tasa_aprobacion = (aprobados_count / total_solicitudes * 100) if total_solicitudes > 0 else 0
+
+    # ===== 4. DESEMBOLSOS =====
+    desembolsados_count = S.objects.filter(estado=S.ESTADO_DESEMBOLSADO).count()
+    tasa_desembolso = (desembolsados_count / total_solicitudes * 100) if total_solicitudes > 0 else 0
+    total_monto_desembolsado = S.objects.filter(
+        estado=S.ESTADO_DESEMBOLSADO
+    ).aggregate(total=Sum('monto_aprobado_calculado'))['total'] or 0
+
+    # ===== 5. TASA DE DESISTIMIENTO =====
+    aprobados_sin_desembolso = S.objects.filter(estado=S.ESTADO_APROBADO).count()
+    tasa_desistimiento = (aprobados_sin_desembolso / aprobados_count * 100) if aprobados_count > 0 else 0
+
+    # ===== 6. NEGADOS =====
+    estados_negados = [
+        S.ESTADO_RECHAZADO_AUTO,
+        S.ESTADO_RECHAZADO_ANALISTA,
+        S.ESTADO_RECHAZADO_DIRECTOR,
+    ]
+    negados_count = S.objects.filter(estado__in=estados_negados).count()
+    tasa_negacion = (negados_count / total_solicitudes * 100) if total_solicitudes > 0 else 0
+
+    # ===== 7. TIEMPOS PROMEDIO DE RESPUESTA =====
+    # Radicado → Aprobado
+    tiempo_radicado_aprobado_dias = None
+    solicitudes_con_aprobacion = S.objects.filter(estado__in=estados_aprobados + [S.ESTADO_DESEMBOLSADO])
+    if solicitudes_con_aprobacion.exists():
+        tiempos_ra = []
+        for sol in solicitudes_con_aprobacion.only('id', 'fecha_creacion'):
+            hist = sol.historial.filter(estado_nuevo='APROBADO').order_by('fecha_cambio').first()
+            if hist:
+                tiempos_ra.append((hist.fecha_cambio - sol.fecha_creacion).total_seconds() / 86400)
+        if tiempos_ra:
+            tiempo_radicado_aprobado_dias = round(sum(tiempos_ra) / len(tiempos_ra), 1)
+
+    # Aprobado → Desembolsado
+    tiempo_aprobado_desembolsado_dias = None
+    solicitudes_desembolsadas = S.objects.filter(estado=S.ESTADO_DESEMBOLSADO)
+    if solicitudes_desembolsadas.exists():
+        tiempos_ad = []
+        for sol in solicitudes_desembolsadas.only('id'):
+            h_apr = sol.historial.filter(estado_nuevo='APROBADO').order_by('fecha_cambio').first()
+            h_des = sol.historial.filter(estado_nuevo='DESEMBOLSADO').order_by('fecha_cambio').first()
+            if h_apr and h_des:
+                tiempos_ad.append((h_des.fecha_cambio - h_apr.fecha_cambio).total_seconds() / 86400)
+        if tiempos_ad:
+            tiempo_aprobado_desembolsado_dias = round(sum(tiempos_ad) / len(tiempos_ad), 1)
+
+    # ===== 8. PENDIENTES DE APROBACION =====
+    solicitudes_pendientes_count = S.objects.filter(estado=S.ESTADO_PEND_APROB_DIRECTOR).count()
+
+    # ===== 9. GRAFICOS =====
+    solicitudes_por_mes = S.objects.annotate(
+        month=TruncMonth('fecha_creacion')
+    ).values('month').annotate(count=Count('id')).order_by('month')
     labels_line_chart = [s['month'].strftime('%b %Y') for s in solicitudes_por_mes]
     data_line_chart = [s['count'] for s in solicitudes_por_mes]
 
-    # --- 3. Datos para el Gráfico de Dona (Distribución de Estados) ---
-    estados_finales = [SolicitudCredito.ESTADO_APROBADO, SolicitudCredito.ESTADO_RECHAZADO_DIRECTOR, SolicitudCredito.ESTADO_RECHAZADO_ANALISTA, SolicitudCredito.ESTADO_RECHAZADO_AUTO]
-    distribucion_estados = SolicitudCredito.objects.filter(estado__in=estados_finales).values('estado').annotate(count=Count('id'))
-    
-    # Formateamos los datos para Chart.js
-    labels_donut_chart = [dict(SolicitudCredito.ESTADOS_CHOICES).get(d['estado']) for d in distribucion_estados]
+    estados_finales = [
+        S.ESTADO_APROBADO, S.ESTADO_DESEMBOLSADO,
+        S.ESTADO_RECHAZADO_DIRECTOR, S.ESTADO_RECHAZADO_ANALISTA, S.ESTADO_RECHAZADO_AUTO
+    ]
+    distribucion_estados = S.objects.filter(estado__in=estados_finales).values('estado').annotate(count=Count('id'))
+    labels_donut_chart = [dict(S.ESTADOS_CHOICES).get(d['estado']) for d in distribucion_estados]
     data_donut_chart = [d['count'] for d in distribucion_estados]
 
-    # --- 4. Tabla de Acciones Inmediatas ---
-    ultimas_pendientes = SolicitudCredito.objects.filter(estado=SolicitudCredito.ESTADO_PEND_APROB_DIRECTOR).order_by('fecha_actualizacion')[:5]
+    # ===== 10. ACCIONES INMEDIATAS =====
+    ultimas_pendientes = S.objects.filter(
+        estado=S.ESTADO_PEND_APROB_DIRECTOR
+    ).order_by('fecha_actualizacion')[:5]
 
     contexto = {
+        # Indicadores de entrada
+        'total_solicitudes': total_solicitudes,
+        'total_monto_solicitado': total_monto_solicitado,
+        'solicitudes_por_convenio': solicitudes_por_convenio,
+        'sin_convenio_count': sin_convenio_count,
+        # Aprobados
+        'aprobados_count': aprobados_count,
+        'tasa_aprobacion': round(tasa_aprobacion, 1),
+        # Desembolsos
+        'desembolsados_count': desembolsados_count,
+        'tasa_desembolso': round(tasa_desembolso, 1),
+        'total_monto_desembolsado': total_monto_desembolsado,
+        # Desistimiento
+        'aprobados_sin_desembolso': aprobados_sin_desembolso,
+        'tasa_desistimiento': round(tasa_desistimiento, 1),
+        # Negados
+        'negados_count': negados_count,
+        'tasa_negacion': round(tasa_negacion, 1),
+        # Tiempos
+        'tiempo_radicado_aprobado_dias': tiempo_radicado_aprobado_dias,
+        'tiempo_aprobado_desembolsado_dias': tiempo_aprobado_desembolsado_dias,
+        # Pendientes
         'solicitudes_pendientes_count': solicitudes_pendientes_count,
-        'solicitudes_aprobadas_count': solicitudes_aprobadas_count,
-        'total_desembolsado': total_desembolsado,
-        'ultimas_pendientes': ultimas_pendientes,
+        # Gráficos
         'labels_line_chart': json.dumps(labels_line_chart),
         'data_line_chart': json.dumps(data_line_chart),
         'labels_donut_chart': json.dumps(labels_donut_chart),
         'data_donut_chart': json.dumps(data_donut_chart),
+        # Acciones
+        'ultimas_pendientes': ultimas_pendientes,
     }
     return render(request, 'creditos/director_escritorio.html', contexto)
 
@@ -812,7 +905,7 @@ def rechazar_credito_final_view(request, solicitud_id):
     """
     if request.method == 'POST':
         solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id)
-        
+
         estado_anterior = solicitud.estado
         solicitud.estado = SolicitudCredito.ESTADO_RECHAZADO_DIRECTOR
         solicitud.save()
@@ -824,11 +917,42 @@ def rechazar_credito_final_view(request, solicitud_id):
             usuario_responsable=request.user,
             observaciones="Director rechazó el crédito definitivamente."
         )
-        
+
         messages.warning(request, f"La Solicitud #{solicitud.id} ha sido RECHAZADA y el proceso ha finalizado.")
         return redirect('director_pendientes')
 
     return redirect('director_pendientes')
+
+
+@login_required
+@director_required
+def desembolsar_credito_view(request, solicitud_id):
+    """
+    Registra el desembolso de un crédito aprobado.
+    """
+    if request.method == 'POST':
+        solicitud = get_object_or_404(SolicitudCredito, id=solicitud_id)
+
+        if solicitud.estado != SolicitudCredito.ESTADO_APROBADO:
+            messages.error(request, "Solo se pueden desembolsar créditos aprobados.")
+            return redirect('director_escritorio')
+
+        estado_anterior = solicitud.estado
+        solicitud.estado = SolicitudCredito.ESTADO_DESEMBOLSADO
+        solicitud.save()
+
+        HistorialEstado.objects.create(
+            solicitud=solicitud,
+            estado_anterior=estado_anterior,
+            estado_nuevo=solicitud.estado,
+            usuario_responsable=request.user,
+            observaciones="Director registró el desembolso del crédito."
+        )
+
+        messages.success(request, f"Solicitud #{solicitud.id} marcada como DESEMBOLSADA exitosamente.")
+        return redirect('director_escritorio')
+
+    return redirect('director_escritorio')
 
 
 

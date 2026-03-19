@@ -30,6 +30,7 @@ urlpatterns = [
     path('director/solicitud/<int:solicitud_id>/', views.director_detalle_solicitud_view, name='director_detalle_solicitud'),
     path('director/solicitud/<int:solicitud_id>/aprobar/', views.aprobar_credito_final_view, name='aprobar_credito_final'),
     path('director/solicitud/<int:solicitud_id>/rechazar/', views.rechazar_credito_final_view, name='rechazar_credito_final'),
+    path('director/solicitud/<int:solicitud_id>/desembolsar/', views.desembolsar_credito_view, name='desembolsar_credito'),
 
     # Gestion de usuarios (Director)
     path('director/usuarios/', views.gestion_usuarios_view, name='gestion_usuarios'),

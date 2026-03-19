@@ -26,6 +26,42 @@
     .action-link:hover i {
         color: var(--gc-dorado);
     }
+    .kpi-tasa {
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+    .kpi-tasa .badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25em 0.6em;
+    }
+    .tiempo-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem;
+    }
+    .tiempo-card .tiempo-valor {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--gc-azul-oscuro);
+        line-height: 1;
+    }
+    .tiempo-card .tiempo-unidad {
+        font-size: 0.85rem;
+        color: var(--gc-texto-secundario);
+        font-weight: 500;
+    }
+    .tiempo-card .tiempo-label {
+        font-size: 0.85rem;
+        color: var(--gc-texto-secundario);
+    }
+    .stat-card .stat-sub {
+        font-size: 0.78rem;
+        color: var(--gc-texto-secundario);
+        margin-top: 0.15rem;
+    }
 </style>
 {% endblock %}
 
@@ -34,11 +70,82 @@
 <!-- Encabezado -->
 <div class="page-header">
     <h2><i class="bi bi-speedometer2 me-2" style="color: var(--gc-dorado);"></i>Dashboard del Director</h2>
-    <p class="subtitle">Panel de control y estadisticas generales</p>
+    <p class="subtitle">Indicadores de entrada y rendimiento del negocio</p>
 </div>
 
-<!-- Tarjetas de Estadisticas -->
+<!-- ===== INDICADORES DE ENTRADA: Fila 1 ===== -->
 <div class="row g-4 mb-4">
+    <!-- Total Solicitudes Recibidas -->
+    <div class="col-lg-4 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <div class="stat-number">{{ total_solicitudes }}</div>
+            <div class="stat-label">Solicitudes Recibidas</div>
+            <div class="stat-sub">${{ total_monto_solicitado|intcomma }} solicitados</div>
+        </div>
+    </div>
+
+    <!-- Aprobados -->
+    <div class="col-lg-4 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-number">{{ aprobados_count }}</div>
+            <div class="stat-label">Aprobados</div>
+            <div class="kpi-tasa">
+                <span class="badge bg-success">{{ tasa_aprobacion }}%</span> Tasa de aprobacion
+            </div>
+        </div>
+    </div>
+
+    <!-- Desembolsos -->
+    <div class="col-lg-4 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-number">{{ desembolsados_count }}</div>
+            <div class="stat-label">Desembolsos</div>
+            <div class="kpi-tasa">
+                <span class="badge bg-success">{{ tasa_desembolso }}%</span> Tasa desembolsados
+            </div>
+            <div class="stat-sub">${{ total_monto_desembolsado|intcomma }} desembolsados</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== INDICADORES DE ENTRADA: Fila 2 ===== -->
+<div class="row g-4 mb-4">
+    <!-- Desistimiento -->
+    <div class="col-lg-4 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="bi bi-arrow-return-left"></i>
+            </div>
+            <div class="stat-number">{{ tasa_desistimiento }}%</div>
+            <div class="stat-label">Tasa de Desistimiento</div>
+            <div class="stat-sub">{{ aprobados_sin_desembolso }} aprobados sin desembolsar</div>
+        </div>
+    </div>
+
+    <!-- Negados -->
+    <div class="col-lg-4 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon danger">
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+            <div class="stat-number">{{ negados_count }}</div>
+            <div class="stat-label">Negados / No Aprobados</div>
+            <div class="kpi-tasa">
+                <span class="badge bg-danger">{{ tasa_negacion }}%</span> Tasa de negacion
+            </div>
+        </div>
+    </div>
+
+    <!-- Pendientes -->
     <div class="col-lg-4 col-md-6">
         <div class="stat-card">
             <div class="stat-icon warning">
@@ -48,22 +155,85 @@
             <div class="stat-label">Pendientes de Aprobacion</div>
         </div>
     </div>
-    <div class="col-lg-4 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon success">
-                <i class="bi bi-check-circle-fill"></i>
+</div>
+
+<!-- ===== TIEMPOS DE RESPUESTA ===== -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="bi bi-clock-history me-2" style="color: var(--gc-dorado);"></i>Tiempos Promedio de Respuesta</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="row g-0">
+            <div class="col-md-6 border-end">
+                <div class="tiempo-card">
+                    <div>
+                        <i class="bi bi-arrow-right-circle" style="font-size: 2rem; color: var(--gc-azul-medio);"></i>
+                    </div>
+                    <div>
+                        <div class="tiempo-label">De Radicado a Aprobado</div>
+                        {% if tiempo_radicado_aprobado_dias is not None %}
+                            <div class="tiempo-valor">{{ tiempo_radicado_aprobado_dias }} <span class="tiempo-unidad">dias</span></div>
+                        {% else %}
+                            <div class="tiempo-valor" style="font-size: 1rem; color: var(--gc-texto-secundario);">Sin datos</div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-            <div class="stat-number">{{ solicitudes_aprobadas_count }}</div>
-            <div class="stat-label">Creditos Aprobados</div>
+            <div class="col-md-6">
+                <div class="tiempo-card">
+                    <div>
+                        <i class="bi bi-arrow-right-circle" style="font-size: 2rem; color: var(--gc-verde-salvia);"></i>
+                    </div>
+                    <div>
+                        <div class="tiempo-label">De Aprobado a Desembolsado</div>
+                        {% if tiempo_aprobado_desembolsado_dias is not None %}
+                            <div class="tiempo-valor">{{ tiempo_aprobado_desembolsado_dias }} <span class="tiempo-unidad">dias</span></div>
+                        {% else %}
+                            <div class="tiempo-valor" style="font-size: 1rem; color: var(--gc-texto-secundario);">Sin datos</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-lg-4 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon primary">
-                <i class="bi bi-cash-stack"></i>
-            </div>
-            <div class="stat-number" style="font-size: 1.5rem;">${{ total_desembolsado|intcomma }}</div>
-            <div class="stat-label">Total Desembolsado</div>
+</div>
+
+<!-- ===== SOLICITUDES POR CONVENIO ===== -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="bi bi-building me-2" style="color: var(--gc-dorado);"></i>Solicitudes por Convenio</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-gc mb-0">
+                <thead>
+                    <tr>
+                        <th>Convenio</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-end">Monto Total Solicitado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for conv in solicitudes_por_convenio %}
+                    <tr>
+                        <td><strong>{{ conv.convenio }}</strong></td>
+                        <td class="text-center">{{ conv.count }}</td>
+                        <td class="text-end">${{ conv.monto_total|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    {% endfor %}
+                    <tr class="table-light">
+                        <td><em class="text-muted">Sin convenio</em></td>
+                        <td class="text-center">{{ sin_convenio_count }}</td>
+                        <td class="text-end">-</td>
+                    </tr>
+                    {% if not solicitudes_por_convenio and sin_convenio_count == 0 %}
+                    <tr>
+                        <td colspan="3" class="text-center py-4 text-muted">No hay solicitudes registradas</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -197,7 +367,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Grafico de Lineas con colores Global Care
+        // Grafico de Lineas
         const ctxLine = document.getElementById('lineChart');
         if (ctxLine) {
             new Chart(ctxLine, {
@@ -225,7 +395,7 @@
             });
         }
 
-        // Grafico de Dona con colores Global Care
+        // Grafico de Dona
         const ctxDonut = document.getElementById('donutChart');
         if (ctxDonut) {
             new Chart(ctxDonut, {
@@ -237,8 +407,10 @@
                         data: {{ data_donut_chart|safe }},
                         backgroundColor: [
                             '#7a8c6b',  // verde salvia - aprobados
-                            '#b03a2e',  // rojo - rechazados
-                            '#b89958',  // dorado - pendientes
+                            '#4a7a3b',  // verde oscuro - desembolsados
+                            '#b03a2e',  // rojo - rechazados director
+                            '#d4553e',  // rojo claro - rechazados analista
+                            '#b89958',  // dorado - rechazados auto
                             '#5c6680'   // azul medio - otros
                         ],
                         hoverOffset: 4

@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Care F.S. - Documentacion del Sistema</title>
+    <style>
+        :root {
+            --gc-azul-oscuro: #4d5572;
+            --gc-azul-medio: #7a87a5;
+            --gc-verde-salvia: #a3b38d;
+            --gc-gris-claro: #e2dfdd;
+            --gc-arena: #f0efef;
+            --gc-dorado: #c9a86c;
+            --rojo: #c0392b;
+            --verde: #27ae60;
+            --amarillo: #f39c12;
+            --azul: #2980b9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* ---- NAV LATERAL ---- */
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--gc-azul-oscuro);
+            color: white;
+            overflow-y: auto;
+            padding: 20px 0;
+            z-index: 100;
+        }
+        .sidebar h2 {
+            padding: 0 20px 15px;
+            font-size: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            margin-bottom: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .sidebar a {
+            display: block;
+            padding: 8px 20px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            color: white;
+            background: rgba(255,255,255,0.08);
+            border-left-color: var(--gc-dorado);
+        }
+        .sidebar .nav-section {
+            padding: 12px 20px 4px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--gc-dorado);
+            font-weight: 700;
+        }
+
+        /* ---- CONTENIDO ---- */
+        .content {
+            margin-left: 280px;
+            padding: 40px 50px 80px;
+            max-width: 1100px;
+        }
+
+        h1 {
+            color: var(--gc-azul-oscuro);
+            font-size: 32px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .subtitle {
+            color: var(--gc-azul-medio);
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: var(--gc-azul-oscuro);
+            font-size: 24px;
+            margin: 50px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--gc-gris-claro);
+        }
+        h3 {
+            color: var(--gc-azul-medio);
+            font-size: 18px;
+            margin: 30px 0 12px;
+        }
+        h4 {
+            color: var(--gc-azul-oscuro);
+            font-size: 15px;
+            margin: 20px 0 8px;
+        }
+
+        p { margin-bottom: 12px; }
+
+        /* ---- TABLAS ---- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0 25px;
+            font-size: 14px;
+        }
+        th {
+            background: var(--gc-azul-oscuro);
+            color: white;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        td {
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--gc-gris-claro);
+        }
+        tr:nth-child(even) { background: var(--gc-arena); }
+        tr:hover { background: rgba(122, 135, 165, 0.08); }
+
+        code {
+            background: #eef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+            font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            color: var(--gc-azul-oscuro);
+        }
+
+        .code-block {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 18px 22px;
+            border-radius: 8px;
+            font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin: 15px 0 25px;
+            white-space: pre;
+        }
+        .code-block .kw { color: #cba6f7; }
+        .code-block .str { color: #a6e3a1; }
+        .code-block .num { color: #fab387; }
+        .code-block .cm { color: #6c7086; font-style: italic; }
+        .code-block .fn { color: #89b4fa; }
+        .code-block .var { color: #f9e2af; }
+
+        /* ---- DIAGRAMAS DE FLUJO ---- */
+        .flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 25px 0 35px;
+        }
+        .flow-step {
+            background: white;
+            border: 2px solid var(--gc-azul-medio);
+            border-radius: 8px;
+            padding: 14px 24px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            position: relative;
+        }
+        .flow-step.start {
+            background: var(--gc-azul-oscuro);
+            color: white;
+            border-color: var(--gc-azul-oscuro);
+            border-radius: 24px;
+        }
+        .flow-step.decision {
+            background: #fff8e1;
+            border-color: var(--amarillo);
+            border-radius: 4px;
+            transform: none;
+            max-width: 600px;
+        }
+        .flow-step.reject {
+            background: #fde8e8;
+            border-color: var(--rojo);
+            color: var(--rojo);
+            font-weight: 600;
+        }
+        .flow-step.approve {
+            background: #e8f5e9;
+            border-color: var(--verde);
+            color: var(--verde);
+            font-weight: 600;
+        }
+        .flow-step.process {
+            background: #e3f2fd;
+            border-color: var(--azul);
+        }
+        .flow-step.end {
+            background: var(--gc-azul-oscuro);
+            color: white;
+            border-color: var(--gc-azul-oscuro);
+            border-radius: 24px;
+        }
+
+        .flow-arrow {
+            font-size: 22px;
+            color: var(--gc-azul-medio);
+            line-height: 1;
+            padding: 4px 0;
+        }
+
+        .flow-branch {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 620px;
+            justify-content: center;
+        }
+        .flow-branch > div {
+            flex: 1;
+            text-align: center;
+        }
+        .flow-branch .branch-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gc-azul-medio);
+            margin-bottom: 6px;
+        }
+
+        /* ---- CARDS ---- */
+        .card {
+            background: white;
+            border: 1px solid var(--gc-gris-claro);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin: 15px 0 25px;
+        }
+        .card-title {
+            font-weight: 700;
+            color: var(--gc-azul-oscuro);
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-red { background: #fde8e8; color: var(--rojo); }
+        .badge-green { background: #e8f5e9; color: var(--verde); }
+        .badge-yellow { background: #fff8e1; color: #e67e22; }
+        .badge-blue { background: #e3f2fd; color: var(--azul); }
+        .badge-gray { background: var(--gc-arena); color: #666; }
+
+        /* ---- GRID 2 COL ---- */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0 25px;
+        }
+
+        /* ---- ALERT BOXES ---- */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 6px;
+            margin: 12px 0;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+        .alert-info { background: #e3f2fd; border-color: var(--azul); }
+        .alert-warning { background: #fff8e1; border-color: var(--amarillo); }
+        .alert-danger { background: #fde8e8; border-color: var(--rojo); }
+        .alert-success { background: #e8f5e9; border-color: var(--verde); }
+
+        .rule-list {
+            list-style: none;
+            padding: 0;
+        }
+        .rule-list li {
+            padding: 10px 16px;
+            border-left: 4px solid var(--rojo);
+            background: #fef9f9;
+            margin: 8px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 14px;
+        }
+        .rule-list li strong { color: var(--rojo); }
+
+        .estado-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .estado-item {
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid var(--gc-gris-claro);
+        }
+        .estado-item .estado-code {
+            font-family: monospace;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .formula-box {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-family: 'Cascadia Code', Consolas, monospace;
+            margin: 15px 0 25px;
+            letter-spacing: 1px;
+        }
+        .formula-box .label { font-size: 12px; color: #6c7086; display: block; margin-bottom: 8px; }
+
+        .separator { border: none; border-top: 1px dashed var(--gc-gris-claro); margin: 40px 0; }
+
+        @media print {
+            .sidebar { display: none; }
+            .content { margin-left: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+    <h2>Global Care F.S.</h2>
+    <div class="nav-section">Vision General</div>
+    <a href="#overview">Resumen del Sistema</a>
+    <a href="#roles">Roles de Usuario</a>
+    <a href="#estados">Estados de Solicitud</a>
+
+    <div class="nav-section">Flujo Principal</div>
+    <a href="#flujo-general">Flujo General Completo</a>
+    <a href="#formulario">1. Formulario Publico</a>
+    <a href="#motor-inicial">2. Motor Inicial</a>
+    <a href="#datacredito">3. Consulta DataCredito</a>
+    <a href="#motor-datacredito">4. Motor DataCredito</a>
+    <a href="#preaprobacion">5. Pre-Aprobacion</a>
+    <a href="#registro">6. Registro y Documentos</a>
+    <a href="#analisis">7-9. Analisis del Analista</a>
+    <a href="#director">10. Aprobacion Director</a>
+
+    <div class="nav-section">Motores de Decision</div>
+    <a href="#motor-inicial-detail">Motor Inicial (Reglas)</a>
+    <a href="#motor-riesgo">Motor de Riesgo (Analista)</a>
+    <a href="#motor-dc-detail">Motor DataCredito (Reglas)</a>
+
+    <div class="nav-section">Calculos Financieros</div>
+    <a href="#capacidad-pago">Capacidad de Pago</a>
+    <a href="#oferta">Calculo de Oferta</a>
+    <a href="#parametros">Parametros Globales</a>
+
+    <div class="nav-section">Integracion DataCredito</div>
+    <a href="#dc-arquitectura">Arquitectura de APIs</a>
+    <a href="#dc-hpn">API HPN (Score+Historia)</a>
+    <a href="#dc-reconocer">API Reconocer Master</a>
+    <a href="#dc-codigos">Codigos de Respuesta</a>
+
+    <div class="nav-section">Logicas Auxiliares</div>
+    <a href="#asignacion">Asignacion de Analistas</a>
+    <a href="#reaplicacion">Reaplicacion</a>
+    <a href="#documentos">Tipos de Documentos</a>
+    <a href="#emails">Notificaciones Email</a>
+</nav>
+
+<!-- CONTENIDO -->
+<div class="content">
+
+    <h1>Documentacion Tecnica del Sistema</h1>
+    <p class="subtitle">Global Care Financial Services &mdash; Sistema de Gestion de Solicitudes de Credito</p>
+
+    <!-- ================================================================ -->
+    <h2 id="overview">Resumen del Sistema</h2>
+    <p>Sistema de gestion de solicitudes de credito que permite a aspirantes aplicar de forma publica y gestiona el flujo interno de analisis y aprobacion con integracion a centrales de riesgo (DataCredito/Experian).</p>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">Stack Tecnologico</div>
+            <table>
+                <tr><td><strong>Backend</strong></td><td>Django 5.2.3</td></tr>
+                <tr><td><strong>Base de Datos</strong></td><td>PostgreSQL</td></tr>
+                <tr><td><strong>Frontend</strong></td><td>Bootstrap 5.3.3</td></tr>
+                <tr><td><strong>APIs Externas</strong></td><td>DataCredito/Experian</td></tr>
+                <tr><td><strong>Email</strong></td><td>SMTP configurable</td></tr>
+            </table>
+        </div>
+        <div class="card">
+            <div class="card-title">Colores de Marca</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:28px;height:28px;border-radius:4px;background:#4d5572;"></div><code>#4d5572</code></div>
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:28px;height:28px;border-radius:4px;background:#7a87a5;"></div><code>#7a87a5</code></div>
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:28px;height:28px;border-radius:4px;background:#a3b38d;"></div><code>#a3b38d</code></div>
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:28px;height:28px;border-radius:4px;background:#c9a86c;"></div><code>#c9a86c</code></div>
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:28px;height:28px;border-radius:4px;background:#e2dfdd;"></div><code>#e2dfdd</code></div>
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:28px;height:28px;border-radius:4px;background:#f0efef;border:1px solid #ccc;"></div><code>#f0efef</code></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <h2 id="roles">Roles de Usuario</h2>
+    <table>
+        <thead><tr><th>Rol</th><th>Constante</th><th>Descripcion</th><th>Acceso</th></tr></thead>
+        <tbody>
+            <tr><td><span class="badge badge-blue">ASPIRANTE</span></td><td><code>ROL_ASPIRANTE</code></td><td>Persona que solicita el credito</td><td><code>/mi-solicitud/</code></td></tr>
+            <tr><td><span class="badge badge-yellow">ANALISTA</span></td><td><code>ROL_ANALISTA</code></td><td>Evalua solicitudes asignadas, ejecuta analisis de riesgo y capacidad de pago</td><td><code>/analista/</code></td></tr>
+            <tr><td><span class="badge badge-green">DIRECTOR</span></td><td><code>ROL_DIRECTOR</code></td><td>Aprueba o rechaza definitivamente, gestiona parametros globales y usuarios</td><td><code>/director/</code></td></tr>
+        </tbody>
+    </table>
+    <div class="alert alert-info">Los decoradores <code>@aspirante_required</code>, <code>@analista_required</code> y <code>@director_required</code> validan que el usuario autenticado tenga el rol correcto. Si no, se redirige al login con un mensaje de error.</div>
+
+    <!-- ================================================================ -->
+    <h2 id="estados">Estados de Solicitud</h2>
+    <p>Cada solicitud pasa por una secuencia de estados. Los estados se almacenan en <code>SolicitudCredito.estado</code> y cada transicion queda registrada en <code>HistorialEstado</code>.</p>
+
+    <table>
+        <thead><tr><th>Constante</th><th>Display</th><th>Fase</th><th>Descripcion</th></tr></thead>
+        <tbody>
+            <tr><td><code>NUEVO</code></td><td>Nuevo</td><td><span class="badge badge-gray">Inicio</span></td><td>Recien creada desde formulario publico</td></tr>
+            <tr><td><code>RECHAZADO_AUTO</code></td><td>Rechazado Automaticamente</td><td><span class="badge badge-red">Final</span></td><td>No paso motor inicial o motor DataCredito</td></tr>
+            <tr><td><code>PEND_DOCUMENTOS</code></td><td>Pendiente Carga Documentos</td><td><span class="badge badge-blue">Aspirante</span></td><td>Esperando documentos iniciales del aspirante</td></tr>
+            <tr><td><code>DOCS_CORRECCION</code></td><td>Documentos en Correccion</td><td><span class="badge badge-blue">Aspirante</span></td><td>Aspirante debe corregir documentos rechazados</td></tr>
+            <tr><td><code>EN_ASIGNACION</code></td><td>En Espera de Asignacion</td><td><span class="badge badge-gray">Cola</span></td><td>En cola esperando analista libre</td></tr>
+            <tr><td><code>EN_ANALISIS</code></td><td>En Analisis por Analista</td><td><span class="badge badge-yellow">Analista</span></td><td>Analista revisando caso activo</td></tr>
+            <tr><td><code>PREAPROBADO</code></td><td>Pre-Aprobado por Analista</td><td><span class="badge badge-yellow">Analista</span></td><td>Paso revision de riesgo, en capacidad de pago</td></tr>
+            <tr><td><code>PEND_DOCS_ADICIONALES</code></td><td>Pendiente Docs Adicionales</td><td><span class="badge badge-blue">Aspirante</span></td><td>Esperando documentos finales (pagare, poliza, etc.)</td></tr>
+            <tr><td><code>DOCS_FINALES_CORRECCION</code></td><td>Correccion Docs Finales</td><td><span class="badge badge-blue">Aspirante</span></td><td>Aspirante corrigiendo documentos finales</td></tr>
+            <tr><td><code>EN_VALIDACION_DOCS</code></td><td>En Validacion de Documentos</td><td><span class="badge badge-yellow">Analista</span></td><td>Analista valida documentos finales</td></tr>
+            <tr><td><code>PEND_APROB_DIRECTOR</code></td><td>Pendiente Aprobacion Director</td><td><span class="badge badge-green">Director</span></td><td>Expediente completo, director debe decidir</td></tr>
+            <tr><td><code>APROBADO</code></td><td>Aprobado Final</td><td><span class="badge badge-green">Final</span></td><td>Credito aprobado definitivamente</td></tr>
+            <tr><td><code>RECHAZADO_ANALISTA</code></td><td>Rechazado por Analista</td><td><span class="badge badge-red">Final</span></td><td>Analista rechazo la solicitud</td></tr>
+            <tr><td><code>RECHAZADO_DIRECTOR</code></td><td>Rechazado por Director</td><td><span class="badge badge-red">Final</span></td><td>Director rechazo la solicitud</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================================ -->
+    <h2 id="flujo-general">Flujo General Completo</h2>
+    <p>El siguiente diagrama muestra el recorrido completo de una solicitud desde el formulario publico hasta la decision final.</p>
+
+    <div class="flow">
+        <div class="flow-step start">ASPIRANTE: Llena formulario publico en <code>/aplicar/</code></div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">MOTOR INICIAL: Edad 18-65? Ingresos suficientes?</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">NO PASA</div>
+                <div class="flow-step reject" style="font-size:13px;">RECHAZADO_AUTO<br>Email generico de rechazo</div>
+            </div>
+            <div>
+                <div class="branch-label">SI PASA</div>
+                <div class="flow-step process" style="font-size:13px;">Consultar DataCredito<br>(HPN + Reconocer)</div>
+            </div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">MOTOR DATACREDITO: Score, moras, huellas dentro de limites?</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">NO PASA</div>
+                <div class="flow-step reject" style="font-size:13px;">RECHAZADO_AUTO<br>Email generico de rechazo</div>
+            </div>
+            <div>
+                <div class="branch-label">SI PASA</div>
+                <div class="flow-step approve" style="font-size:13px;">PRE-APROBADO<br>Email con link de registro (24h)</div>
+            </div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step">ASPIRANTE: Crea cuenta desde el link &rarr; Sube 4 documentos iniciales &rarr; Envia</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">Hay analista libre?</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">NO</div>
+                <div class="flow-step" style="font-size:13px;border-color:var(--amarillo);">EN_ASIGNACION (cola FIFO)<br>Email: en espera</div>
+            </div>
+            <div>
+                <div class="branch-label">SI</div>
+                <div class="flow-step process" style="font-size:13px;">Asignacion aleatoria<br>Email: asignado</div>
+            </div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step process">ANALISTA: Valida docs &rarr; Analisis de riesgo &rarr; Motor recomendacion</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">Analista decide: Pre-aprobar o Rechazar?</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">RECHAZA</div>
+                <div class="flow-step reject" style="font-size:13px;">RECHAZADO_ANALISTA<br>Analista se libera</div>
+            </div>
+            <div>
+                <div class="branch-label">PRE-APRUEBA</div>
+                <div class="flow-step process" style="font-size:13px;">Capacidad de pago &rarr; Oferta &rarr; Docs finales</div>
+            </div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step">ASPIRANTE: Sube 4 documentos finales (pagare, poliza, etc.)</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step process">ANALISTA: Valida docs finales &rarr; Envia a Director</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">DIRECTOR: Revisa expediente completo</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">RECHAZA</div>
+                <div class="flow-step reject" style="font-size:13px;">RECHAZADO_DIRECTOR</div>
+            </div>
+            <div>
+                <div class="branch-label">APRUEBA</div>
+                <div class="flow-step approve" style="font-size:13px;">APROBADO</div>
+            </div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step end">FIN DEL PROCESO</div>
+    </div>
+
+    <!-- ================================================================ -->
+    <h2 id="formulario">Paso 1: Formulario Publico</h2>
+    <p>El aspirante accede a <code>/aplicar/</code> y llena el formulario. El flujo tiene 3 sub-pasos HTTP:</p>
+
+    <div class="flow">
+        <div class="flow-step start">GET /aplicar/ &mdash; Formulario vacio</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step">POST action="review" &mdash; Validar datos y mostrar pantalla de confirmacion</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step">POST action="confirm" &mdash; Crear solicitud, ejecutar motores, enviar email</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step end">Mostrar pagina generica "Datos recibidos" (no revela resultado)</div>
+    </div>
+
+    <h3>Campos del Formulario</h3>
+    <table>
+        <thead><tr><th>Campo</th><th>Tipo</th><th>Validacion</th></tr></thead>
+        <tbody>
+            <tr><td>Cedula</td><td><code>CharField(20)</code></td><td>Unico en el sistema</td></tr>
+            <tr><td>Nombre Completo</td><td><code>CharField(255)</code></td><td>Obligatorio</td></tr>
+            <tr><td>Fecha de Nacimiento</td><td><code>DateField</code></td><td>Para calculo de edad</td></tr>
+            <tr><td>Fecha Expedicion Cedula</td><td><code>DateField</code></td><td>Obligatorio</td></tr>
+            <tr><td>Ocupacion</td><td><code>Choice</code></td><td>EMPLEADO | INDEPENDIENTE | PENSIONADO</td></tr>
+            <tr><td>Ingresos Mensuales</td><td><code>Decimal(12,2)</code></td><td>Obligatorio</td></tr>
+            <tr><td>Monto Solicitado</td><td><code>Decimal(12,2)</code></td><td>Minimo $500,000</td></tr>
+            <tr><td>Plazo (meses)</td><td><code>PositiveSmallInt</code></td><td>Minimo 6 meses</td></tr>
+            <tr><td>Email</td><td><code>EmailField</code></td><td>Para comunicacion</td></tr>
+            <tr><td>Telefono</td><td><code>CharField(20)</code></td><td>Obligatorio</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================================ -->
+    <h2 id="motor-inicial">Paso 2: Motor Inicial</h2>
+    <h3 id="motor-inicial-detail">Diagrama de Decision</h3>
+    <p>Funcion: <code>ejecutar_motor_inicial(solicitud)</code> en <code>services.py</code></p>
+
+    <div class="flow">
+        <div class="flow-step start">Solicitud recibida</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">Edad entre 18 y 65 anos (inclusive)?</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">NO</div>
+                <div class="flow-step reject">RECHAZADO_AUTO<br><small>"Rechazado por politica de edad (18-65 anos)"</small></div>
+            </div>
+            <div>
+                <div class="branch-label">SI</div>
+                <div class="flow-step decision" style="font-size:13px;">Empleado: Ingresos &ge; $2,000,000?<br>Independiente: Ingresos &ge; $3,000,000?<br>Pensionado: Sin restriccion de ingresos</div>
+            </div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">NO CUMPLE</div>
+                <div class="flow-step reject">RECHAZADO_AUTO<br><small>"Ingresos insuficientes"</small></div>
+            </div>
+            <div>
+                <div class="branch-label">SI CUMPLE</div>
+                <div class="flow-step approve">PASA &rarr; Continua a DataCredito</div>
+            </div>
+        </div>
+    </div>
+
+    <h4>Umbrales del Motor Inicial</h4>
+    <table>
+        <thead><tr><th>Regla</th><th>Condicion</th><th>Resultado si falla</th></tr></thead>
+        <tbody>
+            <tr><td>Edad</td><td>18 &le; edad &le; 65</td><td>Rechazo automatico</td></tr>
+            <tr><td>Ingreso Empleado</td><td>ingresos &ge; $2,000,000</td><td>Rechazo automatico</td></tr>
+            <tr><td>Ingreso Independiente</td><td>ingresos &ge; $3,000,000</td><td>Rechazo automatico</td></tr>
+            <tr><td>Ingreso Pensionado</td><td><em>Sin minimo</em></td><td>Siempre pasa</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================================ -->
+    <h2 id="datacredito">Paso 3: Consulta DataCredito</h2>
+    <h3 id="dc-arquitectura">Arquitectura de la Integracion</h3>
+    <p>Se ejecutan dos APIs secuencialmente. Ambos resultados se almacenan en <code>ConsultaDataCredito</code> para auditoria.</p>
+
+    <div class="flow">
+        <div class="flow-step start">consultar_datacredito(solicitud)</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="flow-step process" style="font-size:13px;">
+                    <strong>API HPN</strong><br>
+                    Historia de Credito<br>+ Advance Score (Z0)<br>+ Quanto (O4)
+                </div>
+            </div>
+            <div>
+                <div class="flow-step process" style="font-size:13px;">
+                    <strong>API Reconocer Master</strong><br>
+                    Ciudad, Departamento<br>Direccion, Estrato<br>Telefono, Celular, Email
+                </div>
+            </div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step">Guardar en <code>ConsultaDataCredito</code> (tipo HPN + RECONOCER)</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step">Actualizar campos de la solicitud con datos obtenidos</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">evaluar_reglas_datacredito(resultado)</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step end">Retorna: {success, hpn, reconocer, rechazar, motivo_rechazo}</div>
+    </div>
+
+    <h3 id="dc-hpn">API HPN &mdash; Historia de Credito + Score + Quanto</h3>
+    <div class="card">
+        <div class="card-title">Detalles Tecnicos</div>
+        <table>
+            <tr><td><strong>Endpoint</strong></td><td><code>POST /cs/credit-history/v1/hdcplus</code></td></tr>
+            <tr><td><strong>Autenticacion</strong></td><td>OAuth2 (client_id + client_secret + usuario/password)</td></tr>
+            <tr><td><strong>Requiere</strong></td><td>IP autorizada por DataCredito</td></tr>
+            <tr><td><strong>Timeout</strong></td><td>60 segundos</td></tr>
+            <tr><td><strong>Identificacion</strong></td><td>Cedula + Primer Apellido</td></tr>
+        </table>
+    </div>
+
+    <h4>Datos que se extraen de HPN</h4>
+    <table>
+        <thead><tr><th>Campo</th><th>Tipo</th><th>Descripcion</th></tr></thead>
+        <tbody>
+            <tr><td><code>advance_score</code></td><td>int (150-950)</td><td>Puntaje de riesgo crediticio</td></tr>
+            <tr><td><code>score_descripcion</code></td><td>str</td><td>Texto descriptivo del nivel de riesgo</td></tr>
+            <tr><td><code>quanto_valor</code></td><td>Decimal</td><td>Patrimonio estimado</td></tr>
+            <tr><td><code>total_obligaciones</code></td><td>int</td><td>Numero total de cuentas</td></tr>
+            <tr><td><code>obligaciones_al_dia</code></td><td>int</td><td>Cuentas al dia</td></tr>
+            <tr><td><code>obligaciones_mora</code></td><td>int</td><td>Cuentas en mora</td></tr>
+            <tr><td><code>saldo_total</code></td><td>Decimal</td><td>Saldo total de obligaciones</td></tr>
+            <tr><td><code>saldo_mora</code></td><td>Decimal</td><td>Saldo en mora</td></tr>
+            <tr><td><code>cuota_mensual_total</code></td><td>Decimal</td><td>Suma de cuotas mensuales (se usa en capacidad de pago)</td></tr>
+            <tr><td><code>mora_telco</code></td><td>Decimal</td><td>Mora en telecomunicaciones</td></tr>
+            <tr><td><code>mora_sector_real</code></td><td>Decimal</td><td>Mora en sector real</td></tr>
+            <tr><td><code>mora_sector_financiero</code></td><td>Decimal</td><td>Mora en sector financiero</td></tr>
+            <tr><td><code>huellas_ultimos_6_meses</code></td><td>int</td><td>Consultas a centrales en ultimos 6 meses</td></tr>
+            <tr><td><code>vector_comportamiento</code></td><td>JSON</td><td>Historico de pagos 24 meses (primeras 5 cuentas)</td></tr>
+        </tbody>
+    </table>
+
+    <h3 id="dc-reconocer">API Reconocer Master &mdash; Ubicacion y Contacto</h3>
+    <div class="card">
+        <div class="card-title">Detalles Tecnicos</div>
+        <table>
+            <tr><td><strong>Endpoint</strong></td><td><code>GET /cs/reconocer/v1/location-info</code></td></tr>
+            <tr><td><strong>Autenticacion</strong></td><td>OAuth2 via Okta (grant_type=password)</td></tr>
+            <tr><td><strong>Requiere</strong></td><td>Funciona desde cualquier IP</td></tr>
+            <tr><td><strong>Timeout</strong></td><td>30 segundos</td></tr>
+        </table>
+    </div>
+
+    <h4>Datos que se extraen de Reconocer</h4>
+    <table>
+        <thead><tr><th>Campo</th><th>Descripcion</th></tr></thead>
+        <tbody>
+            <tr><td><code>reconocer_ciudad</code></td><td>Ciudad de residencia</td></tr>
+            <tr><td><code>reconocer_departamento</code></td><td>Departamento</td></tr>
+            <tr><td><code>reconocer_direccion</code></td><td>Direccion completa</td></tr>
+            <tr><td><code>reconocer_estrato</code></td><td>Estrato socioeconomico</td></tr>
+            <tr><td><code>reconocer_telefono</code></td><td>Telefono fijo</td></tr>
+            <tr><td><code>reconocer_celular</code></td><td>Celular</td></tr>
+            <tr><td><code>reconocer_email</code></td><td>Email registrado en central</td></tr>
+        </tbody>
+    </table>
+
+    <h3 id="dc-codigos">Codigos de Respuesta DataCredito</h3>
+    <table>
+        <thead><tr><th>Codigo</th><th>Significado</th><th>Estado en BD</th></tr></thead>
+        <tbody>
+            <tr><td><code>09</code></td><td>Identificacion no encontrada</td><td><code>NO_ENCONTRADO</code></td></tr>
+            <tr><td><code>10</code></td><td>Apellido no coincide con identificacion</td><td><code>ERROR</code></td></tr>
+            <tr><td><code>13</code></td><td>Consulta exitosa con datos</td><td><code>EXITO</code></td></tr>
+            <tr><td><code>14</code></td><td>Consulta exitosa sin datos en central</td><td><code>SIN_DATOS</code></td></tr>
+            <tr><td><code>99</code></td><td>Error tecnico</td><td><code>ERROR</code></td></tr>
+        </tbody>
+    </table>
+
+    <h4>Datos que se pre-llenan en la solicitud</h4>
+    <p>La funcion <code>actualizar_solicitud_con_datacredito()</code> actualiza automaticamente estos campos:</p>
+    <table>
+        <thead><tr><th>Origen</th><th>Campo en Solicitud</th><th>Logica</th></tr></thead>
+        <tbody>
+            <tr><td>HPN</td><td><code>mora_telco_mayor_300k</code></td><td><code>True</code> si mora_telco &gt; $300,000</td></tr>
+            <tr><td>HPN</td><td><code>mora_otros_mayor_500k</code></td><td><code>True</code> si mora_real + mora_financiero &gt; $500,000</td></tr>
+            <tr><td>HPN</td><td><code>huellas_consulta</code></td><td>Numero de consultas en ultimos 6 meses</td></tr>
+            <tr><td>HPN</td><td><code>gastos_financieros</code></td><td>Cuota mensual total (si &gt; 0)</td></tr>
+            <tr><td>Reconocer</td><td><code>ciudad_residencia</code></td><td>Si viene con datos</td></tr>
+            <tr><td>Reconocer</td><td><code>departamento_residencia</code></td><td>Si viene con datos</td></tr>
+            <tr><td>Reconocer</td><td><code>direccion_residencia</code></td><td>Si viene con datos</td></tr>
+            <tr><td>Reconocer</td><td><code>estrato</code></td><td>Convertido a entero</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================================ -->
+    <h2 id="motor-datacredito">Paso 4: Motor DataCredito</h2>
+    <h3 id="motor-dc-detail">Reglas de Rechazo Automatico</h3>
+    <p>Funcion: <code>evaluar_reglas_datacredito(resultado)</code> en <code>datacredito_service.py</code>. Se ejecuta inmediatamente despues de consultar las APIs. Si alguna regla se activa, la solicitud se rechaza sin pasar a registro.</p>
+
+    <ul class="rule-list">
+        <li><strong>Regla 1 &mdash; Score muy bajo:</strong> Si <code>advance_score &lt; 300</code> &rarr; Rechazo. Indica riesgo crediticio muy alto.</li>
+        <li><strong>Regla 2 &mdash; Mora Telco:</strong> Si <code>mora_telco &gt; $300,000</code> &rarr; Rechazo. Deuda significativa en telecomunicaciones.</li>
+        <li><strong>Regla 3 &mdash; Mora Otros Sectores:</strong> Si <code>mora_sector_real + mora_sector_financiero &gt; $500,000</code> &rarr; Rechazo. Deuda alta en sector real y financiero combinados.</li>
+        <li><strong>Regla 4 &mdash; Exceso de Huellas:</strong> Si <code>huellas_ultimos_6_meses &gt; 3</code> &rarr; Rechazo. Demasiadas consultas a centrales recientemente.</li>
+    </ul>
+
+    <div class="alert alert-warning"><strong>Importante:</strong> Si multiples reglas se activan, se registran TODOS los motivos concatenados con punto y coma. El email de rechazo al aspirante es generico y no revela los motivos especificos (politica de UX).</div>
+
+    <div class="alert alert-info"><strong>Caso especial &mdash; Datos vacios:</strong> Si la API responde exitosamente pero sin datos reales (advance_score = None, moras = $0), la solicitud PASA todos los filtros porque las condiciones requieren valores positivos. El analista y director veran una alerta "Datos incompletos" en la card de DataCredito para que verifiquen manualmente.</div>
+
+    <!-- ================================================================ -->
+    <h2 id="preaprobacion">Paso 5: Pre-Aprobacion y Token</h2>
+    <p>Si la solicitud pasa ambos motores (inicial + DataCredito), el sistema:</p>
+    <ol style="padding-left:20px;margin:12px 0;">
+        <li>Genera un token seguro de 32 bytes: <code>secrets.token_urlsafe(32)</code></li>
+        <li>Establece expiracion en 24 horas</li>
+        <li>Envia email de tipo <code>PREAPROBACION</code> con link: <code>/aplicar/registro/{token}/</code></li>
+    </ol>
+    <div class="alert alert-danger">El token expira en exactamente <strong>24 horas</strong>. Si el aspirante no se registra en ese tiempo, el link deja de funcionar y debe reaplicar.</div>
+
+    <!-- ================================================================ -->
+    <h2 id="registro">Paso 6: Registro y Documentos</h2>
+    <h3>6a. Registro del Aspirante</h3>
+    <div class="flow">
+        <div class="flow-step start">Aspirante abre link /aplicar/registro/{token}/</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">Token valido y no expirado?</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">NO</div>
+                <div class="flow-step reject" style="font-size:13px;">Redirige a /aplicar/<br>con mensaje de error</div>
+            </div>
+            <div>
+                <div class="branch-label">SI</div>
+                <div class="flow-step" style="font-size:13px;">Crear usuario + PerfilUsuario (ROL_ASPIRANTE)<br>Vincular a solicitud<br>Limpiar token<br>Auto-login<br>Email BIENVENIDA</div>
+            </div>
+        </div>
+    </div>
+
+    <h3>6b. Carga de Documentos Iniciales</h3>
+    <p>El aspirante debe subir 4 documentos obligatorios desde <code>/mi-solicitud/</code>:</p>
+    <table>
+        <thead><tr><th>Documento</th><th>Constante</th><th>Descripcion</th></tr></thead>
+        <tbody>
+            <tr><td>Cedula</td><td><code>CEDULA</code></td><td>Fotocopia del documento de identidad</td></tr>
+            <tr><td>Declaracion de Renta</td><td><code>DECLARACION_RENTA</code></td><td>Soporte de ingresos</td></tr>
+            <tr><td>Certificado Laboral</td><td><code>CERTIFICADO_LABORAL</code></td><td>Comprobante de empleo</td></tr>
+            <tr><td>Autorizacion de Consulta</td><td><code>AUTORIZACION_CONSULTA</code></td><td>Autorizacion para consultar centrales</td></tr>
+        </tbody>
+    </table>
+    <div class="alert alert-info">Formatos permitidos: PDF, JPG, JPEG, PNG. Tamano maximo: 5 MB por archivo.</div>
+    <p>Al enviar documentos, la solicitud pasa a <code>EN_ASIGNACION</code> y el sistema intenta asignar un analista.</p>
+
+    <!-- ================================================================ -->
+    <h2 id="analisis">Pasos 7-9: Analisis del Analista</h2>
+
+    <h3>Paso 7: Caso Activo &mdash; Analisis de Riesgo</h3>
+    <p>El analista ve su caso en <code>/analista/caso/</code> organizado en 3 pasos secuenciales:</p>
+
+    <div class="card">
+        <div class="card-title">Paso 1: Validacion y Documentacion</div>
+        <p>El analista revisa cada documento del aspirante (aprobar/rechazar con motivo), carga sus propios soportes de analisis (obligatorios: Historial Credito + Procesos Judiciales), y deja una observacion general.</p>
+        <p>Si rechaza documentos, puede devolver el caso al aspirante &rarr; <code>DOCS_CORRECCION</code>.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Paso 2: Analisis de Riesgo (Motor de Recomendacion)</div>
+        <p>El analista marca las alertas encontradas y el sistema genera una recomendacion automatica.</p>
+    </div>
+
+    <h3 id="motor-riesgo">Motor de Riesgo / Recomendacion del Analista</h3>
+    <p>Funcion: <code>ejecutar_motor_recomendacion(datos_analisis)</code> en <code>services.py</code></p>
+
+    <div class="flow">
+        <div class="flow-step start">Analista marca alertas y ejecuta motor</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">Tiene procesos judiciales?</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div><div class="branch-label">SI</div><div class="flow-step reject" style="font-size:13px;">RECHAZAR</div></div>
+            <div><div class="branch-label">NO</div><div class="flow-step decision" style="font-size:13px;">Mora Telco &gt; $300,000?</div></div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div><div class="branch-label">SI</div><div class="flow-step reject" style="font-size:13px;">RECHAZAR</div></div>
+            <div><div class="branch-label">NO</div><div class="flow-step decision" style="font-size:13px;">Mora otros &gt; $500,000?</div></div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div><div class="branch-label">SI</div><div class="flow-step reject" style="font-size:13px;">RECHAZAR</div></div>
+            <div><div class="branch-label">NO</div><div class="flow-step decision" style="font-size:13px;">Huellas &gt; 3 en 6 meses?</div></div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div><div class="branch-label">SI</div><div class="flow-step reject" style="font-size:13px;">RECHAZAR</div></div>
+            <div><div class="branch-label">NO</div><div class="flow-step approve" style="font-size:13px;">APROBAR<br>"Cumple politicas de riesgo"</div></div>
+        </div>
+    </div>
+
+    <div class="alert alert-warning"><strong>Nota:</strong> La recomendacion del sistema es orientativa. El analista tiene la ultima palabra para pre-aprobar o rechazar, independientemente de lo que diga el motor.</div>
+
+    <div class="card">
+        <div class="card-title">Paso 3: Decision Final del Analista</div>
+        <p>Con la recomendacion visible, el analista decide:</p>
+        <ul style="padding-left:20px;">
+            <li><strong>Pre-Aprobar:</strong> &rarr; Pasa a <code>PREAPROBADO</code> y continua a Capacidad de Pago</li>
+            <li><strong>Rechazar:</strong> &rarr; <code>RECHAZADO_ANALISTA</code>, analista se libera, busca solicitud en cola</li>
+        </ul>
+    </div>
+
+    <h3>Paso 8: Capacidad de Pago y Oferta</h3>
+    <p>Si el analista pre-aprueba, accede a <code>/analista/capacidad-pago/{id}/</code></p>
+
+    <!-- ================================================================ -->
+    <h2 id="capacidad-pago">Calculo de Capacidad de Pago</h2>
+    <p>Funcion: <code>calcular_capacidad_pago_service(solicitud)</code> en <code>services.py</code></p>
+
+    <div class="formula-box">
+        <span class="label">Formula de Capacidad de Pago</span>
+        Capacidad = Ingresos - max(Gastos_Estimados, Gastos_Reportados) - Gastos_Financieros
+    </div>
+
+    <h4>Tabla de Factores de Gasto Personal</h4>
+    <p>El sistema estima los gastos personales usando una tabla que cruza el rango de ingresos con el tipo de vivienda y numero de aportantes. El SMLV usado es <strong>$1,423,500</strong>.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Rango de Ingresos</th>
+                <th>Propia / 1 Aport.</th>
+                <th>Propia / 2 Aport.</th>
+                <th>No Propia / 1 Aport.</th>
+                <th>No Propia / 2 Aport.</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>$1.4M - $2.1M (1-1.5 SMLV)</td><td>90%</td><td>80%</td><td>95%</td><td>85%</td></tr>
+            <tr><td>$2.1M - $2.8M (1.5-2 SMLV)</td><td>65%</td><td>60%</td><td>70%</td><td>65%</td></tr>
+            <tr><td>$2.8M - $4.3M (2-3 SMLV)</td><td>58%</td><td>51%</td><td>63%</td><td>56%</td></tr>
+            <tr><td>$4.3M - $5.7M (3-4 SMLV)</td><td>51%</td><td>40%</td><td>56%</td><td>45%</td></tr>
+            <tr><td>$5.7M - $8.5M (4-6 SMLV)</td><td>48%</td><td>38%</td><td>53%</td><td>43%</td></tr>
+            <tr><td>$8.5M+ (6+ SMLV)</td><td>45%</td><td>35%</td><td>50%</td><td>40%</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Ajuste por Personas a Cargo</h4>
+    <table>
+        <thead><tr><th>Personas a Cargo</th><th>Ajuste al Factor</th></tr></thead>
+        <tbody>
+            <tr><td>0 personas</td><td>Sin ajuste</td></tr>
+            <tr><td>1 persona</td><td>Factor &times; 1.02 (+2%)</td></tr>
+            <tr><td>2 o mas personas</td><td>Factor &times; 1.05 (+5%)</td></tr>
+        </tbody>
+    </table>
+
+    <div class="alert alert-info"><strong>Regla clave:</strong> El sistema toma el MAYOR entre el gasto estimado por tabla y el gasto reportado por el cliente. Esto protege contra subreporte de gastos.</div>
+
+    <!-- ================================================================ -->
+    <h2 id="oferta">Calculo de Oferta de Credito</h2>
+    <p>Funcion: <code>calcular_oferta_service(solicitud)</code> en <code>services.py</code></p>
+
+    <div class="formula-box">
+        <span class="label">Formula de Monto Maximo (Amortizacion Inversa)</span>
+        P = PMT &times; [(1+r)<sup>n</sup> - 1] / [r &times; (1+r)<sup>n</sup>]
+    </div>
+
+    <table>
+        <thead><tr><th>Variable</th><th>Significado</th><th>Fuente</th></tr></thead>
+        <tbody>
+            <tr><td><code>P</code></td><td>Monto maximo a prestar</td><td>Resultado del calculo</td></tr>
+            <tr><td><code>PMT</code></td><td>Cuota maxima mensual</td><td><code>capacidad_pago_calculada</code></td></tr>
+            <tr><td><code>r</code></td><td>Tasa total mensual</td><td>tasa_interes + seguro + FGS</td></tr>
+            <tr><td><code>n</code></td><td>Plazo en meses</td><td><code>plazo_oferta</code></td></tr>
+        </tbody>
+    </table>
+
+    <p>El analista puede <strong>simular</strong> diferentes plazos antes de guardar la oferta definitiva. Los campos <code>monto_aprobado_calculado</code> y <code>plazo_oferta</code> se guardan como oferta final.</p>
+
+    <!-- ================================================================ -->
+    <h2 id="parametros">Parametros Globales</h2>
+    <p>Modelo singleton <code>ParametrosGlobales</code> (pk=1), configurado por el Director en <code>/director/parametros/</code>.</p>
+
+    <table>
+        <thead><tr><th>Parametro</th><th>Valor Default</th><th>Descripcion</th></tr></thead>
+        <tbody>
+            <tr><td>SMLV</td><td>$1,300,000</td><td>Salario Minimo Legal Vigente</td></tr>
+            <tr><td>Tasa de Interes Mensual</td><td>2.30%</td><td>Tasa base del credito</td></tr>
+            <tr><td>Porcentaje Seguro</td><td>0.25%</td><td>Seguro sobre el monto</td></tr>
+            <tr><td>Porcentaje FGS</td><td>0.25%</td><td>Fondo de Garantias</td></tr>
+            <tr><td colspan="3" style="text-align:center;font-weight:bold;background:#e8f5e9;">Tasa Total Mensual Default: 2.80%</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================================ -->
+    <h2 id="director">Paso 10: Aprobacion del Director</h2>
+    <p>El Director accede al expediente completo en <code>/director/detalle/{id}/</code> donde puede ver:</p>
+    <ul style="padding-left:20px;margin:12px 0;">
+        <li>Oferta pre-aprobada (monto y plazo)</li>
+        <li>Datos de DataCredito (score, moras, ubicacion)</li>
+        <li>Datos del cliente y analisis financiero</li>
+        <li>Recomendacion del sistema</li>
+        <li>Todos los documentos (iniciales, analista, finales)</li>
+        <li>Referencias verificadas</li>
+        <li>Observaciones del analista</li>
+    </ul>
+
+    <div class="flow">
+        <div class="flow-step start">Director revisa expediente completo</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">Decision final</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">RECHAZAR</div>
+                <div class="flow-step reject">RECHAZADO_DIRECTOR<br><small>Proceso finalizado</small></div>
+            </div>
+            <div>
+                <div class="branch-label">APROBAR</div>
+                <div class="flow-step approve">APROBADO<br><small>Credito aprobado definitivamente</small></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <h2 id="asignacion">Logica de Asignacion de Analistas</h2>
+    <p>Funcion: <code>asignar_solicitud_a_analista(solicitud_id)</code> en <code>services.py</code>. Se ejecuta con <code>@transaction.atomic</code> para evitar condiciones de carrera.</p>
+
+    <div class="flow">
+        <div class="flow-step start">Aspirante envia documentos &rarr; EN_ASIGNACION</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">Hay analistas con solicitud_actual = NULL?</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">NO</div>
+                <div class="flow-step" style="border-color:var(--amarillo);">Queda en cola (FIFO)<br>Email: EN_ESPERA</div>
+            </div>
+            <div>
+                <div class="branch-label">SI</div>
+                <div class="flow-step process">Seleccion aleatoria<br><code>random.choice(analistas_libres)</code></div>
+            </div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step">Analista ocupado &rarr; solicitud_actual = solicitud<br>Solicitud &rarr; analista_asignado, estado = EN_ANALISIS<br>Email: ASIGNADO</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Cola de Espera (FIFO)</div>
+        <p>Cuando un analista termina un caso (rechaza, envia a director, o devuelve al aspirante), se llama automaticamente <code>intentar_asignar_solicitud_en_espera()</code>:</p>
+        <ol style="padding-left:20px;">
+            <li>Busca la solicitud mas antigua en estado <code>EN_ASIGNACION</code> (<code>order_by('fecha_actualizacion')</code>)</li>
+            <li>Si encuentra una, llama a <code>asignar_solicitud_a_analista()</code></li>
+            <li>No re-envia email de espera (ya se envio cuando entro a la cola)</li>
+        </ol>
+    </div>
+
+    <!-- ================================================================ -->
+    <h2 id="reaplicacion">Logica de Reaplicacion</h2>
+    <p>Cuando alguien aplica con una cedula que ya existe en estado inactivo (rechazado o aprobado):</p>
+
+    <div class="flow">
+        <div class="flow-step start">Aspirante aplica con cedula existente</div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step decision">Existe solicitud con esa cedula en estado inactivo?<br><small>(RECHAZADO_AUTO, RECHAZADO_ANALISTA, RECHAZADO_DIRECTOR, APROBADO)</small></div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-branch">
+            <div>
+                <div class="branch-label">NO EXISTE</div>
+                <div class="flow-step process" style="font-size:13px;">Crear solicitud nueva</div>
+            </div>
+            <div>
+                <div class="branch-label">SI EXISTE</div>
+                <div class="flow-step process" style="font-size:13px;">ACTUALIZAR existente:<br>Resetear campos de analisis<br>aspirante, analista = NULL<br>estado &rarr; NUEVO<br>Registrar "Reaplicacion"</div>
+            </div>
+        </div>
+        <div class="flow-arrow">&darr;</div>
+        <div class="flow-step end">Continua flujo normal (motor inicial + DataCredito)</div>
+    </div>
+    <div class="alert alert-info">No se crea una solicitud nueva; se reutiliza la existente para mantener la unicidad de la cedula. Se resetean: aspirante, analista, recomendacion, monto aprobado, plazo y capacidad de pago.</div>
+
+    <!-- ================================================================ -->
+    <h2 id="documentos">Tipos de Documentos</h2>
+
+    <h3>Documentos Iniciales (Aspirante)</h3>
+    <table>
+        <thead><tr><th>Constante</th><th>Nombre</th><th>Quien sube</th><th>Cuando</th></tr></thead>
+        <tbody>
+            <tr><td><code>CEDULA</code></td><td>Cedula de Ciudadania</td><td>Aspirante</td><td>PEND_DOCUMENTOS</td></tr>
+            <tr><td><code>DECLARACION_RENTA</code></td><td>Declaracion de Renta</td><td>Aspirante</td><td>PEND_DOCUMENTOS</td></tr>
+            <tr><td><code>CERTIFICADO_LABORAL</code></td><td>Certificado Laboral</td><td>Aspirante</td><td>PEND_DOCUMENTOS</td></tr>
+            <tr><td><code>AUTORIZACION_CONSULTA</code></td><td>Autorizacion Consulta Centrales</td><td>Aspirante</td><td>PEND_DOCUMENTOS</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Documentos de Analisis (Analista)</h3>
+    <table>
+        <thead><tr><th>Constante</th><th>Nombre</th><th>Obligatorio</th></tr></thead>
+        <tbody>
+            <tr><td><code>HISTORIAL_CREDITO</code></td><td>Historial de Credito</td><td><strong>Si</strong></td></tr>
+            <tr><td><code>PROCESOS_JUDICIALES</code></td><td>Consulta Procesos Judiciales</td><td><strong>Si</strong></td></tr>
+            <tr><td><code>ADRESS</code></td><td>Verificacion de Direccion</td><td>No</td></tr>
+            <tr><td><code>CONTRALORIA</code></td><td>Consulta Contraloria</td><td>No</td></tr>
+            <tr><td><code>PROCURADURIA</code></td><td>Consulta Procuraduria</td><td>No</td></tr>
+            <tr><td><code>OTRAS_CONSULTAS</code></td><td>Otras Consultas</td><td>No</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Documentos Finales (Aspirante &mdash; Cierre)</h3>
+    <table>
+        <thead><tr><th>Constante</th><th>Nombre</th><th>Cuando</th></tr></thead>
+        <tbody>
+            <tr><td><code>PAGARE</code></td><td>Pagare</td><td>PEND_DOCS_ADICIONALES</td></tr>
+            <tr><td><code>CARTA_INSTRUCCIONES</code></td><td>Carta de Instrucciones</td><td>PEND_DOCS_ADICIONALES</td></tr>
+            <tr><td><code>POLIZA_SEGURO</code></td><td>Poliza de Seguro</td><td>PEND_DOCS_ADICIONALES</td></tr>
+            <tr><td><code>FORMATO_VINCULACION</code></td><td>Formato de Vinculacion</td><td>PEND_DOCS_ADICIONALES</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================================ -->
+    <h2 id="emails">Sistema de Notificaciones por Email</h2>
+    <p>Cada email enviado se registra en <code>NotificacionEmail</code> para auditoria (tipo, destino, asunto, estado de envio, errores).</p>
+
+    <table>
+        <thead><tr><th>Tipo</th><th>Cuando se envia</th><th>Template</th></tr></thead>
+        <tbody>
+            <tr><td><code>PREAPROBACION</code></td><td>Pasa motor inicial + DataCredito</td><td><code>preaprobacion.html</code></td></tr>
+            <tr><td><code>BIENVENIDA</code></td><td>Aspirante crea su cuenta</td><td><code>bienvenida.html</code></td></tr>
+            <tr><td><code>EN_ESPERA</code></td><td>No hay analistas libres</td><td><code>en_espera.html</code></td></tr>
+            <tr><td><code>ASIGNADO</code></td><td>Se asigna a un analista</td><td><code>asignado.html</code></td></tr>
+            <tr><td><code>RECHAZO_MOTOR</code></td><td>Rechazado por motor inicial o DataCredito</td><td><code>rechazo_motor.html</code></td></tr>
+            <tr><td><code>CAMBIO_ESTADO</code></td><td>Solicitud cambia de estado</td><td><code>cambio_estado.html</code></td></tr>
+            <tr><td><code>DOCS_RECHAZADOS</code></td><td>Documentos marcados para correccion</td><td><code>documentos_rechazados.html</code></td></tr>
+            <tr><td><code>APROBACION_FINAL</code></td><td>Director aprueba</td><td><code>aprobacion_final.html</code></td></tr>
+            <tr><td><code>RECHAZO</code></td><td>Director rechaza</td><td><code>rechazo.html</code></td></tr>
+        </tbody>
+    </table>
+
+    <hr class="separator">
+    <p style="text-align:center;color:#999;font-size:13px;margin-top:30px;">
+        Global Care Financial Services &mdash; Documentacion Tecnica del Sistema<br>
+        Generado automaticamente &mdash; Marzo 2026
+    </p>
+
+</div>
+
+<script>
+// Resaltar link activo en sidebar al hacer scroll
+document.addEventListener('DOMContentLoaded', function() {
+    const links = document.querySelectorAll('.sidebar a[href^="#"]');
+    const sections = [];
+    links.forEach(link => {
+        const id = link.getAttribute('href').substring(1);
+        const el = document.getElementById(id);
+        if (el) sections.push({ link, el });
+    });
+
+    function updateActive() {
+        let current = sections[0];
+        for (const s of sections) {
+            if (s.el.getBoundingClientRect().top <= 120) current = s;
+        }
+        links.forEach(l => l.classList.remove('active'));
+        if (current) current.link.classList.add('active');
+    }
+
+    window.addEventListener('scroll', updateActive);
+    updateActive();
+
+    // Smooth scroll
+    links.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const id = this.getAttribute('href').substring(1);
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+});
+</script>
+
+</body>
+</html>

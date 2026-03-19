@@ -21,7 +21,10 @@
       "Bash(git config:*)",
       "Bash(git push:*)",
       "Bash(gh auth:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(venv/Scripts/python.exe manage.py makemigrations creditos -n \"add_convenio_and_desembolsado_state\" 2>&1)",
+      "Bash(venv/Scripts/python.exe -c \"\nimport django\nimport os\nos.environ['DJANGO_SETTINGS_MODULE'] = 'core_credito.settings'\ndjango.setup\\(\\)\nfrom creditos.models import SolicitudCredito\nprint\\('ESTADO_DESEMBOLSADO:', SolicitudCredito.ESTADO_DESEMBOLSADO\\)\nprint\\('convenio field:', SolicitudCredito._meta.get_field\\('convenio'\\)\\)\nprint\\('All states:', [c[0] for c in SolicitudCredito.ESTADOS_CHOICES]\\)\nfrom creditos.views import director_escritorio_view, desembolsar_credito_view\nprint\\('Views imported OK'\\)\n\" 2>&1)",
+      "Bash(venv/Scripts/python.exe -c \"\nimport django, os\nos.environ['DJANGO_SETTINGS_MODULE'] = 'core_credito.settings'\ndjango.setup\\(\\)\nfrom django.urls import reverse\nprint\\('desembolsar_credito URL:', reverse\\('desembolsar_credito', args=[1]\\)\\)\nprint\\('director_escritorio URL:', reverse\\('director_escritorio'\\)\\)\nprint\\('All OK'\\)\n\" 2>&1)"
     ]
   }
 }
